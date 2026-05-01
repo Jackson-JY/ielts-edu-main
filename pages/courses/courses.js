@@ -16,15 +16,37 @@ Page({
     selectedDateText: '', // 选中日期的文本
     isLoading: false,
     
-    // 模拟课程数据
-    mockCourses: [
+    // 模拟课程数据 - 使用动态日期
+    mockCourses: [],
+  },
+
+  onLoad() {
+    this.initMockCourses();
+    this.initDate();
+    this.loadCourses();
+  },
+
+  // 初始化模拟课程数据 - 使用当前日期
+  initMockCourses() {
+    const today = new Date();
+    const todayStr = formatDate(today);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const tomorrowStr = formatDate(tomorrow);
+    
+    const dayAfter = new Date(today);
+    dayAfter.setDate(today.getDate() + 2);
+    const dayAfterStr = formatDate(dayAfter);
+
+    const mockCourses = [
       {
         id: 1,
         name: "雅思词汇精讲",
         time: "09:00-10:00",
         duration: "60分钟",
         status: "已完成",
-        date: "2026-04-30",
+        date: todayStr,
       },
       {
         id: 2,
@@ -32,7 +54,7 @@ Page({
         time: "14:00-15:30",
         duration: "90分钟",
         status: "待上课",
-        date: "2026-04-30",
+        date: todayStr,
       },
       {
         id: 3,
@@ -40,7 +62,7 @@ Page({
         time: "10:00-11:30",
         duration: "90分钟",
         status: "待上课",
-        date: "2026-05-01",
+        date: tomorrowStr,
       },
       {
         id: 4,
@@ -48,14 +70,13 @@ Page({
         time: "15:00-16:30",
         duration: "90分钟",
         status: "待上课",
-        date: "2026-05-03",
+        date: dayAfterStr,
       },
-    ],
-  },
-
-  onLoad() {
-    this.initDate();
-    this.loadCourses();
+    ];
+    
+    // 直接赋值，确保同步可用
+    this.data.mockCourses = mockCourses;
+    this.setData({ mockCourses });
   },
 
   onShow() {

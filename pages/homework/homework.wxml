@@ -5,7 +5,7 @@
   <view class="header">
     <text class="title">打卡记录</text>
     <view class="settings-btn" bindtap="onSettings">
-      <text class="icon-settings">⚙️</text>
+      <image class="icon-settings" src="/images/icon-settings.png" mode="aspectFit"/>
     </view>
   </view>
 
@@ -102,7 +102,7 @@
 
   <!-- 打卡按钮（悬浮） -->
   <view class="fab-btn" bindtap="showCheckinForm">
-    <text class="fab-icon">＋</text>
+    <image class="fab-icon" src="/images/icon-plus.png" mode="aspectFit"/>
   </view>
 
   <!-- 打卡表单弹窗 -->

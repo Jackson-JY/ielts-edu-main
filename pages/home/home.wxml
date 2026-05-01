@@ -13,7 +13,7 @@
     <view class="card-header">
       <text class="card-title">今日任务</text>
       <view class="card-icon">
-        <text class="icon">📖</text>
+        <image class="icon" src="/images/icon-book.png" mode="aspectFit"/>
       </view>
     </view>
     <view class="task-info">
@@ -37,28 +37,28 @@
     <view class="ability-grid">
       <view class="ability-item">
         <view class="ability-icon">
-          <text class="icon">🎯</text>
+          <image class="icon" src="/images/icon-target.png" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{vocabulary}}</text>
         <text class="ability-label">词汇量</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
-          <text class="icon">📊</text>
+          <image class="icon" src="/images/icon-chart.png" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{cefrLevel}}</text>
         <text class="ability-label">CEFR 等级</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
-          <text class="icon">📅</text>
+          <image class="icon" src="/images/icon-calendar.png" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{studyDays}}</text>
         <text class="ability-label">学习天数</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
-          <text class="icon">🔥</text>
+          <image class="icon" src="/images/icon-fire.png" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{streakDays}}</text>
         <text class="ability-label">连续打卡</text>

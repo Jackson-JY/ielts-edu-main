@@ -4,7 +4,7 @@
   <view class="profile-card">
     <view class="profile-header">
       <view class="avatar">
-        <text class="avatar-icon">👤</text>
+        <image class="avatar-icon" src="/images/icon-user.png" mode="aspectFit"/>
       </view>
       <view class="profile-info">
         <text class="user-name">{{userName}}</text>
@@ -87,7 +87,7 @@
   <view class="menu-list">
     <view class="menu-item" bindtap="goToAssessmentResult">
       <view class="menu-icon">
-        <text>🎯</text>
+        <image src="/images/icon-target.png" mode="aspectFit" style="width: 64rpx; height: 64rpx;"/>
       </view>
       <text class="menu-label">测评结果</text>
       <text class="menu-arrow">›</text>
@@ -95,7 +95,7 @@
     
     <view class="menu-item" bindtap="goToLearningReport">
       <view class="menu-icon">
-        <text>📈</text>
+        <image src="/images/icon-chart.png" mode="aspectFit" style="width: 64rpx; height: 64rpx;"/>
       </view>
       <text class="menu-label">学习报告</text>
       <text class="menu-arrow">›</text>
@@ -103,7 +103,7 @@
     
     <view class="menu-item" bindtap="goToOrders">
       <view class="menu-icon">
-        <text>📄</text>
+        <image src="/images/icon-document.png" mode="aspectFit" style="width: 64rpx; height: 64rpx;"/>
       </view>
       <text class="menu-label">我的订单</text>
       <text class="menu-arrow">›</text>
@@ -111,7 +111,7 @@
     
     <view class="menu-item" bindtap="goToAssessment">
       <view class="menu-icon">
-        <text>🔄</text>
+        <image src="/images/icon-refresh.png" mode="aspectFit" style="width: 64rpx; height: 64rpx;"/>
       </view>
       <text class="menu-label">重新测评</text>
       <text class="menu-arrow">›</text>
@@ -119,7 +119,7 @@
     
     <view class="menu-item" bindtap="contactService">
       <view class="menu-icon">
-        <text>❓</text>
+        <image src="/images/icon-support.png" mode="aspectFit" style="width: 64rpx; height: 64rpx;"/>
       </view>
       <text class="menu-label">联系客服</text>
       <text class="menu-arrow">›</text>
