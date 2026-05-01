@@ -3,56 +3,61 @@
   <view class="container">
     <!-- 标题区域 -->
     <view class="header">
-      <text class="title">雅思水平测评</text>
-      <text class="subtitle">完成测评，了解你的真实水平</text>
+      <text class="main-title">先测一测，找到你的起点</text>
+      <text class="subtitle">预估总时长：约 30 分钟</text>
     </view>
 
-    <!-- 测评说明 -->
-    <view class="intro-card">
-      <view class="intro-item">
-        <view class="intro-icon">
-          <text>📖</text>
+    <!-- 测评模块说明 -->
+    <view class="modules-list">
+      <view class="module-item">
+        <view class="module-icon" style="background-color: #A7FBF5;">
+          <image src="/images/icon-headphones.png" mode="aspectFit" class="icon-img"/>
         </view>
-        <view class="intro-content">
-          <text class="intro-title">听力测评</text>
-          <text class="intro-desc">20道题目，测试你的听力理解能力</text>
-        </view>
-      </view>
-      
-      <view class="intro-item">
-        <view class="intro-icon">
-          <text>📄</text>
-        </view>
-        <view class="intro-content">
-          <text class="intro-title">阅读测评</text>
-          <text class="intro-desc">15道题目，测试你的阅读理解能力</text>
+        <view class="module-content">
+          <text class="module-title">听力</text>
+          <text class="module-desc">雅思 Part 1 题型，10 道填空题</text>
+          <text class="module-duration">约 5 分钟</text>
         </view>
       </view>
-      
-      <view class="intro-item">
-        <view class="intro-icon">
-          <text>🎤</text>
+
+      <view class="module-item">
+        <view class="module-icon" style="background-color: #E8D4F8;">
+          <image src="/images/icon-mic.png" mode="aspectFit" class="icon-img"/>
         </view>
-        <view class="intro-content">
-          <text class="intro-title">口语测评</text>
-          <text class="intro-desc">录制音频，AI评估你的口语水平</text>
+        <view class="module-content">
+          <text class="module-title">口语</text>
+          <text class="module-desc">Part 1 问答 × 5 + Part 2 话题卡 × 1 + Part 3 问答 × 2</text>
+          <text class="module-duration">约 8 分钟</text>
         </view>
       </view>
-      
-      <view class="intro-item">
-        <view class="intro-icon">
-          <text>✍️</text>
+
+      <view class="module-item">
+        <view class="module-icon" style="background-color: #FFD4B8;">
+          <image src="/images/icon-book.png" mode="aspectFit" class="icon-img"/>
         </view>
-        <view class="intro-content">
-          <text class="intro-title">写作测评</text>
-          <text class="intro-desc">提交作文，获取专业评分</text>
+        <view class="module-content">
+          <text class="module-title">阅读</text>
+          <text class="module-desc">词汇量精准测试</text>
+          <text class="module-duration">约 5 分钟</text>
+        </view>
+      </view>
+
+      <view class="module-item">
+        <view class="module-icon" style="background-color: #FFE8F0;">
+          <image src="/images/icon-pen.png" mode="aspectFit" class="icon-img"/>
+        </view>
+        <view class="module-content">
+          <text class="module-title">写作</text>
+          <text class="module-desc">两道题目，均需先写思路再写一段主体段</text>
+          <text class="module-duration">约 10 分钟</text>
         </view>
       </view>
     </view>
 
-    <!-- 开始测评按钮 -->
-    <view class="start-button" bindtap="startAssessment">
-      <text>开始测评</text>
+    <!-- 底部按钮 -->
+    <view class="bottom-actions">
+      <button class="btn btn-primary" bindtap="startAssessment">开始测评</button>
+      <button class="btn btn-text" bindtap="skipAssessment">跳过，直接进入学习</button>
     </view>
   </view>
 </view>

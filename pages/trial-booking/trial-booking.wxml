@@ -7,7 +7,7 @@
       <view class="course-title">雅思入门体验课</view>
       <view class="course-subtitle">专业老师一对一试听，定制你的学习方案</view>
       <view class="course-tags">
-        <view class="tag">免费</view>
+        <view class="tag tag-price">¥400</view>
         <view class="tag">1对1</view>
         <view class="tag">45分钟</view>
       </view>
@@ -38,39 +38,6 @@
           <view class="highlight-title">学习方案</view>
           <view class="highlight-desc">根据评估结果，定制个性化学习计划</view>
         </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 选择时间 -->
-  <view class="time-section">
-    <view class="section-title">选择时间</view>
-    
-    <!-- 日期选择 -->
-    <view class="date-list">
-      <view 
-        class="date-item {{selectedDate === item.date ? 'active' : ''}}"
-        wx:for="{{availableDates}}"
-        wx:key="date"
-        bindtap="selectDate"
-        data-date="{{item.date}}">
-        <view class="date-weekday">{{item.weekday}}</view>
-        <view class="date-day">{{item.day}}</view>
-        <view class="date-month">{{item.month}}</view>
-      </view>
-    </view>
-
-    <!-- 时间段选择 -->
-    <view class="time-list" wx:if="{{selectedDate}}">
-      <view 
-        class="time-item {{selectedTime === item.time ? 'active' : ''}} {{!item.available ? 'disabled' : ''}}"
-        wx:for="{{timeSlots}}"
-        wx:key="time"
-        bindtap="selectTime"
-        data-time="{{item.time}}"
-        data-available="{{item.available}}">
-        <view class="time-text">{{item.time}}</view>
-        <view class="time-status">{{item.available ? '可约' : '已满'}}</view>
       </view>
     </view>
   </view>
@@ -130,18 +97,56 @@
         </view>
       </picker>
     </view>
+
+    <!-- 优惠码 -->
+    <view class="form-group">
+      <view class="form-label">优惠码</view>
+      <view class="coupon-input-wrapper">
+        <input 
+          class="form-input coupon-input" 
+          placeholder="请输入优惠码（选填）" 
+          value="{{formData.couponCode}}"
+          bindinput="onInputChange"
+          data-field="couponCode">
+        </input>
+        <button class="coupon-btn {{formData.couponCode ? 'active' : ''}}" bindtap="applyCoupon" disabled="{{!formData.couponCode || couponApplied}}">
+          {{couponApplied ? '已使用' : '应用'}}
+        </button>
+      </view>
+      <view class="coupon-tip" wx:if="{{!couponApplied}}">输入优惠码可享受对应金额减免</view>
+      <view class="coupon-success" wx:if="{{couponApplied}}">
+        <text class="coupon-text">优惠码已生效，减免 ¥{{couponDiscount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 价格信息 -->
+  <view class="price-section">
+    <view class="price-row">
+      <text class="price-label">课程价格</text>
+      <text class="price-original">¥{{originalPrice}}</text>
+    </view>
+    <view class="price-row" wx:if="{{couponApplied}}">
+      <text class="price-label">优惠减免</text>
+      <text class="price-discount">-¥{{couponDiscount}}</text>
+    </view>
+    <view class="price-row price-total">
+      <text class="price-label">实付金额</text>
+      <text class="price-final">¥{{finalPrice}}</text>
+    </view>
   </view>
 
   <!-- 提交按钮 -->
   <button class="submit-btn" bindtap="submitBooking" disabled="{{!canSubmit}}">
-    立即预约
+    立即支付 ¥{{finalPrice}}
   </button>
 
   <!-- 提示信息 -->
   <view class="tips">
     <view class="tips-title">温馨提示</view>
-    <view class="tips-item">1. 预约成功后，老师会在24小时内联系您</view>
+    <view class="tips-item">1. 支付成功后，老师会在24小时内联系您</view>
     <view class="tips-item">2. 如有疑问，请联系客服微信：ielts001</view>
-    <view class="tips-item">3. 可免费取消预约，请提前2小时通知</view>
+    <view class="tips-item">3. 支持微信支付，安全有保障</view>
+    <view class="tips-item">4. 每个优惠码仅限使用一次</view>
   </view>
 </view>

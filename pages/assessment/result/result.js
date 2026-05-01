@@ -35,26 +35,6 @@ Page({
         comment: '写作结构清晰，但词汇多样性和语法准确性需要提升',
       },
     ],
-    recommendedCourses: [
-      {
-        id: 1,
-        icon: '🎧',
-        name: '口语强化训练',
-        desc: '提升口语流利度和准确性',
-      },
-      {
-        id: 2,
-        icon: '✍️',
-        name: '写作技巧提升',
-        desc: '掌握高分写作策略和技巧',
-      },
-      {
-        id: 3,
-        icon: '📖',
-        name: '词汇拓展课程',
-        desc: '扩大词汇量，提升表达多样性',
-      },
-    ],
   },
 
   onLoad() {
@@ -66,13 +46,6 @@ Page({
   },
 
   onShow() {},
-
-  // 跳转到课程页
-  goToCourses() {
-    wx.switchTab({
-      url: '/pages/courses/courses',
-    });
-  },
 
   // 返回首页
   goToHome() {

@@ -101,14 +101,6 @@
       <text class="menu-arrow">›</text>
     </view>
     
-    <view class="menu-item" bindtap="goToOrders">
-      <view class="menu-icon">
-        <image src="/images/icon-document.png" mode="aspectFit" style="width: 64rpx; height: 64rpx;"/>
-      </view>
-      <text class="menu-label">我的订单</text>
-      <text class="menu-arrow">›</text>
-    </view>
-    
     <view class="menu-item" bindtap="goToAssessment">
       <view class="menu-icon">
         <image src="/images/icon-refresh.png" mode="aspectFit" style="width: 64rpx; height: 64rpx;"/>

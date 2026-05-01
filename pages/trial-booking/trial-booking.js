@@ -9,14 +9,28 @@ Page({
       name: '',
       phone: '',
       level: '',
-      goal: ''
+      goal: '',
+      couponCode: ''
     },
     levelOptions: ['零基础', '初级 (4.0-5.0)', '中级 (5.0-6.0)', '中高级 (6.0-7.0)', '高级 (7.0+)'],
     levelIndex: 0,
     goalOptions: ['留学申请', '移民加分', '职业规划', '兴趣提升', '其他'],
     goalIndex: 0,
     canSubmit: false,
-    isLoading: false
+    isLoading: false,
+    // 价格相关
+    originalPrice: 400,
+    finalPrice: 400,
+    couponApplied: false,
+    couponDiscount: 0,
+    // 模拟优惠码数据（实际应从服务器获取）
+    validCoupons: {
+      'IELTS100': 100,
+      'IELTS50': 50,
+      'WELCOME': 80,
+      'VIP200': 200,
+      'STUDENT': 120
+    }
   },
 
   onLoad() {
@@ -182,20 +196,68 @@ Page({
    */
   checkCanSubmit() {
     const { name, phone, level, goal } = this.data.formData;
-    
+
     // 手机号正则：1开头，第二位3-9，共11位
     const phoneRegex = /^1[3-9]\d{9}$/;
-    
-    const canSubmit = name && 
-                     phone && 
-                     phoneRegex.test(phone) && 
-                     level && 
-                     goal && 
+
+    const canSubmit = name &&
+                     phone &&
+                     phoneRegex.test(phone) &&
+                     level &&
+                     goal &&
                      this.data.selectedTime;
-    
+
     this.setData({
       canSubmit
     });
+  },
+
+  /**
+   * 应用优惠码
+   * @description 验证并应用优惠码，计算减免金额
+   */
+  applyCoupon() {
+    const { couponCode } = this.data.formData;
+    const { validCoupons, originalPrice } = this.data;
+
+    if (!couponCode) {
+      wx.showToast({
+        title: '请输入优惠码',
+        icon: 'none'
+      });
+      return;
+    }
+
+    // 转换为大写进行匹配
+    const code = couponCode.toUpperCase().trim();
+
+    if (validCoupons[code]) {
+      const discount = validCoupons[code];
+      const finalPrice = Math.max(0, originalPrice - discount);
+
+      this.setData({
+        couponApplied: true,
+        couponDiscount: discount,
+        finalPrice: finalPrice
+      });
+
+      wx.showToast({
+        title: `优惠 ¥${discount}`,
+        icon: 'success'
+      });
+    } else {
+      wx.showToast({
+        title: '优惠码无效',
+        icon: 'none'
+      });
+
+      // 重置优惠状态
+      this.setData({
+        couponApplied: false,
+        couponDiscount: 0,
+        finalPrice: originalPrice
+      });
+    }
   },
 
   /**
@@ -222,8 +284,8 @@ Page({
       this.setData({ isLoading: false });
       
       wx.showModal({
-        title: '预约成功',
-        content: `您已成功预约 ${selectedDate} ${selectedTime} 的试听课程，老师会在24小时内联系您。`,
+        title: '支付成功',
+        content: `您已成功支付 ¥${this.data.finalPrice} 预约试听课程，老师会在24小时内联系您确认上课时间。`,
         showCancel: false,
         confirmText: '知道了',
         success: () => {

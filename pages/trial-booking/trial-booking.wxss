@@ -55,6 +55,12 @@ page {
   font-weight: 500;
 }
 
+.tag-price {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
 /* 课程亮点 */
 .highlights-section {
   background-color: #FFFFFF;

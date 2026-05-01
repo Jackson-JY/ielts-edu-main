@@ -257,14 +257,6 @@ Page({
     });
   },
 
-  // 跳转到订单页
-  goToOrders() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none',
-    });
-  },
-
   // 跳转到测评页
   goToAssessment() {
     wx.navigateTo({

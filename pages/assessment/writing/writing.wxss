@@ -1,0 +1,173 @@
+/* pages/assessment/writing/writing.wxss */
+page {
+  background-color: #FFF9F5;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header */
+.header {
+  padding: 30rpx;
+  border-bottom: 2rpx solid rgba(154, 151, 170, 0.2);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+}
+
+.progress-badge {
+  font-size: 24rpx;
+  padding: 8rpx 24rpx;
+  background-color: #E8D4F8;
+  color: #4A4A4A;
+  border-radius: 30rpx;
+}
+
+.task-tabs {
+  display: flex;
+  gap: 16rpx;
+  box-sizing: border-box;
+}
+
+.task-tab {
+  flex: 1;
+  padding: 16rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: #4A4A4A;
+  background-color: #F5F0FF;
+  border-radius: 16rpx;
+}
+
+.task-tab.active {
+  background-color: #A7FBF5;
+}
+
+/* Content Area */
+.content-area {
+  flex: 1;
+  padding: 30rpx;
+}
+
+/* Task Card */
+.task-card {
+  padding: 30rpx;
+  background-color: #F5F0FF;
+  border-radius: 24rpx;
+  margin-bottom: 30rpx;
+}
+
+.task-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.task-desc {
+  font-size: 28rpx;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 16rpx;
+  line-height: 1.6;
+}
+
+.word-count-hint {
+  font-size: 24rpx;
+  color: #9A97AA;
+}
+
+/* Step Tabs */
+.step-tabs {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 30rpx;
+  box-sizing: border-box;
+}
+
+.step-tab {
+  flex: 1;
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: #4A4A4A;
+  background-color: #F5F0FF;
+  border-radius: 16rpx;
+}
+
+.step-tab.active {
+  background-color: #A7FBF5;
+}
+
+/* Input Section */
+.input-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-hint {
+  font-size: 26rpx;
+  color: #9A97AA;
+  margin-bottom: 16rpx;
+}
+
+.input-textarea {
+  width: 100%;
+  min-height: 300rpx;
+  background-color: #F5F0FF;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  font-size: 28rpx;
+  color: #4A4A4A;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.char-count {
+  font-size: 24rpx;
+  color: #9A97AA;
+  text-align: right;
+  margin-top: 16rpx;
+}
+
+/* Bottom Actions */
+.bottom-actions {
+  padding: 30rpx;
+  border-top: 2rpx solid rgba(154, 151, 170, 0.2);
+  background-color: #FFF9F5;
+}
+
+.btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 48rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.btn::after {
+  border: none;
+}
+
+.btn-primary {
+  background-color: #A7FBF5;
+  color: #4A4A4A;
+}

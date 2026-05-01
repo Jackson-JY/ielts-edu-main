@@ -1,0 +1,64 @@
+<!-- pages/assessment/speaking/speaking.wxml -->
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="header-top">
+      <text class="title">口语测评</text>
+      <view class="progress-badge">进度 2/4</view>
+    </view>
+    <view class="part-tabs">
+      <view 
+        class="part-tab {{currentPart === 'part1' ? 'active' : ''}}"
+        bindtap="switchPart"
+        data-part="part1">Part 1</view>
+      <view 
+        class="part-tab {{currentPart === 'part2' ? 'active' : ''}}"
+        bindtap="switchPart"
+        data-part="part2">Part 2</view>
+      <view 
+        class="part-tab {{currentPart === 'part3' ? 'active' : ''}}"
+        bindtap="switchPart"
+        data-part="part3">Part 3</view>
+    </view>
+  </view>
+
+  <!-- Main Content -->
+  <scroll-view class="content-area" scroll-y>
+    <view class="question-info">
+      <text class="question-count">第 {{currentQuestion + 1}} 题 / 共 {{totalQuestions}} 题</text>
+    </view>
+
+    <!-- Part 2 Topic Card -->
+    <view wx:if="{{currentPart === 'part2'}}" class="topic-card">
+      <text class="topic-title">{{part2Topic.title}}</text>
+      <view class="topic-points">
+        <text class="point-item" wx:for="{{part2Topic.points}}" wx:key="index">• {{item}}</text>
+      </view>
+      <text class="time-hint">准备时间：60 秒 | 答题时间：最长 2 分钟</text>
+    </view>
+
+    <!-- Question Display -->
+    <view wx:else class="question-card">
+      <text class="question-title">{{questions[currentQuestion]}}</text>
+      <text class="time-hint">建议回答时长：{{currentPart === 'part1' ? '15-20' : '30-45'}} 秒</text>
+    </view>
+
+    <!-- Recording Area -->
+    <view class="recording-area">
+      <view class="mic-btn {{isRecording ? 'recording' : ''}}" bindtap="toggleRecording">
+        <image src="/images/icon-mic.png" mode="aspectFit" class="mic-icon"/>
+      </view>
+      <view class="recording-info">
+        <text class="recording-time">{{recordingTimeText}}</text>
+        <text class="recording-status">{{isRecording ? '答题中...' : recordingTime > 0 ? '录音完成' : '点击开始答题'}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- Bottom Actions -->
+  <view class="bottom-actions">
+    <button class="btn btn-primary" bindtap="handleNext">
+      {{currentQuestion < totalQuestions - 1 ? '下一题' : currentPart === 'part3' ? '完成口语测评' : '进入下一部分'}}
+    </button>
+  </view>
+</view>

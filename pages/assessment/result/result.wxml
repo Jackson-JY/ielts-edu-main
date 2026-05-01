@@ -58,29 +58,9 @@
       </view>
     </view>
 
-    <!-- 建议课程 -->
-    <view class="recommendation-card">
-      <text class="card-title">推荐课程</text>
-      <view class="recommendation-list">
-        <view class="recommendation-item" wx:for="{{recommendedCourses}}" wx:key="id">
-          <view class="course-icon">
-            <text>{{item.icon}}</text>
-          </view>
-          <view class="course-info">
-            <text class="course-name">{{item.name}}</text>
-            <text class="course-desc">{{item.desc}}</text>
-          </view>
-          <view class="course-arrow">›</view>
-        </view>
-      </view>
-    </view>
-
     <!-- 操作按钮 -->
     <view class="button-group">
-      <view class="action-btn primary" bindtap="goToCourses">
-        <text>查看推荐课程</text>
-      </view>
-      <view class="action-btn secondary" bindtap="goToHome">
+      <view class="action-btn primary" bindtap="goToHome">
         <text>返回首页</text>
       </view>
     </view>

@@ -79,13 +79,4 @@
     </view>
   </view>
 
-  <!-- 快速链接 -->
-  <view class="quick-links">
-    <view class="quick-link-item" bindtap="goToCheckin">
-      <text>打卡记录</text>
-    </view>
-    <view class="quick-link-item" bindtap="goToLearningReport">
-      <text>查看报告</text>
-    </view>
-  </view>
 </view>

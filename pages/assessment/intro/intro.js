@@ -1,5 +1,4 @@
 // pages/assessment/intro/intro.js
-
 Page({
   data: {},
 
@@ -7,18 +6,17 @@ Page({
 
   // 开始测评
   startAssessment() {
-    // TODO: 跳转到实际测评页面
-    wx.showToast({
-      title: '测评功能开发中',
-      icon: 'none',
+    // 跳转到听力测评页面
+    wx.navigateTo({
+      url: '/pages/assessment/listening/listening',
     });
+  },
 
-    // 模拟测评完成，跳转到结果页
-    setTimeout(() => {
-      wx.navigateTo({
-        url: '/pages/assessment/result/result',
-      });
-    }, 1500);
+  // 跳过测评
+  skipAssessment() {
+    wx.switchTab({
+      url: '/pages/home/home',
+    });
   },
 
   onShareAppMessage() {

@@ -9,6 +9,10 @@
     "pages/checkin/checkin",
     "pages/learning-report/learning-report",
     "pages/assessment/intro/intro",
+    "pages/assessment/listening/listening",
+    "pages/assessment/speaking/speaking",
+    "pages/assessment/reading/reading",
+    "pages/assessment/writing/writing",
     "pages/assessment/result/result"
   ],
   "window": {
