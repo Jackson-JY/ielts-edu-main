@@ -1,0 +1,91 @@
+<!-- pages/home/home.wxml -->
+<view class="page">
+  <!-- 顶部问候 -->
+  <view class="header">
+    <view class="header-text">
+      <text class="greeting">你好，{{userName}} 👋</text>
+      <text class="date-text">{{currentDate}}</text>
+    </view>
+  </view>
+
+  <!-- 今日任务卡片 -->
+  <view class="section-card task-card">
+    <view class="card-header">
+      <text class="card-title">今日任务</text>
+      <view class="card-icon">
+        <text class="icon">📖</text>
+      </view>
+    </view>
+    <view class="task-info">
+      <view class="task-item">
+        <text class="task-label">今日课程：</text>
+        <text class="task-value">{{todayCourses}} 节</text>
+      </view>
+      <view class="task-item">
+        <text class="task-label">已提交作业：</text>
+        <text class="task-value">{{submittedHomework}} / {{totalHomework}}</text>
+      </view>
+    </view>
+    <view class="task-button" bindtap="goToCourses">
+      <text>去学习</text>
+      <text class="arrow">→</text>
+    </view>
+  </view>
+
+  <!-- 能力概览 -->
+  <view class="ability-section">
+    <view class="ability-grid">
+      <view class="ability-item">
+        <view class="ability-icon">
+          <text class="icon">🎯</text>
+        </view>
+        <text class="ability-value">{{vocabulary}}</text>
+        <text class="ability-label">词汇量</text>
+      </view>
+      <view class="ability-item">
+        <view class="ability-icon">
+          <text class="icon">📊</text>
+        </view>
+        <text class="ability-value">{{cefrLevel}}</text>
+        <text class="ability-label">CEFR 等级</text>
+      </view>
+      <view class="ability-item">
+        <view class="ability-icon">
+          <text class="icon">📅</text>
+        </view>
+        <text class="ability-value">{{studyDays}}</text>
+        <text class="ability-label">学习天数</text>
+      </view>
+      <view class="ability-item">
+        <view class="ability-icon">
+          <text class="icon">🔥</text>
+        </view>
+        <text class="ability-value">{{streakDays}}</text>
+        <text class="ability-label">连续打卡</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预约试听课程 -->
+  <view class="section-card trial-card">
+    <text class="card-title">预约试听课程</text>
+    <text class="card-sub">体验专业雅思教学</text>
+    <view class="trial-price">
+      <text class="price">¥400</text>
+      <text class="price-note">支持优惠码</text>
+    </view>
+    <view class="trial-button" bindtap="goToTrialBooking">
+      <text>立即预约</text>
+    </view>
+  </view>
+
+  <!-- 快速链接 -->
+  <view class="quick-links">
+    <view class="quick-link-item" bindtap="goToCheckin">
+      <text>打卡记录</text>
+    </view>
+    <view class="quick-link-item" bindtap="goToLearningReport">
+      <text>查看报告</text>
+    </view>
+  </view>
+</view>

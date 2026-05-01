@@ -1,0 +1,88 @@
+<!-- pages/assessment/result/result.wxml -->
+<view class="page">
+  <view class="container">
+    <!-- 测评结果标题 -->
+    <view class="header">
+      <text class="title">测评结果</text>
+      <text class="subtitle">你的雅思水平评估结果</text>
+    </view>
+
+    <!-- 总分展示 -->
+    <view class="score-card">
+      <view class="total-score">
+        <text class="score-value">{{totalScore}}</text>
+        <text class="score-label">总分</text>
+      </view>
+      <view class="score-details">
+        <view class="score-item">
+          <text class="skill-name">听力</text>
+          <text class="skill-score">{{listeningScore}}</text>
+        </view>
+        <view class="score-divider"></view>
+        <view class="score-item">
+          <text class="skill-name">口语</text>
+          <text class="skill-score">{{speakingScore}}</text>
+        </view>
+        <view class="score-divider"></view>
+        <view class="score-item">
+          <text class="skill-name">阅读</text>
+          <text class="skill-score">{{readingScore}}</text>
+        </view>
+        <view class="score-divider"></view>
+        <view class="score-item">
+          <text class="skill-name">写作</text>
+          <text class="skill-score">{{writingScore}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- CEFR 等级 -->
+    <view class="cefr-card">
+      <text class="cefr-label">CEFR 等级</text>
+      <text class="cefr-level">{{cefrLevel}}</text>
+      <text class="cefr-desc">{{cefrDesc}}</text>
+    </view>
+
+    <!-- 能力分析 -->
+    <view class="analysis-card">
+      <text class="card-title">能力分析</text>
+      <view class="analysis-item" wx:for="{{analysisItems}}" wx:key="index">
+        <view class="analysis-header">
+          <text class="analysis-skill">{{item.skill}}</text>
+          <text class="analysis-score">{{item.score}}</text>
+        </view>
+        <view class="analysis-bar">
+          <view class="bar-fill" style="width: {{item.percentage}}%;"></view>
+        </view>
+        <text class="analysis-comment">{{item.comment}}</text>
+      </view>
+    </view>
+
+    <!-- 建议课程 -->
+    <view class="recommendation-card">
+      <text class="card-title">推荐课程</text>
+      <view class="recommendation-list">
+        <view class="recommendation-item" wx:for="{{recommendedCourses}}" wx:key="id">
+          <view class="course-icon">
+            <text>{{item.icon}}</text>
+          </view>
+          <view class="course-info">
+            <text class="course-name">{{item.name}}</text>
+            <text class="course-desc">{{item.desc}}</text>
+          </view>
+          <view class="course-arrow">›</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="button-group">
+      <view class="action-btn primary" bindtap="goToCourses">
+        <text>查看推荐课程</text>
+      </view>
+      <view class="action-btn secondary" bindtap="goToHome">
+        <text>返回首页</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,185 @@
+<!-- pages/courses/courses.wxml -->
+<view class="page">
+  <!-- 顶部标题 -->
+  <view class="header">
+    <text class="title">课程安排</text>
+  </view>
+
+  <!-- 视图切换按钮 -->
+  <view class="view-mode-switch">
+    <view 
+      class="mode-btn {{viewMode === 'day' ? 'active' : ''}}" 
+      bindtap="switchViewMode" 
+      data-mode="day"
+    >
+      <text>日</text>
+    </view>
+    <view 
+      class="mode-btn {{viewMode === 'week' ? 'active' : ''}}" 
+      bindtap="switchViewMode" 
+      data-mode="week"
+    >
+      <text>周</text>
+    </view>
+    <view 
+      class="mode-btn {{viewMode === 'month' ? 'active' : ''}}" 
+      bindtap="switchViewMode" 
+      data-mode="month"
+    >
+      <text>月</text>
+    </view>
+  </view>
+
+  <!-- 日期导航 -->
+  <view class="date-nav">
+    <view class="nav-btn" bindtap="changeDate" data-direction="-1">
+      <text class="arrow">‹</text>
+    </view>
+    <text class="date-text">{{dateRangeText}}</text>
+    <view class="nav-btn" bindtap="changeDate" data-direction="1">
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 日视图 -->
+  <view class="day-view" wx:if="{{viewMode === 'day'}}">
+    <scroll-view scroll-y class="course-list">
+      <block wx:if="{{filteredCourses.length > 0}}">
+        <block wx:for="{{filteredCourses}}" wx:key="id">
+          <view class="course-card">
+            <view class="course-header" bindtap="toggleExpand" data-id="{{item.id}}">
+              <view class="course-info">
+                <text class="course-name">{{item.name}}</text>
+                <view class="course-meta">
+                  <text class="meta-item">{{item.time}}</text>
+                  <text class="meta-item">{{item.duration}}</text>
+                  <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
+                    <text>{{item.status}}</text>
+                  </view>
+                </view>
+              </view>
+              <view class="expand-icon" wx:if="{{expandedCourse === item.id}}">∧</view>
+              <view class="expand-icon" wx:else>∨</view>
+            </view>
+            
+            <!-- 展开的作业区域 -->
+            <view class="homework-section" wx:if="{{expandedCourse === item.id}}">
+              <view class="homework-form">
+                <view class="form-group">
+                  <text class="form-label">作业标题 *</text>
+                  <input 
+                    class="form-input" 
+                    placeholder="请输入作业标题（最多50字）" 
+                    maxlength="50"
+                    value="{{homework[item.id].title || ''}}"
+                    bindinput="onHomeworkTitleInput"
+                    data-id="{{item.id}}"
+                  />
+                </view>
+                <view class="form-group">
+                  <text class="form-label">作业详情 *</text>
+                  <textarea 
+                    class="form-textarea" 
+                    placeholder="请输入作业详情（最多500字）" 
+                    maxlength="500"
+                    value="{{homework[item.id].content || ''}}"
+                    bindinput="onHomeworkContentInput"
+                    data-id="{{item.id}}"
+                  />
+                </view>
+                <view class="save-button" bindtap="saveHomework" data-id="{{item.id}}">
+                  <text>保存作业</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+      </block>
+      
+      <!-- 无课程时的提示 -->
+      <view class="empty-state" wx:else>
+        <text class="empty-text">暂无课程安排</text>
+        <text class="empty-sub">预约试听课程开始学习 · ¥400</text>
+        <view class="empty-button" bindtap="goToTrialBooking">
+          <text>立即预约</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 周视图 -->
+  <view class="week-view" wx:if="{{viewMode === 'week'}}">
+    <view class="week-grid">
+      <block wx:for="{{weekDays}}" wx:key="index">
+        <view 
+          class="week-day {{selectedDay === item.day ? 'selected' : ''}} {{item.isToday ? 'today' : ''}}"
+          bindtap="selectDay"
+          data-day="{{item.day}}"
+          data-date="{{item.date}}"
+        >
+          <text class="day-name">周{{item.dayName}}</text>
+          <text class="day-number">{{item.day}}</text>
+          <text class="day-courses" wx:if="{{item.courseCount > 0}}">{{item.courseCount}}节课</text>
+        </view>
+      </block>
+    </view>
+    
+    <!-- 选中日期的课程列表 -->
+    <view class="selected-day-courses" wx:if="{{selectedDay && filteredCourses.length > 0}}">
+      <text class="section-subtitle">{{selectedDateText}}课程</text>
+      <block wx:for="{{filteredCourses}}" wx:key="id">
+        <view class="course-card compact">
+          <text class="course-name">{{item.name}}</text>
+          <view class="course-meta">
+            <text class="meta-item">{{item.time}}</text>
+            <text class="meta-item">{{item.duration}}</text>
+            <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
+              <text>{{item.status}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 月视图 -->
+  <view class="month-view" wx:if="{{viewMode === 'month'}}">
+    <view class="month-grid">
+      <view class="month-header">
+        <text class="month-day-name" wx:for="{{dayNames}}" wx:key="index">{{item}}</text>
+      </view>
+      <view class="month-days">
+        <block wx:for="{{monthDays}}" wx:key="index">
+          <view 
+            class="month-day {{item.day ? '' : 'empty'}} {{selectedDay === item.day ? 'selected' : ''}} {{item.isToday ? 'today' : ''}} {{item.courseCount > 0 ? 'has-courses' : ''}}"
+            bindtap="selectDay"
+            data-day="{{item.day}}"
+            data-date="{{item.date}}"
+            wx:if="{{item}}"
+          >
+            <text class="day-number">{{item.day}}</text>
+            <view class="day-dot" wx:if="{{item.courseCount > 0}}"></view>
+          </view>
+          <view class="month-day empty" wx:else></view>
+        </block>
+      </view>
+    </view>
+    
+    <!-- 选中日期的课程列表 -->
+    <view class="selected-day-courses" wx:if="{{selectedDay && filteredCourses.length > 0}}">
+      <text class="section-subtitle">{{selectedDateText}}课程</text>
+      <block wx:for="{{filteredCourses}}" wx:key="id">
+        <view class="course-card compact">
+          <text class="course-name">{{item.name}}</text>
+          <view class="course-meta">
+            <text class="meta-item">{{item.time}}</text>
+            <text class="meta-item">{{item.duration}}</text>
+            <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
+              <text>{{item.status}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

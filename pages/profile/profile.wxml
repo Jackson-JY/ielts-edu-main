@@ -1,0 +1,203 @@
+<!-- pages/profile/profile.wxml -->
+<view class="page">
+  <!-- 个人信息卡片 -->
+  <view class="profile-card">
+    <view class="profile-header">
+      <view class="avatar">
+        <text class="avatar-icon">👤</text>
+      </view>
+      <view class="profile-info">
+        <text class="user-name">{{userName}}</text>
+        <text class="user-id">ID: {{userId}}</text>
+      </view>
+    </view>
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-value">{{studyDays}}</text>
+        <text class="stat-label">学习天数</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{vocabulary}}</text>
+        <text class="stat-label">词汇量</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 考试成绩记录 -->
+  <view class="section-card">
+    <view class="card-header">
+      <text class="card-title">考试成绩记录</text>
+      <view class="add-button" bindtap="showAddScoreModal">
+        <text class="add-icon">+</text>
+        <text class="add-text">添加成绩</text>
+      </view>
+    </view>
+    
+    <!-- 最新成绩 -->
+    <block wx:if="{{examScores.length > 0}}">
+      <view class="latest-score">
+        <text class="score-date">最近一次考试 - {{examScores[0].date}}</text>
+        <view class="total-score">
+          <text class="score-value">{{examScores[0].total}}</text>
+          <text class="score-label">总分</text>
+        </view>
+        <view class="score-details">
+          <view class="score-item">
+            <text class="score-label">听力</text>
+            <text class="score-value">{{examScores[0].listening}}</text>
+          </view>
+          <view class="score-item">
+            <text class="score-label">口语</text>
+            <text class="score-value">{{examScores[0].speaking}}</text>
+          </view>
+          <view class="score-item">
+            <text class="score-label">阅读</text>
+            <text class="score-value">{{examScores[0].reading}}</text>
+          </view>
+          <view class="score-item">
+            <text class="score-label">写作</text>
+            <text class="score-value">{{examScores[0].writing}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 成绩趋势图 -->
+      <view class="score-trend">
+        <text class="trend-title">成绩趋势</text>
+        <view class="trend-chart">
+          <block wx:for="{{examScoresReverse}}" wx:key="index">
+            <view class="trend-bar-wrap">
+              <view class="trend-bar" style="height: {{item.total / 9 * 100}}%;"></view>
+              <text class="trend-value">{{item.total}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+    
+    <!-- 无成绩时的提示 -->
+    <view class="empty-scores" wx:else>
+      <text class="empty-text">暂无考试成绩记录</text>
+      <text class="empty-sub">点击"添加成绩"记录您的雅思成绩</text>
+    </view>
+  </view>
+
+  <!-- 菜单项 -->
+  <view class="menu-list">
+    <view class="menu-item" bindtap="goToAssessmentResult">
+      <view class="menu-icon">
+        <text>🎯</text>
+      </view>
+      <text class="menu-label">测评结果</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    
+    <view class="menu-item" bindtap="goToLearningReport">
+      <view class="menu-icon">
+        <text>📈</text>
+      </view>
+      <text class="menu-label">学习报告</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    
+    <view class="menu-item" bindtap="goToOrders">
+      <view class="menu-icon">
+        <text>📄</text>
+      </view>
+      <text class="menu-label">我的订单</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    
+    <view class="menu-item" bindtap="goToAssessment">
+      <view class="menu-icon">
+        <text>🔄</text>
+      </view>
+      <text class="menu-label">重新测评</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    
+    <view class="menu-item" bindtap="contactService">
+      <view class="menu-icon">
+        <text>❓</text>
+      </view>
+      <text class="menu-label">联系客服</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 添加成绩弹窗 -->
+  <view class="modal-overlay" wx:if="{{showAddScore}}" bindtap="hideAddScoreModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <text class="modal-title">添加考试成绩</text>
+      
+      <view class="form-group">
+        <text class="form-label">考试日期 *</text>
+        <picker mode="date" value="{{newScore.date}}" bindchange="onDateChange">
+          <view class="form-input">
+            <text>{{newScore.date || '请选择日期'}}</text>
+          </view>
+        </picker>
+      </view>
+      
+      <view class="score-inputs">
+        <view class="score-input-group">
+          <text class="form-label">听力分数</text>
+          <input 
+            class="form-input small" 
+            type="digit" 
+            placeholder="0-9" 
+            value="{{newScore.listening}}"
+            bindinput="onScoreInput"
+            data-type="listening"
+          />
+        </view>
+        
+        <view class="score-input-group">
+          <text class="form-label">口语分数</text>
+          <input 
+            class="form-input small" 
+            type="digit" 
+            placeholder="0-9" 
+            value="{{newScore.speaking}}"
+            bindinput="onScoreInput"
+            data-type="speaking"
+          />
+        </view>
+        
+        <view class="score-input-group">
+          <text class="form-label">阅读分数</text>
+          <input 
+            class="form-input small" 
+            type="digit" 
+            placeholder="0-9" 
+            value="{{newScore.reading}}"
+            bindinput="onScoreInput"
+            data-type="reading"
+          />
+        </view>
+        
+        <view class="score-input-group">
+          <text class="form-label">写作分数</text>
+          <input 
+            class="form-input small" 
+            type="digit" 
+            placeholder="0-9" 
+            value="{{newScore.writing}}"
+            bindinput="onScoreInput"
+            data-type="writing"
+          />
+        </view>
+      </view>
+      
+      <view class="modal-buttons">
+        <view class="modal-btn cancel" bindtap="hideAddScoreModal">
+          <text>取消</text>
+        </view>
+        <view class="modal-btn confirm" bindtap="saveScore">
+          <text>保存</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,49 @@
+/* app.wxss - 全局样式 */
+
+page {
+  background-color: #FFF9F5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #4A4A4A;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+/* 通用卡片样式 */
+.section-card {
+  background: #F5F0FF;
+  border-radius: 44rpx;
+  padding: 40rpx;
+  margin-bottom: 24rpx;
+}
+
+/* 通用按钮样式 */
+.btn-primary {
+  background: #A7FBF5;
+  color: #4A4A4A;
+  border-radius: 60rpx;
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 600;
+  border: none;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+/* 通用标题样式 */
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A4A4A;
+}
+
+/* 通用文本颜色 */
+.text-secondary {
+  color: #9A97AA;
+}
+
+.text-primary {
+  color: #4A4A4A;
+}

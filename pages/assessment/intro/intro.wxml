@@ -1,0 +1,58 @@
+<!-- pages/assessment/intro/intro.wxml -->
+<view class="page">
+  <view class="container">
+    <!-- 标题区域 -->
+    <view class="header">
+      <text class="title">雅思水平测评</text>
+      <text class="subtitle">完成测评，了解你的真实水平</text>
+    </view>
+
+    <!-- 测评说明 -->
+    <view class="intro-card">
+      <view class="intro-item">
+        <view class="intro-icon">
+          <text>📖</text>
+        </view>
+        <view class="intro-content">
+          <text class="intro-title">听力测评</text>
+          <text class="intro-desc">20道题目，测试你的听力理解能力</text>
+        </view>
+      </view>
+      
+      <view class="intro-item">
+        <view class="intro-icon">
+          <text>📄</text>
+        </view>
+        <view class="intro-content">
+          <text class="intro-title">阅读测评</text>
+          <text class="intro-desc">15道题目，测试你的阅读理解能力</text>
+        </view>
+      </view>
+      
+      <view class="intro-item">
+        <view class="intro-icon">
+          <text>🎤</text>
+        </view>
+        <view class="intro-content">
+          <text class="intro-title">口语测评</text>
+          <text class="intro-desc">录制音频，AI评估你的口语水平</text>
+        </view>
+      </view>
+      
+      <view class="intro-item">
+        <view class="intro-icon">
+          <text>✍️</text>
+        </view>
+        <view class="intro-content">
+          <text class="intro-title">写作测评</text>
+          <text class="intro-desc">提交作文，获取专业评分</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 开始测评按钮 -->
+    <view class="start-button" bindtap="startAssessment">
+      <text>开始测评</text>
+    </view>
+  </view>
+</view>

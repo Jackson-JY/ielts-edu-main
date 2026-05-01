@@ -1,0 +1,27 @@
+<!-- pages/login/login.wxml -->
+<view class="page">
+  <!-- Logo 区域 -->
+  <view class="logo-section">
+    <text class="logo-icon">📚</text>
+    <text class="title">欢迎来到雅思学习</text>
+    <text class="subtitle">开始你的学习之旅</text>
+  </view>
+
+  <!-- 按钮组 -->
+  <view class="button-group">
+    <button class="btn btn-primary" bindtap="handleWechatLogin" loading="{{isLoading}}">
+      微信一键登录
+    </button>
+    <button class="btn btn-secondary" bindtap="handleSkipLogin">
+      跳过登录
+    </button>
+  </view>
+
+  <!-- 用户协议 -->
+  <view class="agreement">
+    <text class="agreement-text">登录即表示同意</text>
+    <text class="link" bindtap="showAgreement">《用户协议》</text>
+    <text class="agreement-text">和</text>
+    <text class="link" bindtap="showPrivacy">《隐私政策》</text>
+  </view>
+</view>

@@ -1,0 +1,55 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/home/home",
+    "pages/courses/courses",
+    "pages/homework/homework",
+    "pages/profile/profile",
+    "pages/trial-booking/trial-booking",
+    "pages/checkin/checkin",
+    "pages/learning-report/learning-report",
+    "pages/assessment/intro/intro",
+    "pages/assessment/result/result"
+  ],
+  "window": {
+    "navigationBarTitleText": "雅思学习",
+    "navigationBarBackgroundColor": "#FFF5F5",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF5F5",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#9A97AA",
+    "selectedColor": "#A7FBF5",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/courses/courses",
+        "text": "学习",
+        "iconPath": "images/tab-course.png",
+        "selectedIconPath": "images/tab-course-active.png"
+      },
+      {
+        "pagePath": "pages/homework/homework",
+        "text": "作业",
+        "iconPath": "images/tab-homework.png",
+        "selectedIconPath": "images/tab-homework-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tab-profile.png",
+        "selectedIconPath": "images/tab-profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
