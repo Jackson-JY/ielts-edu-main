@@ -1,7 +1,10 @@
 // pages/homework/homework.js - 打卡记录页面逻辑
+const cloudDB = require('../../utils/cloudDB');
+const { getTempUrl } = require('../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../config/images');
+
 Page({
   data: {
-    // 打卡类型
     checkinTypes: [
       { id: 'listening', label: '听力', color: '#A7FBF5' },
       { id: 'speaking',  label: '口语', color: '#E8D4F8' },
@@ -13,41 +16,46 @@ Page({
     checkinContent: '',
     showForm: false,
 
-    // 统计
-    streakDays: 7,
-    weekCheckin: 5,
-    monthCheckin: 22,
+    streakDays: 0,
+    weekCheckin: 0,
+    monthCheckin: 0,
 
-    // 月份选择
-    displayedYear: 2026,
-    displayedMonth: 3, // 0-indexed，默认4月
-    maxYear: 2026,
-    maxMonth: 3,
-    monthLabel: '2026年4月',
+    displayedYear: new Date().getFullYear(),
+    displayedMonth: new Date().getMonth(),
+    maxYear: new Date().getFullYear(),
+    maxMonth: new Date().getMonth(),
+    monthLabel: '',
     canGoNext: false,
 
-    // 日历（含热力背景色）
     dayLabels: ['日', '一', '二', '三', '四', '五', '六'],
     calendarDays: [],
-
-    // 打卡列表
     checkinList: [],
+    // 云存储图片临时 URL
+    imageUrls: {},
   },
 
-  onLoad() {
-    const now = new Date();
-    this.setData({
-      displayedYear: now.getFullYear(),
-      displayedMonth: now.getMonth(),
-      maxYear: now.getFullYear(),
-      maxMonth: now.getMonth(),
-    });
+  async onLoad() {
     this.updateMonthLabel();
     this.initCalendar();
+    this.loadStats();
     this.loadCheckinList();
+    await this.loadIcons();
   },
 
-  // 更新月份标签
+  /**
+   * 加载图标临时 URL
+   */
+  async loadIcons() {
+    try {
+      const iconSettings = await getTempUrl(CLOUD_IMAGES.iconSettings);
+      this.setData({
+        imageUrls: { iconSettings }
+      });
+    } catch (e) {
+      console.error('[homework] 加载图标失败', e);
+    }
+  },
+
   updateMonthLabel() {
     const { displayedYear, displayedMonth } = this.data;
     const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
@@ -57,15 +65,10 @@ Page({
     });
   },
 
-  /* ===== 月份切换 ===== */
   prevMonth() {
     let { displayedYear, displayedMonth } = this.data;
-    if (displayedMonth === 0) {
-      displayedMonth = 11;
-      displayedYear--;
-    } else {
-      displayedMonth--;
-    }
+    if (displayedMonth === 0) { displayedMonth = 11; displayedYear--; }
+    else { displayedMonth--; }
     this.setData({ displayedYear, displayedMonth });
     this.updateMonthLabel();
     this.initCalendar();
@@ -81,62 +84,118 @@ Page({
     this.initCalendar();
   },
 
-  /* ===== 日历 + 热力图合并 ===== */
-  initCalendar() {
+  /**
+   * 加载打卡统计数据（从云数据库）
+   */
+  async loadStats() {
+    try {
+      const today = this.formatDate(new Date());
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - 7);
+      const weekStartStr = this.formatDate(weekStart);
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      const monthStartStr = this.formatDate(monthStart);
+
+      const [myCheckins, allCheckins] = await Promise.all([
+        cloudDB.getMy('checkins'),
+        cloudDB.get('checkins'),
+      ]);
+
+      let streakDays = 0, weekCheckin = 0, monthCheckin = 0;
+      const myDates = myCheckins.success ? myCheckins.data.map(c => c.date) : [];
+
+      // 计算连续打卡
+      if (myCheckins.success && myCheckins.data.length > 0) {
+        const sorted = [...myDates].sort().reverse();
+        let checkDate = new Date(today);
+        for (const d of sorted) {
+          const expected = this.formatDate(checkDate);
+          if (d === expected) {
+            streakDays++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      }
+
+      // 本周打卡数
+      if (myCheckins.success) {
+        weekCheckin = myCheckins.data.filter(c => c.date >= weekStartStr).length;
+        monthCheckin = myCheckins.data.filter(c => c.date >= monthStartStr).length;
+      }
+
+      this.setData({ streakDays, weekCheckin, monthCheckin });
+    } catch (e) {
+      console.error('加载统计数据失败', e);
+    }
+  },
+
+  /**
+   * 初始化日历（从云数据库加载热力数据）
+   */
+  async initCalendar() {
     const now = new Date();
     const { displayedYear, displayedMonth, maxYear, maxMonth } = this.data;
     const isCurrentMonth = displayedYear === maxYear && displayedMonth === maxMonth;
     const daysInMonth = new Date(displayedYear, displayedMonth + 1, 0).getDate();
     const firstDay = new Date(displayedYear, displayedMonth, 1).getDay();
 
-    // —— 1. 生成每一天的热力颜色 ——
-    const dateColorMap = {};
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(displayedYear, displayedMonth, d);
-      const dateStr = this.formatDate(date);
-      const isFuture = isCurrentMonth && date > now;
-      const daysFromNow = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-      let count = 0;
-      if (!isFuture) {
-        if (daysFromNow <= 2) {
-          count = Math.random() > 0.2 ? Math.floor(Math.random() * 4) + 1 : 0;
-        } else if (daysFromNow <= 7) {
-          count = Math.random() > 0.3 ? Math.floor(Math.random() * 4) + 1 : 0;
-        } else if (daysFromNow <= 30) {
-          count = Math.random() > 0.4 ? Math.floor(Math.random() * 3) + 1 : 0;
-        } else {
-          count = Math.random() > 0.6 ? Math.floor(Math.random() * 2) : 0;
-        }
+    // 查询当月所有打卡数据
+    const monthStart = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-01`;
+    const monthEnd = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
+    let dateCountMap = {};
+    try {
+      const res = await cloudDB.getMy('checkins', (q) =>
+        q.where({
+          date: wx.cloud.database().command.gte(monthStart),
+        }).orderBy('date', 'asc')
+      );
+      if (res.success && res.data.length > 0) {
+        res.data.forEach(c => {
+          dateCountMap[c.date] = (dateCountMap[c.date] || 0) + 1;
+        });
       }
-      dateColorMap[dateStr] = { color: this.getHeatColor(count), count };
+    } catch (e) {
+      console.error('加载日历数据失败', e);
     }
 
-    // —— 2. 构建日历格子数据 ——
     const days = [];
     for (let i = 0; i < firstDay; i++) {
       days.push({ day: '', isEmpty: true, heatColor: 'transparent', hasCheckin: false, types: [] });
     }
+
+    const today = this.formatDate(now);
     const typeList = this.data.checkinTypes;
+
     for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const date = new Date(displayedYear, displayedMonth, d);
-      const dateStr = this.formatDate(date);
-      const heat = dateColorMap[dateStr] || { color: '#FFF9F5', count: 0 };
-      const has = heat.count > 0;
-      const n = has ? (Math.random() > 0.3 ? Math.floor(Math.random() * 3) + 1 : 0) : 0;
-      const types = [];
-      for (let t = 0; t < n; t++) {
-        types.push(typeList[Math.floor(Math.random() * typeList.length)]);
+      const isFuture = isCurrentMonth && date > now;
+      const count = isFuture ? 0 : (dateCountMap[dateStr] || 0);
+      const hasCheckin = count > 0;
+
+      // 获取该日期的打卡类型（最多取3个）
+      let types = [];
+      if (hasCheckin && res && res.success) {
+        const dayCheckins = res.data.filter(c => c.date === dateStr);
+        const uniqueTypes = [...new Set(dayCheckins.map(c => c.type).filter(Boolean))];
+        types = uniqueTypes.slice(0, 3).map(tid => typeList.find(t => t.id === tid) || typeList[0]);
       }
+
       days.push({
         day: d,
         isEmpty: false,
         date: dateStr,
-        heatColor: heat.color,
-        heatCount: heat.count,
-        hasCheckin: has,
+        heatColor: this.getHeatColor(count),
+        heatCount: count,
+        hasCheckin,
         types,
       });
     }
+
     this.setData({ calendarDays: days });
   },
 
@@ -152,64 +211,51 @@ Page({
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   },
 
-  // 点击日历格子：显示热力提示
   onTapCalendarCell(e) {
     const { date, count } = e.currentTarget.dataset;
     if (!date) return;
     wx.showToast({ title: `${date}: ${count}次打卡`, icon: 'none', duration: 1200 });
   },
 
-  /* ===== 打卡列表 ===== */
-  loadCheckinList() {
-    const typeList = this.data.checkinTypes;
-    const list = [];
-    for (let i = 0; i < 5; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const n = Math.floor(Math.random() * 3) + 1;
-      const types = [];
-      for (let t = 0; t < n; t++) {
-        types.push(typeList[Math.floor(Math.random() * typeList.length)]);
+  /**
+   * 从云数据库加载打卡列表
+   */
+  async loadCheckinList() {
+    try {
+      const res = await cloudDB.getMy('checkins', (q) => q.orderBy('_createTime', 'desc').limit(20));
+      if (res.success) {
+        const list = res.data.map(c => ({
+          id: c._id,
+          date: c.date,
+          types: c.types || [],
+          content: c.content || '',
+        }));
+        this.setData({ checkinList: list });
       }
-      list.push({
-        id: i,
-        day: d.getDate(),
-        month: d.getMonth() + 1,
-        types,
-        content: '今天学习了雅思听力Section 3，重点练习了选择题的定位技巧，感觉进步很大！',
-      });
+    } catch (e) {
+      console.error('加载打卡列表失败', e);
     }
-    this.setData({ checkinList: list });
   },
 
-  /* ===== 打卡表单 ===== */
-  showCheckinForm() {
-    this.setData({ showForm: true });
-  },
-
-  hideCheckinForm() {
-    this.setData({ showForm: false, selectedTypes: [], checkinContent: '' });
-  },
-
+  showCheckinForm() { this.setData({ showForm: true }); },
+  hideCheckinForm() { this.setData({ showForm: false, selectedTypes: [], checkinContent: '' }); },
   preventBubble() {},
 
   toggleType(e) {
     const id = e.currentTarget.dataset.id;
     let selected = this.data.selectedTypes.slice();
     const idx = selected.indexOf(id);
-    if (idx > -1) {
-      selected.splice(idx, 1);
-    } else {
-      selected.push(id);
-    }
+    if (idx > -1) selected.splice(idx, 1);
+    else selected.push(id);
     this.setData({ selectedTypes: selected });
   },
 
-  onContentInput(e) {
-    this.setData({ checkinContent: e.detail.value });
-  },
+  onContentInput(e) { this.setData({ checkinContent: e.detail.value }); },
 
-  submitCheckin() {
+  /**
+   * 提交打卡（保存到云数据库）
+   */
+  async submitCheckin() {
     const { selectedTypes, checkinContent, checkinTypes } = this.data;
     if (selectedTypes.length === 0) {
       wx.showToast({ title: '请选择打卡类型', icon: 'none' });
@@ -220,35 +266,35 @@ Page({
       return;
     }
 
-    // 提交打卡（模拟）
     const now = new Date();
     const typeObjs = selectedTypes.map(id => checkinTypes.find(t => t.id === id));
-    const newItem = {
-      id: Date.now(),
-      day: now.getDate(),
-      month: now.getMonth() + 1,
-      types: typeObjs,
-      content: checkinContent,
-    };
 
-    const list = [newItem, ...this.data.checkinList];
-    const streak = this.data.streakDays + 1;
+    try {
+      const res = await cloudDB.addMy('checkins', {
+        date: this.formatDate(now),
+        types: selectedTypes,
+        content: checkinContent,
+      });
 
-    this.setData({
-      checkinList: list,
-      showForm: false,
-      selectedTypes: [],
-      checkinContent: '',
-      streakDays: streak,
-      weekCheckin: Math.min(this.data.weekCheckin + 1, 7),
-      monthCheckin: Math.min(this.data.monthCheckin + 1, 30),
-    });
-
-    wx.vibrateShort({ type: 'medium' });
-    wx.showToast({ title: '打卡成功！', icon: 'success' });
+      if (res.success) {
+        // 刷新列表和统计
+        await Promise.all([this.loadCheckinList(), this.loadStats(), this.initCalendar()]);
+        this.setData({
+          showForm: false,
+          selectedTypes: [],
+          checkinContent: '',
+        });
+        wx.vibrateShort({ type: 'medium' });
+        wx.showToast({ title: '打卡成功！', icon: 'success' });
+      } else {
+        wx.showToast({ title: '打卡失败', icon: 'none' });
+      }
+    } catch (e) {
+      console.error('打卡失败', e);
+      wx.showToast({ title: '打卡失败', icon: 'none' });
+    }
   },
 
-  /* ===== 设置 ===== */
   onSettings() {
     wx.showToast({ title: '设置功能开发中', icon: 'none' });
   },

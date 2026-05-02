@@ -1,13 +1,16 @@
 // pages/profile/profile.js
 const app = getApp();
 const { formatDate } = require('../../utils/dateUtil');
+const cloudDB = require('../../utils/cloudDB');
+const { getTempUrl, getTempUrls } = require('../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
   data: {
     userName: '雅思学习者',
-    userId: '202604301234',
-    studyDays: 15,
-    vocabulary: 2913,
+    userId: '',
+    studyDays: 0,
+    vocabulary: 0,
     examScores: [],
     examScoresReverse: [],
     showAddScore: false,
@@ -18,93 +21,160 @@ Page({
       reading: '',
       writing: '',
     },
-    isLoading: false
+    isLoading: false,
+    isLoggedIn: false,
+    isGuest: false,
+    avatarUrl: '',
+    defaultAvatarUrl: '',
+    // 云存储图片临时 URL
+    imageUrls: {},
   },
 
   onLoad() {
+    this.checkLoginAndLoad();
+  },
+
+  /**
+   * 检查登录状态并加载数据
+   */
+  async checkLoginAndLoad() {
+    const isLoggedIn = app.globalData.isLoggedIn;
+    const userInfo = app.globalData.userInfo;
+
+    // 未登录时跳转到登录页
+    if (!isLoggedIn || !userInfo) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
+    // 加载默认头像和图标
+    const [defaultAvatarUrl, imageUrls] = await Promise.all([
+      getTempUrl(CLOUD_IMAGES.defaultAvatar),
+      this.loadMenuIcons(),
+    ]);
+    this.setData({ defaultAvatarUrl, imageUrls });
+
     this.loadUserData();
     this.loadExamScores();
   },
 
+  /**
+   * 加载菜单图标临时 URL
+   */
+  async loadMenuIcons() {
+    try {
+      const urls = await getTempUrls([
+        CLOUD_IMAGES.iconTarget,
+        CLOUD_IMAGES.iconChart,
+        CLOUD_IMAGES.iconDocument,
+        CLOUD_IMAGES.iconSettings,
+        CLOUD_IMAGES.iconRefresh,
+        CLOUD_IMAGES.iconSupport,
+      ]);
+      return {
+        iconTarget: urls[CLOUD_IMAGES.iconTarget],
+        iconChart: urls[CLOUD_IMAGES.iconChart],
+        iconDocument: urls[CLOUD_IMAGES.iconDocument],
+        iconSettings: urls[CLOUD_IMAGES.iconSettings],
+        iconRefresh: urls[CLOUD_IMAGES.iconRefresh],
+        iconSupport: urls[CLOUD_IMAGES.iconSupport],
+      };
+    } catch (e) {
+      console.error('[profile] 加载菜单图标失败', e);
+      return {};
+    }
+  },
+
   onShow() {
-    // 每次显示页面时刷新数据
     this.loadUserData();
   },
 
   /**
    * 加载用户数据
-   * @description 从全局数据和本地缓存加载用户信息
    */
   loadUserData() {
     try {
       const userInfo = app.globalData.userInfo;
+      const isLoggedIn = app.globalData.isLoggedIn;
+      const isGuest = userInfo && userInfo.isGuest;
+      
+      this.setData({
+        isLoggedIn: isLoggedIn,
+        isGuest: isGuest || false,
+      });
+      
       if (userInfo && userInfo.nickName) {
         this.setData({
           userName: userInfo.nickName,
-          userId: userInfo.id || '202604301234',
+          userId: userInfo.userId || userInfo._id || '',
+          avatarUrl: userInfo.avatarUrl || '',
+        });
+      } else {
+        // 未登录状态显示默认信息
+        this.setData({
+          userName: '未登录',
+          userId: '',
+          avatarUrl: '',
         });
       }
     } catch (e) {
       console.error('加载用户数据失败', e);
-      wx.showToast({
-        title: '加载用户数据失败',
-        icon: 'none'
-      });
     }
   },
 
   /**
-   * 加载考试成绩
-   * @description 从服务器或本地缓存加载考试成绩记录
+   * 退出登录
    */
-  loadExamScores() {
+  handleLogout() {
+    wx.showModal({
+      title: '确认退出',
+      content: '退出后需要重新登录',
+      success: (res) => {
+        if (res.confirm) {
+          app.logout();
+          wx.showToast({ title: '已退出登录', icon: 'success' });
+          setTimeout(() => {
+            wx.redirectTo({ url: '/pages/login/login' });
+          }, 1000);
+        }
+      }
+    });
+  },
+
+  /**
+   * 去登录
+   */
+  goToLogin() {
+    wx.redirectTo({ url: '/pages/login/login' });
+  },
+
+  /**
+   * 从云数据库加载考试成绩
+   */
+  async loadExamScores() {
     this.setData({ isLoading: true });
-    
     try {
-      // TODO: 从云数据库加载实际数据
-      // 这里使用模拟数据
-      const mockExamScores = [
-        {
-          date: '2026-04-15',
-          listening: 7.0,
-          speaking: 6.5,
-          reading: 7.5,
-          writing: 6.0,
-          total: 6.75,
-        },
-        {
-          date: '2026-03-10',
-          listening: 6.5,
-          speaking: 6.0,
-          reading: 7.0,
-          writing: 5.5,
-          total: 6.25,
-        },
-      ];
-
-      // ✅ 修复：使用正确的展开运算符
-      const examScoresReverse = [...mockExamScores].reverse();
-
-      this.setData({
-        examScores: mockExamScores,
-        examScoresReverse,
-        isLoading: false
-      });
+      const res = await cloudDB.getMy('exam_scores');
+      if (res.success && res.data.length > 0) {
+        const examScoresReverse = [...res.data].reverse();
+        this.setData({
+          examScores: res.data,
+          examScoresReverse,
+          isLoading: false
+        });
+      } else {
+        this.setData({ examScores: [], examScoresReverse: [], isLoading: false });
+      }
     } catch (e) {
       console.error('加载考试成绩失败', e);
-      this.setData({ isLoading: false });
-      wx.showToast({
-        title: '加载考试成绩失败',
-        icon: 'none'
-      });
+      this.setData({ examScores: [], examScoresReverse: [], isLoading: false });
+      wx.showToast({ title: '加载考试成绩失败', icon: 'none' });
     }
   },
 
-  // 显示添加成绩弹窗
   showAddScoreModal() {
     const today = new Date();
     const date = formatDate(today);
-
     this.setData({
       showAddScore: true,
       newScore: {
@@ -117,92 +187,55 @@ Page({
     });
   },
 
-  // 隐藏添加成绩弹窗
   hideAddScoreModal() {
-    this.setData({
-      showAddScore: false,
-    });
+    this.setData({ showAddScore: false });
   },
 
-  // 日期选择变化
   onDateChange(e) {
-    this.setData({
-      'newScore.date': e.detail.value,
-    });
+    this.setData({ 'newScore.date': e.detail.value });
   },
 
   /**
    * 分数输入验证
-   * @description 验证分数是否为0-9之间的有效数字
-   * @param {string} value - 输入的分数
-   * @returns {boolean} 是否为有效分数
    */
   validateScore(value) {
     if (!value || value.trim() === '') return false;
-    
     const scoreValue = parseFloat(value);
-    
-    // ✅ 修复：更严谨的验证
     if (isNaN(scoreValue)) return false;
     if (scoreValue < 0 || scoreValue > 9) return false;
-    if (!/^\d+(\.\d+)?$/.test(value)) return false; // 防止 "123abc" 这样的输入
-    
+    if (!/^\d+(\.\d+)?$/.test(value)) return false;
     return true;
   },
 
-  // 分数输入
   onScoreInput(e) {
     const type = e.currentTarget.dataset.type;
     const value = e.detail.value;
-
-    // 实时验证
     if (value && !this.validateScore(value)) {
-      wx.showToast({
-        title: '分数必须在0-9之间',
-        icon: 'none',
-        duration: 1500
-      });
+      wx.showToast({ title: '分数必须在0-9之间', icon: 'none', duration: 1500 });
     }
-
-    this.setData({
-      [`newScore.${type}`]: value,
-    });
+    this.setData({ [`newScore.${type}`]: value });
   },
 
   /**
-   * 保存成绩
-   * @description 验证并保存考试成绩到服务器
+   * 保存成绩到云数据库
    */
-  saveScore() {
+  async saveScore() {
     const { newScore } = this.data;
 
-    // ✅ 增强：完善的输入验证
     if (!newScore.date) {
-      wx.showToast({
-        title: '请选择考试日期',
-        icon: 'none',
-      });
+      wx.showToast({ title: '请选择考试日期', icon: 'none' });
       return;
     }
 
     const scores = ['listening', 'speaking', 'reading', 'writing'];
+    const subjectMap = { listening: '听力', speaking: '口语', reading: '阅读', writing: '写作' };
     for (const score of scores) {
       if (!this.validateScore(newScore[score])) {
-        const subjectMap = {
-          listening: '听力',
-          speaking: '口语',
-          reading: '阅读',
-          writing: '写作'
-        };
-        wx.showToast({
-          title: `请填写有效的${subjectMap[score]}分数（0-9）`,
-          icon: 'none',
-        });
+        wx.showToast({ title: `请填写有效的${subjectMap[score]}分数（0-9）`, icon: 'none' });
         return;
       }
     }
 
-    // 计算总分
     const total = (
       parseFloat(newScore.listening) +
       parseFloat(newScore.speaking) +
@@ -219,63 +252,45 @@ Page({
       total: Math.round(total * 100) / 100,
     };
 
-    // TODO: 保存到云数据库
-    console.log('保存成绩:', scoreRecord);
-
-    // ✅ 修复：使用正确的展开运算符
-    const examScores = [scoreRecord, ...this.data.examScores];
-    const examScoresReverse = [...examScores].reverse();
-
-    this.setData({
-      examScores,
-      examScoresReverse,
-      showAddScore: false,
-    });
-
-    wx.showToast({
-      title: '成绩已保存',
-      icon: 'success',
-    });
+    try {
+      const res = await cloudDB.addMy('exam_scores', scoreRecord);
+      if (res.success) {
+        const examScores = [scoreRecord, ...this.data.examScores];
+        const examScoresReverse = [...examScores].reverse();
+        this.setData({ examScores, examScoresReverse, showAddScore: false });
+        wx.showToast({ title: '成绩已保存', icon: 'success' });
+      } else {
+        wx.showToast({ title: '保存失败', icon: 'none' });
+      }
+    } catch (e) {
+      console.error('保存成绩失败', e);
+      wx.showToast({ title: '保存失败', icon: 'none' });
+    }
   },
 
-  // 阻止事件冒泡
-  stopPropagation() {
-    // 阻止事件冒泡
-  },
+  stopPropagation() {},
 
-  // 跳转到测评结果页
   goToAssessmentResult() {
-    wx.navigateTo({
-      url: '/pages/assessment/result/result',
-    });
+    wx.navigateTo({ url: '/pages/assessment/result/result' });
   },
 
-  // 跳转到学习报告页
   goToLearningReport() {
-    wx.navigateTo({
-      url: '/pages/learning-report/learning-report',
-    });
+    wx.navigateTo({ url: '/pages/learning-report/learning-report' });
   },
 
-  // 跳转到测评页
   goToAssessment() {
-    wx.navigateTo({
-      url: '/pages/assessment/intro/intro',
-    });
+    wx.navigateTo({ url: '/pages/assessment/intro/intro' });
   },
 
-  // 联系客服
   contactService() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none',
-    });
+    wx.showToast({ title: '功能开发中', icon: 'none' });
   },
 
   onShareAppMessage() {
-    return {
-      title: '雅思学习 - 个人中心',
-      path: '/pages/profile/profile',
-    };
+    return { title: '雅思学习 - 个人中心', path: '/pages/profile/profile' };
+  },
+
+  goToOrders() {
+    wx.showToast({ title: '功能开发中', icon: 'none' });
   },
 });

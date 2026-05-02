@@ -1,9 +1,9 @@
 /* pages/login/login.wxss */
 
-/* 页面容器 */
+/* ===== 页面容器 ===== */
 .page {
   min-height: 100vh;
-  background: #FFF5F5;
+  background: #FFF9F5;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,39 +12,212 @@
   box-sizing: border-box;
 }
 
-/* ===== Logo 区域 ===== */
+/* ==================== */
+/* Step 1: 落地页        */
+/* ==================== */
+
+.landing-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Logo 区域 */
 .logo-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 120rpx;
+  margin-bottom: 100rpx;
 }
 
-.logo-icon {
-  font-size: 120rpx;
+.logo-img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 40rpx;
   margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 32rpx rgba(167, 251, 245, 0.4);
 }
 
 .title {
   font-size: 44rpx;
-  font-weight: 600;
-  color: #4A4A4A;
-  margin-bottom: 20rpx;
+  font-weight: 700;
+  color: #3A3A3A;
+  margin-bottom: 16rpx;
+  letter-spacing: 2rpx;
 }
 
 .subtitle {
   font-size: 28rpx;
   color: #9A97AA;
+  letter-spacing: 1rpx;
 }
 
-/* ===== 按钮组 ===== */
+/* 按钮组 */
 .button-group {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 32rpx;
+  gap: 28rpx;
   margin-bottom: 60rpx;
 }
+
+/* 协议 */
+.agreement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4rpx;
+}
+
+.agreement-text {
+  font-size: 24rpx;
+  color: #BBBBBB;
+}
+
+.link {
+  font-size: 24rpx;
+  color: #A0C8C5;
+}
+
+/* ==================== */
+/* Step 2: 完善信息      */
+/* ==================== */
+
+.profile-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-header {
+  margin-bottom: 72rpx;
+  text-align: center;
+}
+
+.profile-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #3A3A3A;
+  margin-bottom: 16rpx;
+  letter-spacing: 2rpx;
+}
+
+.profile-subtitle {
+  display: block;
+  font-size: 28rpx;
+  color: #9A97AA;
+}
+
+/* 头像选择 */
+.avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 64rpx;
+}
+
+.avatar-btn {
+  width: 160rpx !important;
+  height: 160rpx !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 50% !important;
+  position: relative;
+  overflow: visible;
+  line-height: 1;
+}
+
+.avatar-btn::after {
+  border: none !important;
+}
+
+.avatar-img-large {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  border: 6rpx solid #A7FBF5;
+  box-shadow: 0 8rpx 24rpx rgba(167, 251, 245, 0.5);
+  display: block;
+}
+
+.avatar-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 48rpx;
+  height: 48rpx;
+  background: #A7FBF5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4rpx solid #FFF9F5;
+}
+
+.avatar-badge-icon {
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.avatar-tip {
+  margin-top: 20rpx;
+  font-size: 24rpx;
+  color: #BBBBBB;
+}
+
+/* 昵称输入 */
+.nickname-wrap {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx 40rpx;
+  box-sizing: border-box;
+  margin-bottom: 48rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.nickname-label {
+  font-size: 24rpx;
+  color: #BBBBBB;
+  margin-bottom: 16rpx;
+}
+
+.nickname-input {
+  width: 100%;
+  font-size: 34rpx;
+  font-weight: 500;
+  color: #3A3A3A;
+  height: 60rpx;
+  line-height: 60rpx;
+}
+
+.nickname-placeholder {
+  color: #CCCCCC;
+  font-weight: 400;
+}
+
+/* 确认按钮 */
+.btn-confirm {
+  width: 100% !important;
+  margin-bottom: 40rpx;
+}
+
+/* 底部说明 */
+.profile-note {
+  font-size: 22rpx;
+  color: #CCCCCC;
+  text-align: center;
+}
+
+/* ==================== */
+/* 公共按钮样式          */
+/* ==================== */
 
 .btn {
   width: 100% !important;
@@ -52,51 +225,35 @@
   line-height: 100rpx;
   border-radius: 50rpx;
   font-size: 32rpx;
-  font-weight: 500;
+  font-weight: 600;
   border: none !important;
   padding: 0 !important;
   margin: 0;
+  letter-spacing: 2rpx;
 }
 
 .btn::after {
   border: none !important;
 }
 
-/* 主按钮 - 青色 */
+/* 主按钮 - 薄荷青 */
 .btn-primary {
-  background: #A7F0F5;
-  color: #4A4A4A;
+  background: linear-gradient(135deg, #A7FBF5 0%, #85F0E8 100%);
+  color: #3A3A3A;
+  box-shadow: 0 8rpx 24rpx rgba(167, 251, 245, 0.5);
 }
 
 .btn-primary:active {
-  opacity: 0.9;
+  opacity: 0.85;
+  transform: scale(0.98);
 }
 
-/* 次按钮 - 粉色 */
+/* 次按钮 - 浅粉 */
 .btn-secondary {
   background: #FFE8F0;
   color: #4A4A4A;
 }
 
 .btn-secondary:active {
-  opacity: 0.9;
-}
-
-/* ===== 用户协议 ===== */
-.agreement {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.agreement-text {
-  font-size: 24rpx;
-  color: #9A97AA;
-}
-
-.link {
-  font-size: 24rpx;
-  color: #9A97AA;
-  text-decoration: underline;
+  opacity: 0.85;
 }

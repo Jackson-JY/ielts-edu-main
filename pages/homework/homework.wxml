@@ -5,7 +5,7 @@
   <view class="header">
     <text class="title">打卡记录</text>
     <view class="settings-btn" bindtap="onSettings">
-      <image class="icon-settings" src="/images/icon-settings.png" mode="aspectFit"/>
+      <image class="icon-settings" src="{{imageUrls.iconSettings}}" mode="aspectFit"/>
     </view>
   </view>
 

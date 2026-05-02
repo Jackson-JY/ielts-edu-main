@@ -1,16 +1,45 @@
 // app.js
 App({
   onLaunch() {
+    // 初始化云开发环境
+    this.initCloud();
+
     // 检查登录状态
     this.checkLoginStatus();
-    
+
     // 设置全局错误处理
     this.setupErrorHandler();
+  },
+
+  /**
+   * 初始化云开发
+   * @description 调用 wx.cloud.init()，需在微信开发者工具中开通云开发
+   * 将 env 替换为你的云开发环境 ID
+   */
+  initCloud() {
+    if (!wx.cloud) {
+      console.error('请使用 2.2.3 或以上版本的基础库以使用云能力');
+      return;
+    }
+    wx.cloud.init({
+      env: 'cloud1-d7g66xvli7bb6bcc6',
+      traceUser: true,
+    });
+    console.log('[云开发] 初始化完成');
   },
 
   globalData: {
     isLoggedIn: false,
     userInfo: null,
+    openId: null,     // 微信用户唯一标识，登录后填充
+    // 云数据库引用（懒加载）
+    _db: null,
+    get db() {
+      if (!this._db) {
+        this._db = wx.cloud.database();
+      }
+      return this._db;
+    },
   },
 
   /**
@@ -57,6 +86,9 @@ App({
       if (loginInfo && loginInfo.isLoggedIn) {
         this.globalData.isLoggedIn = true;
         this.globalData.userInfo = loginInfo.userInfo;
+        if (loginInfo.userInfo && loginInfo.userInfo.openId) {
+          this.globalData.openId = loginInfo.userInfo.openId;
+        }
       }
     } catch (e) {
       console.error('检查登录状态失败', e);
@@ -65,12 +97,16 @@ App({
 
   /**
    * 设置登录状态
-   * @param {Object} userInfo - 用户信息
-   * @description 保存登录状态到全局和本地缓存
+   * @param {Object} userInfo - 用户信息（nickName / avatarUrl / openId / userId / isGuest）
+   * @description 保存登录状态到全局 globalData 和本地缓存
    */
   setLoginStatus(userInfo) {
     this.globalData.isLoggedIn = true;
     this.globalData.userInfo = userInfo;
+    // 方便各页面快速读取 openId
+    if (userInfo && userInfo.openId) {
+      this.globalData.openId = userInfo.openId;
+    }
     
     try {
       wx.setStorageSync('loginInfo', {

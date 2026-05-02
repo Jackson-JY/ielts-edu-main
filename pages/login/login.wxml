@@ -1,19 +1,41 @@
 <!-- pages/login/login.wxml -->
 <view class="page">
+
   <!-- Logo 区域 -->
   <view class="logo-section">
-    <text class="logo-icon">📚</text>
+    <image class="logo-img" src="/images/logo.jpg" mode="aspectFit" />
     <text class="title">欢迎来到雅思学习</text>
-    <text class="subtitle">开始你的学习之旅</text>
+    <text class="subtitle">专业陪伴，轻松备考</text>
   </view>
 
   <!-- 按钮组 -->
   <view class="button-group">
-    <button class="btn btn-primary" bindtap="handleWechatLogin" loading="{{isLoading}}">
-      微信一键登录
+    <!-- 第一步：获取 openid -->
+    <button
+      wx:if="{{!openId}}"
+      class="btn btn-primary"
+      bindtap="handleWechatLogin"
+      loading="{{isLoading}}"
+      disabled="{{isLoading}}"
+    >
+      <text wx:if="{{!isLoading}}">微信一键登录</text>
+      <text wx:else>登录中...</text>
     </button>
+    
+    <!-- 第二步：新用户授权获取头像昵称 -->
+    <button
+      wx:if="{{openId && !isOldUser}}"
+      class="btn btn-primary"
+      bindtap="handleGetUserProfile"
+      loading="{{isLoading}}"
+      disabled="{{isLoading}}"
+    >
+      <text wx:if="{{!isLoading}}">授权获取微信头像</text>
+      <text wx:else>处理中...</text>
+    </button>
+    
     <button class="btn btn-secondary" bindtap="handleSkipLogin">
-      跳过登录
+      游客模式体验
     </button>
   </view>
 
@@ -24,4 +46,5 @@
     <text class="agreement-text">和</text>
     <text class="link" bindtap="showPrivacy">《隐私政策》</text>
   </view>
+
 </view>

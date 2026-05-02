@@ -46,6 +46,7 @@
     "swc": false,
     "disableSWC": true
   },
+  "cloudfunctionRoot": "cloudfunctions/",
   "compileType": "miniprogram",
   "libVersion": "2.19.4",
   "appid": "wxe6cdf8cc52f31608",

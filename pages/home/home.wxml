@@ -37,28 +37,28 @@
     <view class="ability-grid">
       <view class="ability-item">
         <view class="ability-icon">
-          <image class="icon" src="/images/icon-target.png" mode="aspectFit"/>
+          <image class="icon" src="{{imageUrls.iconTarget}}" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{vocabulary}}</text>
         <text class="ability-label">词汇量</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
-          <image class="icon" src="/images/icon-chart.png" mode="aspectFit"/>
+          <image class="icon" src="{{imageUrls.iconChart}}" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{cefrLevel}}</text>
         <text class="ability-label">CEFR 等级</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
-          <image class="icon" src="/images/icon-calendar.png" mode="aspectFit"/>
+          <image class="icon" src="{{imageUrls.iconCalendar}}" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{studyDays}}</text>
         <text class="ability-label">学习天数</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
-          <image class="icon" src="/images/icon-fire.png" mode="aspectFit"/>
+          <image class="icon" src="{{imageUrls.iconFire}}" mode="aspectFit"/>
         </view>
         <text class="ability-value">{{streakDays}}</text>
         <text class="ability-label">连续打卡</text>
