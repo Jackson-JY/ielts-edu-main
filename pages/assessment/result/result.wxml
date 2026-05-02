@@ -48,7 +48,10 @@
       <text class="card-title">能力分析</text>
       <view class="analysis-item" wx:for="{{analysisItems}}" wx:key="index">
         <view class="analysis-header">
-          <text class="analysis-skill">{{item.skill}}</text>
+          <view class="skill-info">
+            <image wx:if="{{item.icon}}" class="skill-icon" src="{{item.icon}}" mode="aspectFit"/>
+            <text class="analysis-skill">{{item.skill}}</text>
+          </view>
           <text class="analysis-score">{{item.score}}</text>
         </view>
         <view class="analysis-bar">

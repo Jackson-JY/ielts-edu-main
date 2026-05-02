@@ -1,5 +1,7 @@
 // pages/trial-booking/trial-booking.js
 const cloudDB = require('../../utils/cloudDB');
+const { getTempUrl } = require('../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
   data: {
@@ -26,11 +28,16 @@ Page({
     couponDiscount: 0,
     // 优惠码从云数据库加载
     validCoupons: {},
+    // 课程封面图
+    courseImageUrl: '',
   },
 
-  onLoad() {
+  async onLoad() {
     this.initAvailableDates();
     this.loadCoupons();
+    // 加载云存储的课程封面图
+    const courseImageUrl = await getTempUrl(CLOUD_IMAGES.trialCourse);
+    this.setData({ courseImageUrl });
   },
 
   /**

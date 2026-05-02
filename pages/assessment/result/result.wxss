@@ -152,6 +152,17 @@
   align-items: center;
 }
 
+.skill-info {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.skill-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
 .analysis-skill {
   font-size: 24rpx;
   color: #4A4A4A;

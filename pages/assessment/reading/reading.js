@@ -17,10 +17,16 @@ Page({
       { word: "implement", options: ["实施", "取消", "计划", "讨论"] },
       { word: "justify", options: ["证明正当", "批评", "忽视", "拒绝"] },
     ],
-    currentQuestionData: {}
+    currentQuestionData: {},
+    // 测评模式：'full' 完整测评，'single' 单项测评
+    mode: 'single'
   },
 
-  onLoad() {
+  onLoad(options) {
+    // 设置测评模式
+    if (options.mode === 'full') {
+      this.setData({ mode: 'full' });
+    }
     this.loadQuestion();
   },
 
@@ -55,11 +61,39 @@ Page({
         });
         this.loadQuestion();
       } else {
-        // 完成阅读测评，跳转到写作测评
-        wx.navigateTo({
-          url: '/pages/assessment/writing/writing'
-        });
+        // 完成阅读测评
+        this.completeReading();
       }
     }, 300);
+  },
+
+  // 完成阅读测评
+  completeReading() {
+    // 根据模式决定跳转
+    if (this.data.mode === 'full') {
+      // 完整测评模式：跳转到写作测评
+      wx.navigateTo({
+        url: '/pages/assessment/writing/writing?mode=full'
+      });
+    } else {
+      // 单项测评模式：返回首页
+      wx.showToast({
+        title: '阅读测评完成',
+        icon: 'success',
+        duration: 1500
+      });
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/home/home'
+        });
+      }, 1500);
+    }
+  },
+
+  // 返回首页
+  goToHome() {
+    wx.switchTab({
+      url: '/pages/home/home'
+    });
   }
 });

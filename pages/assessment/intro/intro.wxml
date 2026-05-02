@@ -4,59 +4,36 @@
     <!-- 标题区域 -->
     <view class="header">
       <text class="main-title">先测一测，找到你的起点</text>
-      <text class="subtitle">预估总时长：约 30 分钟</text>
+      <text class="subtitle">选择任意一项进行测评，或完成完整测评</text>
     </view>
 
-    <!-- 测评模块说明 -->
+    <!-- 测评模块列表（可点击选择） -->
     <view class="modules-list">
-      <view class="module-item">
-        <view class="module-icon" style="background-color: #A7FBF5;">
-          <image src="/images/icon-headphones.png" mode="aspectFit" class="icon-img"/>
+      <view 
+        class="module-item" 
+        wx:for="{{modules}}" 
+        wx:key="id"
+        data-index="{{index}}"
+        bindtap="selectModule"
+      >
+        <view class="module-icon" style="background-color: {{item.bgColor}};">
+          <image wx:if="{{item.icon}}" src="{{item.icon}}" mode="aspectFit" class="icon-img"/>
         </view>
         <view class="module-content">
-          <text class="module-title">听力</text>
-          <text class="module-desc">雅思 Part 1 题型，10 道填空题</text>
-          <text class="module-duration">约 5 分钟</text>
+          <text class="module-title">{{item.title}}</text>
+          <text class="module-desc">{{item.desc}}</text>
+          <text class="module-duration">{{item.duration}}</text>
         </view>
-      </view>
-
-      <view class="module-item">
-        <view class="module-icon" style="background-color: #E8D4F8;">
-          <image src="/images/icon-mic.png" mode="aspectFit" class="icon-img"/>
-        </view>
-        <view class="module-content">
-          <text class="module-title">口语</text>
-          <text class="module-desc">Part 1 问答 × 5 + Part 2 话题卡 × 1 + Part 3 问答 × 2</text>
-          <text class="module-duration">约 8 分钟</text>
-        </view>
-      </view>
-
-      <view class="module-item">
-        <view class="module-icon" style="background-color: #FFD4B8;">
-          <image src="/images/icon-book.png" mode="aspectFit" class="icon-img"/>
-        </view>
-        <view class="module-content">
-          <text class="module-title">阅读</text>
-          <text class="module-desc">词汇量精准测试</text>
-          <text class="module-duration">约 5 分钟</text>
-        </view>
-      </view>
-
-      <view class="module-item">
-        <view class="module-icon" style="background-color: #FFE8F0;">
-          <image src="/images/icon-pen.png" mode="aspectFit" class="icon-img"/>
-        </view>
-        <view class="module-content">
-          <text class="module-title">写作</text>
-          <text class="module-desc">两道题目，均需先写思路再写一段主体段</text>
-          <text class="module-duration">约 10 分钟</text>
+        <view class="module-arrow">
+          <text class="arrow-icon">→</text>
         </view>
       </view>
     </view>
 
     <!-- 底部按钮 -->
     <view class="bottom-actions">
-      <button class="btn btn-primary" bindtap="startAssessment">开始测评</button>
+      <button class="btn btn-primary" bindtap="startFullAssessment">开始完整测评</button>
+      <button class="btn btn-secondary" bindtap="viewResult">查看测评结果</button>
       <button class="btn btn-text" bindtap="skipAssessment">跳过，直接进入学习</button>
     </view>
   </view>

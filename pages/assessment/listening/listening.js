@@ -1,4 +1,7 @@
 // pages/assessment/listening/listening.js
+const cloudStorage = require('../../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../../config/images');
+
 Page({
   data: {
     isPlaying: false,
@@ -18,11 +21,39 @@ Page({
     ],
     answers: ['', '', '', '', '', '', '', '', '', ''],
     answeredCount: 0,
-    playTimer: null
+    playTimer: null,
+    // 测评模式：'full' 完整测评，'single' 单项测评
+    mode: 'single',
+    // 云存储图标临时 URL
+    iconPlay: '',
+    iconPause: '',
+    iconCheck: '',
   },
 
-  onLoad() {
+  async onLoad(options) {
+    await this.loadImageUrls();
     this.initAnswers();
+    // 设置测评模式
+    if (options.mode === 'full') {
+      this.setData({ mode: 'full' });
+    }
+  },
+
+  /**
+   * 加载云存储图片临时 URL
+   */
+  async loadImageUrls() {
+    try {
+      const fileIDs = [CLOUD_IMAGES.iconPlay, CLOUD_IMAGES.iconPause, CLOUD_IMAGES.iconCheck];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        iconPlay: urlMap[CLOUD_IMAGES.iconPlay] || '',
+        iconPause: urlMap[CLOUD_IMAGES.iconPause] || '',
+        iconCheck: urlMap[CLOUD_IMAGES.iconCheck] || '',
+      });
+    } catch (e) {
+      console.error('[听力测评] 加载图片 URL 失败', e);
+    }
   },
 
   onUnload() {
@@ -122,9 +153,31 @@ Page({
     // 保存答案到全局或本地存储
     wx.setStorageSync('listeningAnswers', this.data.answers);
 
-    // 跳转到口语测评
-    wx.navigateTo({
-      url: '/pages/assessment/speaking/speaking'
+    // 根据模式决定跳转
+    if (this.data.mode === 'full') {
+      // 完整测评模式：跳转到口语测评
+      wx.navigateTo({
+        url: '/pages/assessment/speaking/speaking?mode=full'
+      });
+    } else {
+      // 单项测评模式：返回首页
+      wx.showToast({
+        title: '听力测评完成',
+        icon: 'success',
+        duration: 1500
+      });
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/home/home'
+        });
+      }, 1500);
+    }
+  },
+
+  // 返回首页
+  goToHome() {
+    wx.switchTab({
+      url: '/pages/home/home'
     });
   }
 });

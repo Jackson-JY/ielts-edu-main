@@ -1,6 +1,6 @@
 // pages/homework/homework.js - 打卡记录页面逻辑
 const cloudDB = require('../../utils/cloudDB');
-const { getTempUrl } = require('../../utils/cloudStorage');
+const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
@@ -30,29 +30,32 @@ Page({
     dayLabels: ['日', '一', '二', '三', '四', '五', '六'],
     calendarDays: [],
     checkinList: [],
-    // 云存储图片临时 URL
-    imageUrls: {},
+    // 云存储图标（使用临时 URL）
+    iconSettings: '',
+    iconPlus: '',
   },
 
   async onLoad() {
+    await this.loadImageUrls();
     this.updateMonthLabel();
     this.initCalendar();
     this.loadStats();
     this.loadCheckinList();
-    await this.loadIcons();
   },
 
   /**
-   * 加载图标临时 URL
+   * 加载云存储图片临时 URL
    */
-  async loadIcons() {
+  async loadImageUrls() {
     try {
-      const iconSettings = await getTempUrl(CLOUD_IMAGES.iconSettings);
+      const fileIDs = [CLOUD_IMAGES.iconSettings, CLOUD_IMAGES.iconPlus];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
       this.setData({
-        imageUrls: { iconSettings }
+        iconSettings: urlMap[CLOUD_IMAGES.iconSettings] || '',
+        iconPlus: urlMap[CLOUD_IMAGES.iconPlus] || '',
       });
     } catch (e) {
-      console.error('[homework] 加载图标失败', e);
+      console.error('[作业页] 加载图片 URL 失败', e);
     }
   },
 

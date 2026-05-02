@@ -2,7 +2,7 @@
 <view class="container">
   <!-- 课程介绍 -->
   <view class="course-intro">
-    <image class="course-image" src="/images/trial-course.png" mode="aspectFill"></image>
+    <image class="course-image" src="{{courseImageUrl}}" mode="aspectFill"></image>
     <view class="course-info">
       <view class="course-title">雅思入门体验课</view>
       <view class="course-subtitle">专业老师一对一试听，定制你的学习方案</view>

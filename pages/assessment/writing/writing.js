@@ -15,10 +15,16 @@ Page({
       description: 'Some people believe that technology has made our lives easier, while others think it has created new problems. Discuss both views and give your own opinion.',
       wordCount: '250+ 字'
     },
-    currentTaskData: {}
+    currentTaskData: {},
+    // 测评模式：'full' 完整测评，'single' 单项测评
+    mode: 'single'
   },
 
-  onLoad() {
+  onLoad(options) {
+    // 设置测评模式
+    if (options.mode === 'full') {
+      this.setData({ mode: 'full' });
+    }
     this.updateTaskData();
   },
 
@@ -96,11 +102,39 @@ Page({
         });
         this.updateTaskData();
       } else {
-        // 完成所有测评，跳转到结果页
-        wx.redirectTo({
-          url: '/pages/assessment/result/result'
-        });
+        // 完成写作测评
+        this.completeWriting();
       }
     }
+  },
+
+  // 完成写作测评
+  completeWriting() {
+    // 根据模式决定跳转
+    if (this.data.mode === 'full') {
+      // 完整测评模式：跳转到结果页
+      wx.redirectTo({
+        url: '/pages/assessment/result/result'
+      });
+    } else {
+      // 单项测评模式：返回首页
+      wx.showToast({
+        title: '写作测评完成',
+        icon: 'success',
+        duration: 1500
+      });
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/home/home'
+        });
+      }, 1500);
+    }
+  },
+
+  // 返回首页
+  goToHome() {
+    wx.switchTab({
+      url: '/pages/home/home'
+    });
   }
 });

@@ -1,5 +1,7 @@
 // pages/assessment/result/result.js
 const cloudDB = require('../../../utils/cloudDB');
+const cloudStorage = require('../../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../../config/images');
 
 Page({
   data: {
@@ -12,10 +14,39 @@ Page({
     cefrDesc: '',
     analysisItems: [],
     isLoading: true,
+    // 技能图标
+    iconHeadphones: '',
+    iconMic: '',
+    iconBook: '',
+    iconPen: '',
   },
 
-  onLoad() {
+  async onLoad() {
+    await this.loadImageUrls();
     this.loadLatestResult();
+  },
+
+  /**
+   * 加载云存储图片临时 URL
+   */
+  async loadImageUrls() {
+    try {
+      const fileIDs = [
+        CLOUD_IMAGES.iconHeadphones,
+        CLOUD_IMAGES.iconMic,
+        CLOUD_IMAGES.iconBook,
+        CLOUD_IMAGES.iconPen,
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        iconHeadphones: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
+        iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
+        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconPen: urlMap[CLOUD_IMAGES.iconPen] || '',
+      });
+    } catch (e) {
+      console.error('[测评结果页] 加载图片 URL 失败', e);
+    }
   },
 
   onShow() {},
@@ -42,24 +73,28 @@ Page({
             score: listeningScore || 0,
             percentage: Math.round((listeningScore || 0) / 9 * 100),
             comment: this.getSkillComment('listening', listeningScore || 0),
+            icon: this.data.iconHeadphones,
           },
           {
             skill: '口语',
             score: speakingScore || 0,
             percentage: Math.round((speakingScore || 0) / 9 * 100),
             comment: this.getSkillComment('speaking', speakingScore || 0),
+            icon: this.data.iconMic,
           },
           {
             skill: '阅读',
             score: readingScore || 0,
             percentage: Math.round((readingScore || 0) / 9 * 100),
             comment: this.getSkillComment('reading', readingScore || 0),
+            icon: this.data.iconBook,
           },
           {
             skill: '写作',
             score: writingScore || 0,
             percentage: Math.round((writingScore || 0) / 9 * 100),
             comment: this.getSkillComment('writing', writingScore || 0),
+            icon: this.data.iconPen,
           },
         ];
 

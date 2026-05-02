@@ -13,9 +13,9 @@
   <view class="audio-player">
     <view class="player-controls">
       <view class="play-btn {{isPlaying || hasPlayed ? 'disabled' : ''}}" bindtap="togglePlay">
-        <image wx:if="{{!isPlaying && !hasPlayed}}" src="/images/icon-play.png" mode="aspectFit" class="play-icon"/>
-        <image wx:elif="{{isPlaying}}" src="/images/icon-pause.png" mode="aspectFit" class="play-icon"/>
-        <image wx:else src="/images/icon-check.png" mode="aspectFit" class="play-icon"/>
+        <image wx:if="{{!isPlaying && !hasPlayed}}" src="{{iconPlay}}" mode="aspectFit" class="play-icon"/>
+        <image wx:elif="{{isPlaying}}" src="{{iconPause}}" mode="aspectFit" class="play-icon"/>
+        <image wx:else src="{{iconCheck}}" mode="aspectFit" class="play-icon"/>
       </view>
       <view class="progress-area">
         <view class="progress-bar">

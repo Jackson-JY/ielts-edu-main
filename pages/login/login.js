@@ -1,17 +1,42 @@
 // pages/login/login.js
 const app = getApp();
+const cloudStorage = require('../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
   data: {
     isLoading: false,
     openId: '',
     isOldUser: false,
+    tempAvatarUrl: '',
+    tempNickName: '',
+    // 云存储图标临时 URL
+    logoUrl: '',
+    iconUser: '',
   },
 
-  onLoad() {
+  async onLoad() {
     // 已登录则直接跳过
     if (app.globalData.isLoggedIn && app.globalData.userInfo) {
       wx.switchTab({ url: '/pages/home/home' });
+      return;
+    }
+    await this.loadImageUrls();
+  },
+
+  /**
+   * 加载云存储图片临时 URL
+   */
+  async loadImageUrls() {
+    try {
+      const fileIDs = [CLOUD_IMAGES.logo, CLOUD_IMAGES.iconUser];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        logoUrl: urlMap[CLOUD_IMAGES.logo] || '',
+        iconUser: urlMap[CLOUD_IMAGES.iconUser] || '',
+      });
+    } catch (e) {
+      console.error('[登录页] 加载图片 URL 失败', e);
     }
   },
 
@@ -57,39 +82,68 @@ Page({
   },
 
   // ======================================================
-  // Step 2：用户点击授权获取微信信息
+  // Step 2：用户选择头像和输入昵称
   // ======================================================
-  async handleGetUserProfile() {
-    if (this.data.isLoading) return;
-    this.setData({ isLoading: true });
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
+    this.setData({ tempAvatarUrl: avatarUrl });
+  },
 
-    const { openId } = this.data;
+  onNickNameInput(e) {
+    const nickName = e.detail.value;
+    this.setData({ tempNickName: nickName });
+  },
+
+  async handleCompleteRegister() {
+    if (this.data.isLoading) return;
+
+    const { openId, tempAvatarUrl, tempNickName } = this.data;
+
     if (!openId) {
       wx.showToast({ title: '请先点击登录', icon: 'none' });
-      this.setData({ isLoading: false });
       return;
     }
 
-    try {
-      // 获取微信用户信息（需要用户点击触发）
-      const { userInfo } = await wx.getUserProfile({
-        desc: '用于完善用户资料',
-      });
+    if (!tempNickName.trim()) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' });
+      return;
+    }
 
-      await this._registerNewUser(openId, userInfo);
-    } catch (e) {
-      console.error('[获取用户信息] 用户拒绝或失败', e);
-      wx.showModal({
-        title: '提示',
-        content: '获取微信信息失败，是否使用默认信息继续？',
-        success: (res) => {
-          if (res.confirm) {
-            this._registerWithDefaultInfo(openId);
-          } else {
-            this.setData({ isLoading: false });
-          }
-        },
+    this.setData({ isLoading: true });
+
+    try {
+      let finalAvatarUrl = tempAvatarUrl;
+
+      // 如果用户选择了头像，上传到云存储
+      if (tempAvatarUrl && tempAvatarUrl.startsWith('http')) {
+        finalAvatarUrl = await this._uploadAvatar(tempAvatarUrl);
+      }
+
+      await this._registerNewUser(openId, {
+        nickName: tempNickName.trim(),
+        avatarUrl: finalAvatarUrl,
       });
+    } catch (e) {
+      console.error('[注册] 失败', e);
+      wx.showToast({ title: '注册失败，请重试', icon: 'none' });
+      this.setData({ isLoading: false });
+    }
+  },
+
+  /**
+   * 上传头像到云存储
+   */
+  async _uploadAvatar(tempFilePath) {
+    try {
+      const cloudPath = `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 6)}.jpg`;
+      const res = await wx.cloud.uploadFile({
+        cloudPath,
+        filePath: tempFilePath,
+      });
+      return res.fileID;
+    } catch (e) {
+      console.error('[上传头像] 失败', e);
+      return '';
     }
   },
 
@@ -99,8 +153,6 @@ Page({
   async _registerNewUser(openId, userInfo) {
     try {
       const nickName = userInfo.nickName || '微信用户';
-      // 直接使用微信头像 URL，不下载上传
-      // 如需永久保存头像，需在小程序管理后台配置 downloadFile 合法域名
       const avatarUrl = userInfo.avatarUrl || '';
 
       // 创建用户记录

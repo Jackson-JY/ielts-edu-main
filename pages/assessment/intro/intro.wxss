@@ -48,6 +48,27 @@ page {
   padding: 30rpx;
   background-color: #F5F0FF;
   border-radius: 32rpx;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.module-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48rpx;
+  height: 48rpx;
+  flex-shrink: 0;
+}
+
+.arrow-icon {
+  font-size: 32rpx;
+  color: #9A97AA;
 }
 
 .module-icon {
@@ -130,4 +151,9 @@ page {
 .btn-text {
   background-color: transparent;
   color: #9A97AA;
+}
+
+.btn-secondary {
+  background-color: #E8D4F8;
+  color: #4A4A4A;
 }

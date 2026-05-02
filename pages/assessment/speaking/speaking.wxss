@@ -7,12 +7,14 @@ page {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  box-sizing: border-box;
 }
 
 /* Header */
 .header {
   padding: 30rpx;
   border-bottom: 2rpx solid rgba(154, 151, 170, 0.2);
+  box-sizing: border-box;
 }
 
 .header-top {
@@ -60,6 +62,7 @@ page {
 .content-area {
   flex: 1;
   padding: 30rpx;
+  box-sizing: border-box;
 }
 
 .question-info {
@@ -72,12 +75,43 @@ page {
   color: #9A97AA;
 }
 
+/* Prepare Card (Part 2) */
+.prepare-card {
+  padding: 40rpx;
+  background: linear-gradient(135deg, #FFE8CC 0%, #FFD4A3 100%);
+  border-radius: 32rpx;
+  margin-bottom: 40rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.prepare-title {
+  font-size: 28rpx;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.prepare-time {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.prepare-hint {
+  font-size: 24rpx;
+  color: #9A97AA;
+}
+
 /* Topic Card (Part 2) */
 .topic-card {
   padding: 40rpx;
   background-color: #FFE8CC;
   border-radius: 32rpx;
   margin-bottom: 40rpx;
+  box-sizing: border-box;
 }
 
 .topic-title {
@@ -86,6 +120,7 @@ page {
   color: #4A4A4A;
   display: block;
   margin-bottom: 24rpx;
+  word-wrap: break-word;
 }
 
 .topic-points {
@@ -98,6 +133,7 @@ page {
 .point-item {
   font-size: 28rpx;
   color: #4A4A4A;
+  word-wrap: break-word;
 }
 
 /* Question Card (Part 1 & 3) */
@@ -107,6 +143,7 @@ page {
   border-radius: 32rpx;
   text-align: center;
   margin-bottom: 40rpx;
+  box-sizing: border-box;
 }
 
 .question-title {
@@ -115,6 +152,7 @@ page {
   color: #4A4A4A;
   display: block;
   margin-bottom: 20rpx;
+  word-wrap: break-word;
 }
 
 .time-hint {
@@ -139,11 +177,22 @@ page {
   align-items: center;
   justify-content: center;
   margin-bottom: 30rpx;
+  transition: all 0.3s ease;
 }
 
 .mic-btn.recording {
   background-color: #FFE8CC;
   animation: pulse 1.5s infinite;
+}
+
+.mic-btn.processing {
+  background-color: #E8D4F8;
+  animation: none;
+}
+
+.mic-btn.completed {
+  background-color: #52C41A;
+  opacity: 0.8;
 }
 
 @keyframes pulse {
@@ -158,6 +207,38 @@ page {
 .mic-icon {
   width: 80rpx;
   height: 80rpx;
+}
+
+/* Processing Indicator */
+.processing-indicator {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+}
+
+.processing-dot {
+  width: 16rpx;
+  height: 16rpx;
+  background-color: #4A4A4A;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.processing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.processing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }
 
 .recording-info {
@@ -177,11 +258,43 @@ page {
   color: #9A97AA;
 }
 
+/* Progress Card */
+.progress-card {
+  padding: 30rpx;
+  background-color: #F5F0FF;
+  border-radius: 24rpx;
+  margin-bottom: 30rpx;
+  box-sizing: border-box;
+}
+
+.progress-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.progress-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.stat-item {
+  font-size: 24rpx;
+  color: #4A4A4A;
+  padding: 8rpx 16rpx;
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+}
+
 /* Bottom Actions */
 .bottom-actions {
   padding: 30rpx;
   border-top: 2rpx solid rgba(154, 151, 170, 0.2);
   background-color: #FFF9F5;
+  box-sizing: border-box;
 }
 
 .btn {
@@ -203,4 +316,40 @@ page {
 .btn-primary {
   background-color: #A7FBF5;
   color: #4A4A4A;
+}
+
+.btn-primary.disabled {
+  background-color: #E0E0E0;
+  color: #9A97AA;
+}
+
+/* Wave Animation for Recording */
+.wave-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  height: 60rpx;
+}
+
+.wave-bar {
+  width: 6rpx;
+  background-color: #4A4A4A;
+  border-radius: 3rpx;
+  animation: wave 1s ease-in-out infinite;
+}
+
+.wave-bar:nth-child(1) { animation-delay: 0s; height: 20rpx; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s; height: 40rpx; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; height: 60rpx; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; height: 40rpx; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; height: 20rpx; }
+
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }

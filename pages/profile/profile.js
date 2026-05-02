@@ -2,7 +2,7 @@
 const app = getApp();
 const { formatDate } = require('../../utils/dateUtil');
 const cloudDB = require('../../utils/cloudDB');
-const { getTempUrl, getTempUrls } = require('../../utils/cloudStorage');
+const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
@@ -26,12 +26,38 @@ Page({
     isGuest: false,
     avatarUrl: '',
     defaultAvatarUrl: '',
-    // 云存储图片临时 URL
-    imageUrls: {},
+    // 云存储图标（使用临时 URL）
+    iconTarget: '',
+    iconChart: '',
+    iconRefresh: '',
   },
 
-  onLoad() {
+  async onLoad() {
+    await this.loadImageUrls();
     this.checkLoginAndLoad();
+  },
+
+  /**
+   * 加载云存储图片临时 URL
+   */
+  async loadImageUrls() {
+    try {
+      const fileIDs = [
+        CLOUD_IMAGES.defaultAvatar,
+        CLOUD_IMAGES.iconTarget,
+        CLOUD_IMAGES.iconChart,
+        CLOUD_IMAGES.iconRefresh,
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        defaultAvatarUrl: urlMap[CLOUD_IMAGES.defaultAvatar] || '',
+        iconTarget: urlMap[CLOUD_IMAGES.iconTarget] || '',
+        iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
+        iconRefresh: urlMap[CLOUD_IMAGES.iconRefresh] || '',
+      });
+    } catch (e) {
+      console.error('[个人中心] 加载图片 URL 失败', e);
+    }
   },
 
   /**
@@ -47,42 +73,8 @@ Page({
       return;
     }
 
-    // 加载默认头像和图标
-    const [defaultAvatarUrl, imageUrls] = await Promise.all([
-      getTempUrl(CLOUD_IMAGES.defaultAvatar),
-      this.loadMenuIcons(),
-    ]);
-    this.setData({ defaultAvatarUrl, imageUrls });
-
     this.loadUserData();
     this.loadExamScores();
-  },
-
-  /**
-   * 加载菜单图标临时 URL
-   */
-  async loadMenuIcons() {
-    try {
-      const urls = await getTempUrls([
-        CLOUD_IMAGES.iconTarget,
-        CLOUD_IMAGES.iconChart,
-        CLOUD_IMAGES.iconDocument,
-        CLOUD_IMAGES.iconSettings,
-        CLOUD_IMAGES.iconRefresh,
-        CLOUD_IMAGES.iconSupport,
-      ]);
-      return {
-        iconTarget: urls[CLOUD_IMAGES.iconTarget],
-        iconChart: urls[CLOUD_IMAGES.iconChart],
-        iconDocument: urls[CLOUD_IMAGES.iconDocument],
-        iconSettings: urls[CLOUD_IMAGES.iconSettings],
-        iconRefresh: urls[CLOUD_IMAGES.iconRefresh],
-        iconSupport: urls[CLOUD_IMAGES.iconSupport],
-      };
-    } catch (e) {
-      console.error('[profile] 加载菜单图标失败', e);
-      return {};
-    }
   },
 
   onShow() {

@@ -28,6 +28,13 @@
       <text class="question-count">第 {{currentQuestion + 1}} 题 / 共 {{totalQuestions}} 题</text>
     </view>
 
+    <!-- Part 2 准备时间倒计时 -->
+    <view wx:if="{{currentPart === 'part2' && isPreparing}}" class="prepare-card">
+      <text class="prepare-title">准备时间</text>
+      <text class="prepare-time">{{prepareTimeText}}</text>
+      <text class="prepare-hint">请准备你的回答要点</text>
+    </view>
+
     <!-- Part 2 Topic Card -->
     <view wx:if="{{currentPart === 'part2'}}" class="topic-card">
       <text class="topic-title">{{part2Topic.title}}</text>
@@ -45,19 +52,44 @@
 
     <!-- Recording Area -->
     <view class="recording-area">
-      <view class="mic-btn {{isRecording ? 'recording' : ''}}" bindtap="toggleRecording">
-        <image src="/images/icon-mic.png" mode="aspectFit" class="mic-icon"/>
+      <!-- 未录音状态：显示录音按钮 -->
+      <view wx:if="{{!currentAnswer}}" class="mic-btn {{isRecording ? 'recording' : ''}} {{isProcessing ? 'processing' : ''}}" bindtap="toggleRecording">
+        <image wx:if="{{!isProcessing}}" src="{{iconMic}}" mode="aspectFit" class="mic-icon"/>
+        <view wx:else class="processing-indicator">
+          <view class="processing-dot"></view>
+          <view class="processing-dot"></view>
+          <view class="processing-dot"></view>
+        </view>
       </view>
+      
+      <!-- 已录音状态：显示完成图标，不可点击 -->
+      <view wx:else class="mic-btn completed">
+        <image src="{{iconCheck}}" mode="aspectFit" class="mic-icon"/>
+      </view>
+      
       <view class="recording-info">
         <text class="recording-time">{{recordingTimeText}}</text>
-        <text class="recording-status">{{isRecording ? '答题中...' : recordingTime > 0 ? '录音完成' : '点击开始答题'}}</text>
+        <text class="recording-status">
+          {{isRecording ? '答题中...' : currentAnswer ? '录音完成' : '点击开始答题'}}
+        </text>
+      </view>
+    </view>
+
+    <!-- 答题进度 -->
+    <view wx:if="{{answers.length > 0}}" class="progress-card">
+      <text class="progress-title">答题进度</text>
+      <view class="progress-stats">
+        <text class="stat-item">已答 {{answers.length}} 题</text>
+        <text class="stat-item" wx:if="{{currentPart === 'part1'}}">Part 1: {{part1Count}}/{{part1Questions.length}}</text>
+        <text class="stat-item" wx:if="{{currentPart === 'part2'}}">Part 2: {{part2Count}}/1</text>
+        <text class="stat-item" wx:if="{{currentPart === 'part3'}}">Part 3: {{part3Count}}/{{part3Questions.length}}</text>
       </view>
     </view>
   </scroll-view>
 
   <!-- Bottom Actions -->
   <view class="bottom-actions">
-    <button class="btn btn-primary" bindtap="handleNext">
+    <button class="btn btn-primary {{isRecording || isProcessing || !currentAnswer ? 'disabled' : ''}}" bindtap="handleNext" disabled="{{isRecording || isProcessing || !currentAnswer}}">
       {{currentQuestion < totalQuestions - 1 ? '下一题' : currentPart === 'part3' ? '完成口语测评' : '进入下一部分'}}
     </button>
   </view>

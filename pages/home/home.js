@@ -1,7 +1,7 @@
 // pages/home/home.js
 const app = getApp();
 const cloudDB = require('../../utils/cloudDB');
-const { getTempUrls } = require('../../utils/cloudStorage');
+const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
@@ -15,39 +15,70 @@ Page({
     cefrLevel: "A1",
     studyDays: 0,
     streakDays: 0,
-    // 云存储图片临时 URL
-    imageUrls: {},
+    // 云存储图标（使用临时 URL）
+    iconBook: '',
+    iconTarget: '',
+    iconChart: '',
+    iconCalendar: '',
+    iconFire: '',
   },
 
-  onLoad() {
+  async onLoad() {
     this.initDate();
+    await this.loadImageUrls();
     this.loadUserData();
-    this.loadCloudImages();
+    this.initDatabase();
   },
 
   /**
    * 加载云存储图片临时 URL
    */
-  async loadCloudImages() {
+  async loadImageUrls() {
     try {
-      const urls = await getTempUrls([
+      const fileIDs = [
+        CLOUD_IMAGES.iconBook,
         CLOUD_IMAGES.iconTarget,
         CLOUD_IMAGES.iconChart,
         CLOUD_IMAGES.iconCalendar,
         CLOUD_IMAGES.iconFire,
-      ]);
-      // 转换为更简单的键名
-      const imageUrls = {
-        iconTarget: urls[CLOUD_IMAGES.iconTarget],
-        iconChart: urls[CLOUD_IMAGES.iconChart],
-        iconCalendar: urls[CLOUD_IMAGES.iconCalendar],
-        iconFire: urls[CLOUD_IMAGES.iconFire],
-      };
-      this.setData({ imageUrls });
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconTarget: urlMap[CLOUD_IMAGES.iconTarget] || '',
+        iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
+        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
+        iconFire: urlMap[CLOUD_IMAGES.iconFire] || '',
+      });
     } catch (e) {
-      console.error('[home] 加载云存储图片失败', e);
+      console.error('[首页] 加载图片 URL 失败', e);
     }
   },
+
+  /**
+   * 初始化数据库集合
+   */
+  async initDatabase() {
+    try {
+      console.log('[首页] 开始初始化数据库...');
+      const { result } = await wx.cloud.callFunction({ name: 'initDatabase' });
+      console.log('[首页] 数据库初始化结果:', result);
+      
+      if (result.success) {
+        const created = result.summary?.created || 0;
+        if (created > 0) {
+          wx.showToast({
+            title: `创建 ${created} 个集合`,
+            icon: 'success'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('[首页] 数据库初始化失败:', error);
+    }
+  },
+
+
 
   onShow() {
     this.loadUserData();
@@ -70,8 +101,13 @@ Page({
   async loadUserData() {
     try {
       const userInfo = app.globalData.userInfo;
-      if (userInfo && userInfo.nickName) {
-        this.setData({ userName: userInfo.nickName });
+      if (userInfo) {
+        if (userInfo.nickName) {
+          this.setData({ userName: userInfo.nickName });
+        }
+        if (userInfo.avatarUrl) {
+          this.setData({ userAvatar: userInfo.avatarUrl });
+        }
       }
 
       const today = this.formatDate(new Date());
