@@ -45,11 +45,12 @@
   <view class="day-view" wx:if="{{viewMode === 'day'}}">
     <scroll-view scroll-y class="course-list">
       <block wx:if="{{filteredCourses.length > 0}}">
-        <block wx:for="{{filteredCourses}}" wx:key="id">
+        <block wx:for="{{filteredCourses}}" wx:key="_id">
           <view class="course-card">
-            <view class="course-header" bindtap="toggleExpand" data-id="{{item.id}}">
+            <view class="course-header" bindtap="toggleExpand" data-id="{{item._id}}">
+              <image class="course-type-icon" src="{{item.type === 'speaking' ? iconSpeaking : item.type === 'listening' ? iconListening : item.type === 'reading' ? iconReading : item.type === 'writing' ? iconWriting : iconBook}}" mode="aspectFit"/>
               <view class="course-info">
-                <text class="course-name">{{item.name}}</text>
+                <text class="course-name">{{item.title}}</text>
                 <view class="course-meta">
                   <text class="meta-item">{{item.time}}</text>
                   <text class="meta-item">{{item.duration}}</text>
@@ -58,12 +59,12 @@
                   </view>
                 </view>
               </view>
-              <view class="expand-icon" wx:if="{{expandedCourse === item.id}}">∧</view>
+              <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
               <view class="expand-icon" wx:else>∨</view>
             </view>
             
             <!-- 展开的作业区域 -->
-            <view class="homework-section" wx:if="{{expandedCourse === item.id}}">
+            <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
               <view class="homework-form">
                 <view class="form-group">
                   <text class="form-label">作业标题 *</text>
@@ -71,9 +72,9 @@
                     class="form-input" 
                     placeholder="请输入作业标题（最多50字）" 
                     maxlength="50"
-                    value="{{homework[item.id].title || ''}}"
+                    value="{{homework[item._id].title || ''}}"
                     bindinput="onHomeworkTitleInput"
-                    data-id="{{item.id}}"
+                    data-id="{{item._id}}"
                   />
                 </view>
                 <view class="form-group">
@@ -82,12 +83,12 @@
                     class="form-textarea" 
                     placeholder="请输入作业详情（最多500字）" 
                     maxlength="500"
-                    value="{{homework[item.id].content || ''}}"
+                    value="{{homework[item._id].content || ''}}"
                     bindinput="onHomeworkContentInput"
-                    data-id="{{item.id}}"
+                    data-id="{{item._id}}"
                   />
                 </view>
-                <view class="save-button" bindtap="saveHomework" data-id="{{item.id}}">
+                <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
                   <text>保存作业</text>
                 </view>
               </view>
@@ -127,14 +128,52 @@
     <!-- 选中日期的课程列表 -->
     <view class="selected-day-courses" wx:if="{{selectedDay && filteredCourses.length > 0}}">
       <text class="section-subtitle">{{selectedDateText}}课程</text>
-      <block wx:for="{{filteredCourses}}" wx:key="id">
-        <view class="course-card compact">
-          <text class="course-name">{{item.name}}</text>
-          <view class="course-meta">
-            <text class="meta-item">{{item.time}}</text>
-            <text class="meta-item">{{item.duration}}</text>
-            <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
-              <text>{{item.status}}</text>
+      <block wx:for="{{filteredCourses}}" wx:key="_id">
+        <view class="course-card">
+          <view class="course-header" bindtap="toggleExpand" data-id="{{item._id}}">
+            <image class="course-type-icon" src="{{item.type === 'speaking' ? iconSpeaking : item.type === 'listening' ? iconListening : item.type === 'reading' ? iconReading : item.type === 'writing' ? iconWriting : iconBook}}" mode="aspectFit"/>
+            <view class="course-info">
+              <text class="course-name">{{item.title}}</text>
+              <view class="course-meta">
+                <text class="meta-item">{{item.time}}</text>
+                <text class="meta-item">{{item.duration}}</text>
+                <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
+                  <text>{{item.status}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
+            <view class="expand-icon" wx:else>∨</view>
+          </view>
+          
+          <!-- 展开的作业区域 -->
+          <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
+            <view class="homework-form">
+              <view class="form-group">
+                <text class="form-label">作业标题 *</text>
+                <input 
+                  class="form-input" 
+                  placeholder="请输入作业标题（最多50字）" 
+                  maxlength="50"
+                  value="{{homework[item._id].title || ''}}"
+                  bindinput="onHomeworkTitleInput"
+                  data-id="{{item._id}}"
+                />
+              </view>
+              <view class="form-group">
+                <text class="form-label">作业详情 *</text>
+                <textarea 
+                  class="form-textarea" 
+                  placeholder="请输入作业详情（最多500字）" 
+                  maxlength="500"
+                  value="{{homework[item._id].content || ''}}"
+                  bindinput="onHomeworkContentInput"
+                  data-id="{{item._id}}"
+                />
+              </view>
+              <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
+                <text>保存作业</text>
+              </view>
             </view>
           </view>
         </view>
@@ -168,14 +207,52 @@
     <!-- 选中日期的课程列表 -->
     <view class="selected-day-courses" wx:if="{{selectedDay && filteredCourses.length > 0}}">
       <text class="section-subtitle">{{selectedDateText}}课程</text>
-      <block wx:for="{{filteredCourses}}" wx:key="id">
-        <view class="course-card compact">
-          <text class="course-name">{{item.name}}</text>
-          <view class="course-meta">
-            <text class="meta-item">{{item.time}}</text>
-            <text class="meta-item">{{item.duration}}</text>
-            <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
-              <text>{{item.status}}</text>
+      <block wx:for="{{filteredCourses}}" wx:key="_id">
+        <view class="course-card">
+          <view class="course-header" bindtap="toggleExpand" data-id="{{item._id}}">
+            <image class="course-type-icon" src="{{item.type === 'speaking' ? iconSpeaking : item.type === 'listening' ? iconListening : item.type === 'reading' ? iconReading : item.type === 'writing' ? iconWriting : iconBook}}" mode="aspectFit"/>
+            <view class="course-info">
+              <text class="course-name">{{item.title}}</text>
+              <view class="course-meta">
+                <text class="meta-item">{{item.time}}</text>
+                <text class="meta-item">{{item.duration}}</text>
+                <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
+                  <text>{{item.status}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
+            <view class="expand-icon" wx:else>∨</view>
+          </view>
+          
+          <!-- 展开的作业区域 -->
+          <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
+            <view class="homework-form">
+              <view class="form-group">
+                <text class="form-label">作业标题 *</text>
+                <input 
+                  class="form-input" 
+                  placeholder="请输入作业标题（最多50字）" 
+                  maxlength="50"
+                  value="{{homework[item._id].title || ''}}"
+                  bindinput="onHomeworkTitleInput"
+                  data-id="{{item._id}}"
+                />
+              </view>
+              <view class="form-group">
+                <text class="form-label">作业详情 *</text>
+                <textarea 
+                  class="form-textarea" 
+                  placeholder="请输入作业详情（最多500字）" 
+                  maxlength="500"
+                  value="{{homework[item._id].content || ''}}"
+                  bindinput="onHomeworkContentInput"
+                  data-id="{{item._id}}"
+                />
+              </view>
+              <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
+                <text>保存作业</text>
+              </view>
             </view>
           </view>
         </view>

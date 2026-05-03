@@ -114,7 +114,7 @@ App({
         userInfo: userInfo,
       });
     } catch (e) {
-      console.error('保存登录状态失败', e);
+      // 保存登录状态失败
     }
   },
 

@@ -60,10 +60,8 @@ Page({
    */
   async initDatabase() {
     try {
-      console.log('[首页] 开始初始化数据库...');
       const { result } = await wx.cloud.callFunction({ name: 'initDatabase' });
-      console.log('[首页] 数据库初始化结果:', result);
-      
+
       if (result.success) {
         const created = result.summary?.created || 0;
         if (created > 0) {
@@ -74,7 +72,7 @@ Page({
         }
       }
     } catch (error) {
-      console.error('[首页] 数据库初始化失败:', error);
+      // 数据库初始化失败
     }
   },
 

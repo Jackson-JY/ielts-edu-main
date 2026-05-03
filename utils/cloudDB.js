@@ -180,7 +180,6 @@ const getByDateRange = async (collName, dateField, startDate, endDate, extraQuer
     });
     return res;
   } catch (e) {
-    console.error(`[cloudDB.getByDateRange ${collName}] 失败`, e);
     return { success: false, error: e.message, data: [] };
   }
 };

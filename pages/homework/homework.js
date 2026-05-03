@@ -48,14 +48,13 @@ Page({
    */
   async loadImageUrls() {
     try {
-      const fileIDs = [CLOUD_IMAGES.iconSettings, CLOUD_IMAGES.iconPlus];
+      const fileIDs = [CLOUD_IMAGES.iconPlus];
       const urlMap = await cloudStorage.getTempUrls(fileIDs);
       this.setData({
-        iconSettings: urlMap[CLOUD_IMAGES.iconSettings] || '',
         iconPlus: urlMap[CLOUD_IMAGES.iconPlus] || '',
       });
     } catch (e) {
-      console.error('[作业页] 加载图片 URL 失败', e);
+      // 加载图片 URL 失败
     }
   },
 
@@ -93,45 +92,54 @@ Page({
   async loadStats() {
     try {
       const today = this.formatDate(new Date());
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - 7);
+      const now = new Date();
+      
+      // 计算本周一（周一为一周开始）
+      const weekStart = new Date(now);
+      const dayOfWeek = weekStart.getDay(); // 0=周日, 1=周一, ...
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      weekStart.setDate(weekStart.getDate() - daysFromMonday);
       const weekStartStr = this.formatDate(weekStart);
-      const monthStart = new Date();
-      monthStart.setDate(1);
+      
+      // 计算本月1号
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthStartStr = this.formatDate(monthStart);
 
-      const [myCheckins, allCheckins] = await Promise.all([
-        cloudDB.getMy('checkins'),
-        cloudDB.get('checkins'),
-      ]);
+      // 只查询当前用户的打卡记录
+      const myCheckins = await cloudDB.getMy('checkins');
 
       let streakDays = 0, weekCheckin = 0, monthCheckin = 0;
-      const myDates = myCheckins.success ? myCheckins.data.map(c => c.date) : [];
-
-      // 计算连续打卡
+      
       if (myCheckins.success && myCheckins.data.length > 0) {
-        const sorted = [...myDates].sort().reverse();
+        const myDates = myCheckins.data.map(c => c.date);
+        
+        // 去重统计（同一天多次打卡只算一次）
+        const uniqueDates = [...new Set(myDates)];
+        
+        // 计算连续打卡天数
+        const sorted = [...uniqueDates].sort().reverse();
         let checkDate = new Date(today);
         for (const d of sorted) {
           const expected = this.formatDate(checkDate);
           if (d === expected) {
             streakDays++;
             checkDate.setDate(checkDate.getDate() - 1);
-          } else {
+          } else if (d < expected) {
+            // 如果日期小于预期，说明有间断，停止计算
             break;
           }
         }
-      }
 
-      // 本周打卡数
-      if (myCheckins.success) {
-        weekCheckin = myCheckins.data.filter(c => c.date >= weekStartStr).length;
-        monthCheckin = myCheckins.data.filter(c => c.date >= monthStartStr).length;
+        // 本周打卡天数（去重）
+        weekCheckin = uniqueDates.filter(d => d >= weekStartStr && d <= today).length;
+        
+        // 本月打卡天数（去重）
+        monthCheckin = uniqueDates.filter(d => d >= monthStartStr && d <= today).length;
       }
 
       this.setData({ streakDays, weekCheckin, monthCheckin });
     } catch (e) {
-      console.error('加载统计数据失败', e);
+      // 加载统计数据失败
     }
   },
 
@@ -150,19 +158,20 @@ Page({
     const monthEnd = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
 
     let dateCountMap = {};
+    let checkinRes = null;
     try {
-      const res = await cloudDB.getMy('checkins', (q) =>
+      checkinRes = await cloudDB.getMy('checkins', (q) =>
         q.where({
           date: wx.cloud.database().command.gte(monthStart),
         }).orderBy('date', 'asc')
       );
-      if (res.success && res.data.length > 0) {
-        res.data.forEach(c => {
+      if (checkinRes.success && checkinRes.data.length > 0) {
+        checkinRes.data.forEach(c => {
           dateCountMap[c.date] = (dateCountMap[c.date] || 0) + 1;
         });
       }
     } catch (e) {
-      console.error('加载日历数据失败', e);
+      // 加载日历数据失败
     }
 
     const days = [];
@@ -182,9 +191,11 @@ Page({
 
       // 获取该日期的打卡类型（最多取3个）
       let types = [];
-      if (hasCheckin && res && res.success) {
-        const dayCheckins = res.data.filter(c => c.date === dateStr);
-        const uniqueTypes = [...new Set(dayCheckins.map(c => c.type).filter(Boolean))];
+      if (hasCheckin && checkinRes && checkinRes.success) {
+        const dayCheckins = checkinRes.data.filter(c => c.date === dateStr);
+        // 从 types 数组中提取所有类型ID（数据库中存储的是 types 数组）
+        const allTypes = dayCheckins.flatMap(c => c.types || []);
+        const uniqueTypes = [...new Set(allTypes.filter(Boolean))];
         types = uniqueTypes.slice(0, 3).map(tid => typeList.find(t => t.id === tid) || typeList[0]);
       }
 
@@ -227,21 +238,41 @@ Page({
     try {
       const res = await cloudDB.getMy('checkins', (q) => q.orderBy('_createTime', 'desc').limit(20));
       if (res.success) {
-        const list = res.data.map(c => ({
-          id: c._id,
-          date: c.date,
-          types: c.types || [],
-          content: c.content || '',
-        }));
+        const typeList = this.data.checkinTypes;
+        const list = res.data.map(c => {
+          const dateParts = c.date ? c.date.split('-') : ['', '', ''];
+          const month = dateParts[1] ? parseInt(dateParts[1], 10) : '';
+          const day = dateParts[2] ? parseInt(dateParts[2], 10) : '';
+          // 将类型ID映射为包含label和color的对象
+          const mappedTypes = (c.types || []).map(tid => {
+            const typeObj = typeList.find(t => t.id === tid);
+            return typeObj || { id: tid, label: tid, color: '#A7FBF5' };
+          });
+          return {
+            id: c._id,
+            date: c.date,
+            month: month,
+            day: day,
+            types: mappedTypes,
+            content: c.content || '',
+          };
+        });
         this.setData({ checkinList: list });
       }
     } catch (e) {
-      console.error('加载打卡列表失败', e);
+      // 加载打卡列表失败
     }
   },
 
-  showCheckinForm() { this.setData({ showForm: true }); },
-  hideCheckinForm() { this.setData({ showForm: false, selectedTypes: [], checkinContent: '' }); },
+  showCheckinForm() {
+    // 重置选中状态
+    const checkinTypes = this.data.checkinTypes.map(t => ({ ...t, selected: false }));
+    this.setData({ showForm: true, selectedTypes: [], checkinTypes, checkinContent: '' });
+  },
+  hideCheckinForm() {
+    const checkinTypes = this.data.checkinTypes.map(t => ({ ...t, selected: false }));
+    this.setData({ showForm: false, selectedTypes: [], checkinTypes, checkinContent: '' });
+  },
   preventBubble() {},
 
   toggleType(e) {
@@ -250,7 +281,12 @@ Page({
     const idx = selected.indexOf(id);
     if (idx > -1) selected.splice(idx, 1);
     else selected.push(id);
-    this.setData({ selectedTypes: selected });
+    // 更新 checkinTypes 的选中状态
+    const checkinTypes = this.data.checkinTypes.map(t => ({
+      ...t,
+      selected: selected.includes(t.id)
+    }));
+    this.setData({ selectedTypes: selected, checkinTypes });
   },
 
   onContentInput(e) { this.setData({ checkinContent: e.detail.value }); },
@@ -293,7 +329,6 @@ Page({
         wx.showToast({ title: '打卡失败', icon: 'none' });
       }
     } catch (e) {
-      console.error('打卡失败', e);
       wx.showToast({ title: '打卡失败', icon: 'none' });
     }
   },

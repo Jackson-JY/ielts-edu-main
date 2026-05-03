@@ -4,9 +4,6 @@
   <!-- Header -->
   <view class="header">
     <text class="title">打卡记录</text>
-    <view class="settings-btn" bindtap="onSettings">
-      <image class="icon-settings" src="{{iconSettings}}" mode="aspectFit"/>
-    </view>
   </view>
 
   <!-- Stats 统计区域 -->
@@ -98,7 +95,7 @@
   </view>
 
   <!-- 底部占位 -->
-  <view style="height: 180rpx;"></view>
+  <view style="height: 320rpx;"></view>
 
   <!-- 打卡按钮（悬浮） -->
   <view class="fab-btn" bindtap="showCheckinForm">
@@ -115,14 +112,16 @@
         <text class="form-label">打卡类型（可多选）</text>
         <view class="type-options">
           <view
-            class="type-option {{selectedTypes.indexOf(item.id) > -1 ? 'type-option-active' : ''}}"
+            class="type-option {{typeItem.selected ? 'type-option-active' : ''}}"
             wx:for="{{checkinTypes}}"
-            wx:key="id"
-            style="{{selectedTypes.indexOf(item.id) > -1 ? 'background-color:' + item.color + ';' : ''}}"
-            data-id="{{item.id}}"
-            bindtap="toggleType"
+            wx:for-item="typeItem"
+            wx:key="*this"
+            style="{{typeItem.selected ? 'background-color:' + typeItem.color + '; border-color:' + typeItem.color + ';' : ''}}"
+            data-id="{{typeItem.id}}"
+            catchtap="toggleType"
           >
-            <text>{{item.label}}</text>
+            <text class="type-option-text {{typeItem.selected ? 'type-option-text-active' : ''}}">{{typeItem.label}}</text>
+            <view class="check-icon {{typeItem.selected ? 'check-icon-show' : ''}}">✓</view>
           </view>
         </view>
       </view>

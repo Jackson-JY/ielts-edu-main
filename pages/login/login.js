@@ -124,7 +124,6 @@ Page({
         avatarUrl: finalAvatarUrl,
       });
     } catch (e) {
-      console.error('[注册] 失败', e);
       wx.showToast({ title: '注册失败，请重试', icon: 'none' });
       this.setData({ isLoading: false });
     }
@@ -219,7 +218,6 @@ Page({
         true,
       );
     } catch (e) {
-      console.error('[默认注册] 失败', e);
       wx.showToast({ title: '注册失败，请重试', icon: 'none' });
       this.setData({ isLoading: false });
     }

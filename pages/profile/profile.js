@@ -56,7 +56,7 @@ Page({
         iconRefresh: urlMap[CLOUD_IMAGES.iconRefresh] || '',
       });
     } catch (e) {
-      console.error('[个人中心] 加载图片 URL 失败', e);
+      // 加载图片 URL 失败
     }
   },
 

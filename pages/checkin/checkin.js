@@ -60,7 +60,7 @@ Page({
         checkedDates = res.data.map(c => c.date);
       }
     } catch (e) {
-      console.error('加载打卡日历失败', e);
+      // 加载打卡日历失败
     }
 
     const calendarDays = [];

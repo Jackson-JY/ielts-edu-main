@@ -90,7 +90,6 @@ const uploadFile = async (filePath, cloudPath) => {
     });
     return res.fileID;
   } catch (e) {
-    console.error('[uploadFile] 上传失败', e);
     throw e;
   }
 };

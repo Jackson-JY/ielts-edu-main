@@ -1,6 +1,8 @@
 // pages/courses/courses.js
 const { formatDate } = require('../../utils/dateUtil');
 const cloudDB = require('../../utils/cloudDB');
+const cloudStorage = require('../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
   data: {
@@ -17,11 +19,55 @@ Page({
     selectedDateText: '',
     isLoading: false,
     courses: [],
+    // 课程类型图标
+    iconSpeaking: '',
+    iconListening: '',
+    iconReading: '',
+    iconWriting: '',
   },
 
   onLoad() {
     this.initDate();
+    this.loadImageUrls();
     this.loadCourses();
+  },
+
+  /**
+   * 加载云存储图片临时 URL
+   */
+  async loadImageUrls() {
+    try {
+      const fileIDs = [
+        CLOUD_IMAGES.iconMic,
+        CLOUD_IMAGES.iconHeadphones,
+        CLOUD_IMAGES.iconDocument,
+        CLOUD_IMAGES.iconPen,
+        CLOUD_IMAGES.iconBook,
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        iconSpeaking: urlMap[CLOUD_IMAGES.iconMic] || '',
+        iconListening: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
+        iconReading: urlMap[CLOUD_IMAGES.iconDocument] || '',
+        iconWriting: urlMap[CLOUD_IMAGES.iconPen] || '',
+        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+      });
+    } catch (e) {
+      console.error('[课程页] 加载图片 URL 失败', e);
+    }
+  },
+
+  /**
+   * 获取课程类型图标
+   */
+  getCourseTypeIcon(type) {
+    const typeMap = {
+      'speaking': this.data.iconSpeaking,
+      'listening': this.data.iconListening,
+      'reading': this.data.iconReading,
+      'writing': this.data.iconWriting,
+    };
+    return typeMap[type] || '';
   },
 
   onShow() {},
@@ -40,9 +86,12 @@ Page({
 
   switchViewMode(e) {
     const mode = e.currentTarget.dataset.mode;
+    const now = new Date();
+    // 切换到周/月视图时，默认选择当前日期
     this.setData({
       viewMode: mode,
-      selectedDay: null,
+      selectedDate: formatDate(now),
+      selectedDay: now.getDate(),
     });
     if (mode === 'week') {
       this.updateWeekDays();
@@ -112,22 +161,24 @@ Page({
   },
 
   /**
-   * 从云数据库加载课程数据
+   * 从云数据库加载当前用户的课程数据
    */
   async loadCourses() {
     this.setData({ isLoading: true });
     try {
-      const res = await cloudDB.get('courses');
+      const res = await cloudDB.getMy('courses');
+      let courses = [];
       if (res.success) {
-        this.data.courses = res.data;
-      } else {
-        this.data.courses = [];
+        courses = res.data;
       }
-      this.filterCourses();
+      this.setData({ courses }, () => {
+        this.filterCourses();
+      });
     } catch (e) {
       console.error('加载课程数据失败', e);
-      this.data.courses = [];
-      this.filterCourses();
+      this.setData({ courses: [] }, () => {
+        this.filterCourses();
+      });
     } finally {
       this.setData({ isLoading: false });
     }
@@ -138,31 +189,9 @@ Page({
    * @description 根据当前视图模式和选中日期过滤课程
    */
   filterCourses() {
-    const { viewMode, selectedDate, courses } = this.data;
-    const selected = new Date(selectedDate);
-    let filteredCourses = [];
-
-    if (viewMode === 'day') {
-      filteredCourses = courses.filter(course => course.date === selectedDate);
-    } else if (viewMode === 'week') {
-      const weekStart = new Date(selected);
-      weekStart.setDate(selected.getDate() - selected.getDay());
-      weekStart.setHours(0, 0, 0, 0);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 7);
-
-      filteredCourses = courses.filter(course => {
-        const courseDate = new Date(course.date);
-        return courseDate >= weekStart && courseDate < weekEnd;
-      });
-    } else {
-      const year = selected.getFullYear();
-      const month = selected.getMonth();
-      filteredCourses = courses.filter(course => {
-        const courseDate = new Date(course.date);
-        return courseDate.getMonth() === month && courseDate.getFullYear() === year;
-      });
-    }
+    const { selectedDate, courses } = this.data;
+    // 所有视图都只展示选中日期的课程
+    const filteredCourses = courses.filter(course => course.date === selectedDate);
     this.setData({ filteredCourses });
   },
 
@@ -255,7 +284,7 @@ Page({
       const course = this.data.courses.find(c => c._id === id);
       const res = await cloudDB.addMy('homework', {
         courseId: id,
-        courseName: course ? course.name : '',
+        courseName: course ? course.title : '',
         title: homework.title,
         content: homework.content,
         date: this.data.selectedDate,
