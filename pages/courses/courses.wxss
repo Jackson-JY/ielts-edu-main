@@ -232,13 +232,15 @@
 
 .form-input {
   width: 100%;
-  padding: 24rpx;
+  height: 88rpx;
+  padding: 0 24rpx;
   border-radius: 24rpx;
   background: #FFFFFF;
   font-size: 28rpx;
   color: #4A4A4A;
   border: none;
   box-shadow: inset 0 1rpx 3rpx rgba(0,0,0,0.05);
+  box-sizing: border-box;
 }
 
 .form-textarea {
@@ -251,6 +253,27 @@
   min-height: 200rpx;
   border: none;
   box-shadow: inset 0 1rpx 3rpx rgba(0,0,0,0.05);
+  box-sizing: border-box;
+}
+
+/* Picker 选择器样式 */
+.form-picker {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  border-radius: 24rpx;
+  background: #FFFFFF;
+  font-size: 28rpx;
+  color: #4A4A4A;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: inset 0 1rpx 3rpx rgba(0,0,0,0.05);
+  box-sizing: border-box;
+}
+.picker-arrow {
+  font-size: 32rpx;
+  color: #9A97AA;
 }
 
 .save-button {

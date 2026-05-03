@@ -1,102 +1,127 @@
 <!-- pages/learning-report/learning-report.wxml -->
 <view class="page">
-  <!-- 标题区域 -->
+  <!-- 顶部标题区 -->
   <view class="header">
-    <text class="title">学习报告</text>
-    <text class="subtitle">查看你的学习进度和成果</text>
-  </view>
-
-  <!-- 时间筛选 -->
-  <view class="time-filter">
-    <view 
-      class="filter-btn {{timeRange === 'week' ? 'active' : ''}}" 
-      bindtap="switchTimeRange" 
-      data-range="week"
-    >
-      <text>本周</text>
+    <view class="header-content">
+      <text class="title">📊 学习报告</text>
+      <text class="subtitle">追踪你的雅思学习进度</text>
     </view>
-    <view 
-      class="filter-btn {{timeRange === 'month' ? 'active' : ''}}" 
-      bindtap="switchTimeRange" 
-      data-range="month"
-    >
-      <text>本月</text>
-    </view>
-    <view 
-      class="filter-btn {{timeRange === 'all' ? 'active' : ''}}" 
-      bindtap="switchTimeRange" 
-      data-range="all"
-    >
-      <text>全部</text>
-    </view>
-  </view>
-
-  <!-- 学习时长统计 -->
-  <view class="section-card">
-    <text class="card-title">学习时长</text>
-    <view class="study-time">
-      <view class="time-circle">
-        <text class="time-value">{{totalHours}}</text>
-        <text class="time-unit">小时</text>
+    <view class="header-actions">
+      <view class="date-badge">
+        <text class="date-text">{{currentDateRange}}</text>
       </view>
-      <view class="time-details">
-        <view class="time-item">
-          <text class="time-label">本周</text>
-          <text class="time-value-small">{{weekHours}}小时</text>
-        </view>
-        <view class="time-item">
-          <text class="time-label">本月</text>
-          <text class="time-value-small">{{monthHours}}小时</text>
-        </view>
+      <button class="share-btn" bindtap="generateShareImage">
+        <text class="share-icon">📤</text>
+        <text class="share-text">生成海报</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 核心数据概览 -->
+  <view class="stats-overview">
+    <view class="stat-card primary">
+      <view class="stat-icon">⏱️</view>
+      <view class="stat-content">
+        <text class="stat-value">{{studyData.totalHours || 0}}</text>
+        <text class="stat-label">总学习时长(小时)</text>
+      </view>
+    </view>
+    <view class="stat-grid">
+      <view class="stat-mini">
+        <text class="mini-value">{{studyData.totalDays || 0}}</text>
+        <text class="mini-label">打卡天数</text>
+      </view>
+      <view class="stat-mini">
+        <text class="mini-value">{{studyData.completedCourses || 0}}</text>
+        <text class="mini-label">完成课程</text>
+      </view>
+      <view class="stat-mini">
+        <text class="mini-value">{{studyData.vocabLearned || 0}}</text>
+        <text class="mini-label">掌握词汇</text>
+      </view>
+      <view class="stat-mini">
+        <text class="mini-value">{{studyData.avgDaily || 0}}</text>
+        <text class="mini-label">日均学习</text>
       </view>
     </view>
   </view>
 
-  <!-- 学习趋势图 -->
+  <!-- 科目成绩趋势图 -->
   <view class="section-card">
-    <text class="card-title">学习趋势</text>
-    <view class="trend-chart">
-      <block wx:for="{{trendData}}" wx:key="index">
-        <view class="trend-bar-wrap">
-          <view class="trend-bar" style="height: {{item.hours / 5 * 100}}%;"></view>
-          <text class="trend-label">{{item.label}}</text>
-        </view>
-      </block>
+    <view class="card-header">
+      <text class="card-title">🎯 科目成绩趋势</text>
+      <text class="card-subtitle">各科目成绩变化</text>
     </view>
-  </view>
+    
+    <!-- 两科一行 -->
+    <view class="subject-charts-row">
+      <!-- 听力趋势 -->
+      <view class="subject-chart-item">
+        <view class="subject-chart-header">
+          <text class="subject-icon">🎧</text>
+          <text class="subject-name">听力</text>
+        </view>
+        <view class="mini-chart-container">
+          <canvas type="2d" id="listeningCanvas" class="mini-chart-canvas"></canvas>
+        </view>
+      </view>
+      
+      <!-- 阅读趋势 -->
+      <view class="subject-chart-item">
+        <view class="subject-chart-header">
+          <text class="subject-icon">📖</text>
+          <text class="subject-name">阅读</text>
+        </view>
+        <view class="mini-chart-container">
+          <canvas type="2d" id="readingCanvas" class="mini-chart-canvas"></canvas>
+        </view>
+      </view>
+    </view>
 
-  <!-- 技能提升 -->
-  <view class="section-card">
-    <text class="card-title">技能提升</text>
-    <view class="skill-list">
-      <view class="skill-item" wx:for="{{skillImprovements}}" wx:key="index">
-        <view class="skill-info">
-          <text class="skill-name">{{item.name}}</text>
-          <text class="skill-score">当前：{{item.currentScore}}</text>
+    <view class="subject-charts-row">
+      <!-- 写作趋势 -->
+      <view class="subject-chart-item">
+        <view class="subject-chart-header">
+          <text class="subject-icon">✍️</text>
+          <text class="subject-name">写作</text>
         </view>
-        <view class="skill-progress">
-          <view class="progress-bar">
-            <view class="progress-fill" style="width: {{item.progress}}%;"></view>
-          </view>
-          <text class="progress-text">+{{item.improvement}}</text>
+        <view class="mini-chart-container">
+          <canvas type="2d" id="writingCanvas" class="mini-chart-canvas"></canvas>
         </view>
+      </view>
+      
+      <!-- 口语趋势 -->
+      <view class="subject-chart-item">
+        <view class="subject-chart-header">
+          <text class="subject-icon">🗣️</text>
+          <text class="subject-name">口语</text>
+        </view>
+        <view class="mini-chart-container">
+          <canvas type="2d" id="speakingCanvas" class="mini-chart-canvas"></canvas>
+        </view>
+      </view>
+    </view>
+
+    <!-- 总成绩趋势 -->
+    <view class="total-score-section">
+      <view class="total-score-header">
+        <text class="total-score-icon">🏆</text>
+        <text class="total-score-title">总成绩趋势</text>
+      </view>
+      <view class="total-chart-container">
+        <canvas type="2d" id="totalCanvas" class="total-chart-canvas"></canvas>
+      </view>
+      <view class="total-chart-labels">
+        <block wx:for="{{examScoresReverse}}" wx:key="index">
+          <text class="total-chart-label">{{item.date}}</text>
+        </block>
       </view>
     </view>
   </view>
 
-  <!-- 学习建议 -->
-  <view class="section-card">
-    <text class="card-title">学习建议</text>
-    <view class="suggestion-list">
-      <view class="suggestion-item" wx:for="{{suggestions}}" wx:key="index">
-        <view class="suggestion-icon">
-          <text>{{item.icon}}</text>
-        </view>
-        <view class="suggestion-content">
-          <text class="suggestion-title">{{item.title}}</text>
-          <text class="suggestion-desc">{{item.desc}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
+  <!-- 底部留白 -->
+  <view class="footer-space"></view>
+
+  <!-- 隐藏的画布用于生成分享图片 -->
+  <canvas type="2d" id="shareCanvas" class="share-canvas"></canvas>
 </view>

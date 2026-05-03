@@ -13,7 +13,8 @@
     "pages/assessment/speaking/speaking",
     "pages/assessment/reading/reading",
     "pages/assessment/writing/writing",
-    "pages/assessment/result/result"
+    "pages/assessment/result/result",
+    "pages/homework-detail/homework-detail"
   ],
   "window": {
     "navigationBarTitleText": "雅思学习",

@@ -1,0 +1,14 @@
+{
+  "name": "migrateHomework",
+  "version": "1.0.0",
+  "description": "迁移 homework 集合数据到新格式",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

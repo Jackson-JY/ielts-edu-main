@@ -29,6 +29,79 @@
     </view>
   </view>
 
+  <!-- 打卡统计 -->
+  <view class="stats-card">
+    <text class="streak-num">{{streakDays}}</text>
+    <text class="streak-label">连续打卡天数</text>
+    <view class="stats-row">
+      <view class="stats-item">
+        <text class="stats-value">{{weekCheckin}} / 7</text>
+        <text class="stats-label">本周打卡</text>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item">
+        <text class="stats-value">{{monthCheckin}} / 30</text>
+        <text class="stats-label">本月打卡</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 打卡日历（热力图） -->
+  <view class="section-card">
+    <view class="section-header">
+      <text class="section-title">打卡日历</text>
+      <view class="checkin-btn" bindtap="showCheckinForm">
+        <text class="checkin-btn-icon">+</text>
+        <text class="checkin-btn-text">打卡</text>
+      </view>
+    </view>
+    <!-- 月份选择导航 -->
+    <view class="month-nav">
+      <view class="month-btn" bindtap="prevMonth">
+        <text class="month-arrow">‹</text>
+      </view>
+      <text class="month-label">{{monthLabel}}</text>
+      <view class="month-btn {{!canGoNext ? 'month-btn-disabled' : ''}}" bindtap="nextMonth">
+        <text class="month-arrow">›</text>
+      </view>
+    </view>
+    <view class="calendar-header">
+      <text class="cal-day-label" wx:for="{{dayLabels}}" wx:key="index">{{item}}</text>
+    </view>
+    <view class="calendar-grid">
+      <view
+        class="calendar-cell {{item.hasCheckin ? 'has-checkin' : ''}} {{item.isToday ? 'today' : ''}}"
+        wx:for="{{calendarDays}}"
+        wx:key="day"
+        style="background-color: {{item.heatColor}};"
+        data-date="{{item.date}}"
+        data-count="{{item.heatCount}}"
+        bindtap="onTapCalendarCell"
+      >
+        <text class="cal-day-num {{item.isEmpty ? 'cal-day-empty' : (item.hasCheckin ? 'cal-day-active' : 'cal-day-inactive')}}">{{item.day}}</text>
+        <view class="cal-type-bars" wx:if="{{!item.isEmpty}}">
+          <view
+            class="cal-type-bar"
+            wx:for="{{item.types}}"
+            wx:for-item="type"
+            wx:key="index"
+            style="background-color: {{type.color}};"
+          ></view>
+        </view>
+      </view>
+    </view>
+    <!-- 热力图例 -->
+    <view class="heatmap-legend">
+      <text class="legend-label">少</text>
+      <view class="legend-cell" style="background-color: #FFF9F5;"></view>
+      <view class="legend-cell" style="background-color: rgba(167,251,245,0.2);"></view>
+      <view class="legend-cell" style="background-color: rgba(167,251,245,0.5);"></view>
+      <view class="legend-cell" style="background-color: rgba(167,251,245,0.75);"></view>
+      <view class="legend-cell" style="background-color: #A7FBF5;"></view>
+      <text class="legend-label">多</text>
+    </view>
+  </view>
+
   <!-- 考试成绩记录 -->
   <view class="section-card">
     <view class="card-header">
@@ -71,12 +144,12 @@
       <view class="score-trend">
         <text class="trend-title">成绩趋势</text>
         <view class="trend-chart">
-          <block wx:for="{{examScoresReverse}}" wx:key="index">
-            <view class="trend-bar-wrap">
-              <view class="trend-bar" style="height: {{item.total / 9 * 100}}%;"></view>
-              <text class="trend-value">{{item.total}}</text>
-            </view>
-          </block>
+          <canvas type="2d" id="scoreTrendCanvas" class="trend-canvas"></canvas>
+          <view class="trend-labels">
+            <block wx:for="{{examScoresReverse}}" wx:key="index">
+              <text class="trend-label">{{item.date}}</text>
+            </block>
+          </view>
         </view>
       </view>
     </block>
@@ -115,66 +188,192 @@
     </view>
   </view>
 
-  <!-- 添加成绩弹窗 -->
-  <view class="modal-overlay" wx:if="{{showAddScore}}" bindtap="hideAddScoreModal">
-    <view class="modal-content" catchtap="stopPropagation">
-      <text class="modal-title">添加考试成绩</text>
+  <!-- 打卡明细弹窗 -->
+  <view class="modal-overlay" wx:if="{{showCheckinDetail}}">
+    <view class="modal-mask" bindtap="hideCheckinDetail"></view>
+    <view class="modal-content checkin-detail-modal">
+      <view class="modal-header">
+        <text class="modal-title">{{selectedDate}} 打卡记录</text>
+        <text class="modal-subtitle">共 {{selectedDateCheckins.length}} 次打卡</text>
+      </view>
       
+      <scroll-view class="checkin-detail-list" scroll-y>
+        <block wx:if="{{selectedDateCheckins.length > 0}}">
+          <view class="checkin-detail-item" wx:for="{{selectedDateCheckins}}" wx:key="id">
+            <view class="detail-time">
+              <text class="time-icon">🕐</text>
+              <text class="time-text">{{item.time}}</text>
+            </view>
+            <view class="detail-content">
+              <view class="detail-types">
+                <text class="detail-type-tag" wx:for="{{item.types}}" wx:for-item="type" wx:key="index" style="background-color: {{type.color}};">{{type.label}}</text>
+              </view>
+              <text class="detail-text" wx:if="{{item.content}}">{{item.content}}</text>
+            </view>
+          </view>
+        </block>
+        <view class="checkin-detail-empty" wx:else>
+          <text class="empty-icon">📭</text>
+          <text class="empty-text">该日期暂无打卡记录</text>
+        </view>
+      </scroll-view>
+      
+      <view class="modal-buttons">
+        <view class="modal-btn confirm" bindtap="hideCheckinDetail">
+          <text>关闭</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 打卡表单弹窗 -->
+  <view class="modal-overlay" wx:if="{{showCheckinForm}}">
+    <view class="modal-mask" bindtap="hideCheckinForm"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">今日打卡</text>
+        <text class="modal-subtitle">记录今天的学习进度</text>
+      </view>
+      
+      <!-- 打卡类型选择 -->
       <view class="form-group">
-        <text class="form-label">考试日期 *</text>
-        <picker mode="date" value="{{newScore.date}}" bindchange="onDateChange">
-          <view class="form-input">
-            <text>{{newScore.date || '请选择日期'}}</text>
+        <text class="form-label">打卡类型（可多选）</text>
+        <view class="checkin-type-grid">
+          <view class="checkin-type-item {{item.selected ? 'selected' : ''}}" 
+                wx:for="{{checkinTypeList}}" 
+                wx:key="id"
+                data-id="{{item.id}}"
+                bindtap="toggleCheckinType">
+            <view class="type-color" style="background-color: {{item.color}};"></view>
+            <text class="type-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 备注输入 -->
+      <view class="form-group">
+        <text class="form-label">备注内容</text>
+        <textarea class="checkin-textarea" 
+                  placeholder="记录今天的学习心得..."
+                  value="{{checkinContent}}"
+                  bindinput="onCheckinContentInput"
+                  maxlength="200"/>
+        <text class="textarea-count">{{checkinContent.length}}/200</text>
+      </view>
+      
+      <view class="modal-buttons">
+        <view class="modal-btn cancel" bindtap="hideCheckinForm">
+          <text>取消</text>
+        </view>
+        <view class="modal-btn confirm {{canSubmitCheckin ? '' : 'disabled'}}" bindtap="submitCheckin">
+          <text>确认打卡</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加成绩弹窗 -->
+  <view class="modal-overlay" wx:if="{{showAddScore}}">
+    <view class="modal-mask" bindtap="hideAddScoreModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">添加考试成绩</text>
+        <text class="modal-subtitle">记录你的雅思模考成绩</text>
+      </view>
+      
+      <!-- 日期选择 -->
+      <view class="form-group">
+        <text class="form-label">考试日期</text>
+        <picker mode="date" value="{{newScore.date}}" start="2020-01-01" end="{{maxDate}}" bindchange="onDateChange">
+          <view class="date-picker {{newScore.date ? 'date-picker-active' : ''}}">
+            <text class="date-icon-text">📅</text>
+            <text class="date-text">{{newScore.date ? newScore.date : '请选择考试日期'}}</text>
+            <text class="date-arrow">›</text>
           </view>
         </picker>
       </view>
       
-      <view class="score-inputs">
-        <view class="score-input-group">
-          <text class="form-label">听力分数</text>
-          <input 
-            class="form-input small" 
-            type="digit" 
-            placeholder="0-9" 
-            value="{{newScore.listening}}"
-            bindinput="onScoreInput"
-            data-type="listening"
-          />
+      <!-- 分数输入 -->
+      <view class="form-group">
+        <text class="form-label">各项分数 (0-9分)</text>
+        <view class="score-inputs">
+          <view class="score-input-item">
+            <view class="score-icon listening">
+              <image wx:if="{{iconHeadphones}}" src="{{iconHeadphones}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+              <text wx:else>🎧</text>
+            </view>
+            <input 
+              class="score-input" 
+              type="digit" 
+              placeholder="0.0" 
+              value="{{newScore.listening}}"
+              bindinput="onScoreInput"
+              data-type="listening"
+            />
+            <text class="score-name">听力</text>
+          </view>
+          
+          <view class="score-input-item">
+            <view class="score-icon speaking">
+              <image wx:if="{{iconMic}}" src="{{iconMic}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+              <text wx:else>🗣️</text>
+            </view>
+            <input 
+              class="score-input" 
+              type="digit" 
+              placeholder="0.0" 
+              value="{{newScore.speaking}}"
+              bindinput="onScoreInput"
+              data-type="speaking"
+            />
+            <text class="score-name">口语</text>
+          </view>
+          
+          <view class="score-input-item">
+            <view class="score-icon reading">
+              <image wx:if="{{iconBook}}" src="{{iconBook}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+              <text wx:else>📖</text>
+            </view>
+            <input 
+              class="score-input" 
+              type="digit" 
+              placeholder="0.0" 
+              value="{{newScore.reading}}"
+              bindinput="onScoreInput"
+              data-type="reading"
+            />
+            <text class="score-name">阅读</text>
+          </view>
+          
+          <view class="score-input-item">
+            <view class="score-icon writing">
+              <image wx:if="{{iconPen}}" src="{{iconPen}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+              <text wx:else>✍️</text>
+            </view>
+            <input 
+              class="score-input" 
+              type="digit" 
+              placeholder="0.0" 
+              value="{{newScore.writing}}"
+              bindinput="onScoreInput"
+              data-type="writing"
+            />
+            <text class="score-name">写作</text>
+          </view>
         </view>
-        
-        <view class="score-input-group">
-          <text class="form-label">口语分数</text>
+      </view>
+      
+      <!-- 总分输入 -->
+      <view class="form-group">
+        <text class="form-label">总分 (0-9分)</text>
+        <view class="total-input-wrap">
           <input 
-            class="form-input small" 
+            class="total-input" 
             type="digit" 
-            placeholder="0-9" 
-            value="{{newScore.speaking}}"
+            placeholder="请输入总分" 
+            value="{{newScore.total}}"
             bindinput="onScoreInput"
-            data-type="speaking"
-          />
-        </view>
-        
-        <view class="score-input-group">
-          <text class="form-label">阅读分数</text>
-          <input 
-            class="form-input small" 
-            type="digit" 
-            placeholder="0-9" 
-            value="{{newScore.reading}}"
-            bindinput="onScoreInput"
-            data-type="reading"
-          />
-        </view>
-        
-        <view class="score-input-group">
-          <text class="form-label">写作分数</text>
-          <input 
-            class="form-input small" 
-            type="digit" 
-            placeholder="0-9" 
-            value="{{newScore.writing}}"
-            bindinput="onScoreInput"
-            data-type="writing"
+            data-type="total"
           />
         </view>
       </view>
@@ -184,7 +383,7 @@
           <text>取消</text>
         </view>
         <view class="modal-btn confirm" bindtap="saveScore">
-          <text>保存</text>
+          <text>保存成绩</text>
         </view>
       </view>
     </view>

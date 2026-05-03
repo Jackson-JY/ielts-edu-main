@@ -269,33 +269,108 @@ Page({
   },
 
   /**
+   * 作业截止时间选择
+   */
+  onHomeworkDeadlineChange(e) {
+    const id = e.currentTarget.dataset.id;
+    const value = e.detail.value;
+    const homework = this.data.homework;
+    if (!homework[id]) homework[id] = {};
+    homework[id].deadline = value;
+    this.setData({ homework });
+  },
+
+  /**
+   * 作业科目选择
+   */
+  onHomeworkSubjectChange(e) {
+    const id = e.currentTarget.dataset.id;
+    const value = e.detail.value;
+    const homework = this.data.homework;
+    if (!homework[id]) homework[id] = {};
+    const subjects = ['听力', '阅读', '写作', '口语', '综合'];
+    homework[id].subject = subjects[value];
+    this.setData({ homework });
+  },
+
+  /**
+   * 作业描述输入
+   */
+  onHomeworkDescriptionInput(e) {
+    const id = e.currentTarget.dataset.id;
+    const value = e.detail.value;
+    const homework = this.data.homework;
+    if (!homework[id]) homework[id] = {};
+    homework[id].description = value;
+    this.setData({ homework });
+  },
+
+  /**
+   * 获取课程类型对应的科目
+   */
+  getSubjectFromCourseType(courseType) {
+    const typeMap = {
+      'listening': '听力',
+      'reading': '阅读',
+      'writing': '写作',
+      'speaking': '口语',
+    };
+    return typeMap[courseType] || '综合';
+  },
+
+  /**
    * 保存作业到云数据库
+   * 适配统一的 homework 表结构
    */
   async saveHomework(e) {
     const id = e.currentTarget.dataset.id;
     const homework = this.data.homework[id];
 
-    if (!homework || !homework.title || !homework.content) {
-      wx.showToast({ title: '请填写完整的作业信息', icon: 'none' });
+    if (!homework || !homework.title) {
+      wx.showToast({ title: '请填写作业标题', icon: 'none' });
       return;
     }
 
     try {
       const course = this.data.courses.find(c => c._id === id);
-      const res = await cloudDB.addMy('homework', {
+      
+      // 构建作业数据，适配统一表结构
+      const homeworkData = {
+        // 关联信息
         courseId: id,
         courseName: course ? course.title : '',
+        
+        // 基础信息
         title: homework.title,
-        content: homework.content,
-        date: this.data.selectedDate,
+        description: homework.description || homework.content || '',
+        content: homework.content || '',
+        
+        // 科目（优先使用选择的，否则根据课程类型）
+        subject: homework.subject || this.getSubjectFromCourseType(course?.type),
+        
+        // 截止时间
+        deadline: homework.deadline ? new Date(homework.deadline) : null,
+        
+        // 状态
+        status: 'pending',
         submitted: false,
-      });
+        
+        // 布置时间
+        assignedAt: new Date(),
+        date: this.data.selectedDate,
+      };
+
+      const res = await cloudDB.addMy('homework', homeworkData);
 
       if (res.success) {
         wx.showToast({ title: '作业已保存', icon: 'success' });
-        this.setData({ expandedCourse: null });
-        // 刷新页面数据
-        this.loadCourses();
+        // 清空当前课程的作业表单
+        const newHomework = { ...this.data.homework };
+        delete newHomework[id];
+        this.setData({ 
+          expandedCourse: null,
+          homework: newHomework
+        });
       } else {
         wx.showToast({ title: '保存失败', icon: 'none' });
       }

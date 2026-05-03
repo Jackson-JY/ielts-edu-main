@@ -1,273 +1,372 @@
 /* 学习报告页面样式 */
 page {
-  background-color: #F5F0FF;
+  background: linear-gradient(180deg, #F8F4FF 0%, #F5F0FF 100%);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-.container {
-  padding: 30rpx;
-  padding-bottom: 60rpx;
+.page {
+  padding: 0 32rpx 60rpx;
+  min-height: 100vh;
 }
 
-/* 日期选择器 */
-.date-selector {
+/* 顶部标题区 */
+.header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background-color: #FFFFFF;
-  border-radius: 16rpx;
-  padding: 20rpx 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-}
-
-.date-arrow {
-  font-size: 32rpx;
-  color: #9A97AA;
-  padding: 10rpx;
-}
-
-.date-range {
-  font-size: 28rpx;
-  color: #4A4A4A;
-  font-weight: 500;
-}
-
-/* 学习概览 */
-.overview-card {
-  background-color: #FFFFFF;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-}
-
-.overview-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #4A4A4A;
-  margin-bottom: 30rpx;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
-}
-
-.stat-item {
-  background-color: #F8F9FA;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 48rpx;
-  font-weight: 700;
-  color: #6C5CE7;
-  margin-bottom: 8rpx;
-}
-
-.stat-label {
-  font-size: 24rpx;
-  color: #9A97AA;
-}
-
-/* 学习趋势 */
-.trend-card {
-  background-color: #FFFFFF;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-}
-
-.trend-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #4A4A4A;
-  margin-bottom: 30rpx;
-}
-
-.trend-chart {
-  width: 100%;
-  height: 300rpx;
-  background-color: #F8F9FA;
-  border-radius: 12rpx;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  padding: 20rpx;
-  box-sizing: border-box;
-}
-
-.chart-bar {
-  width: 40rpx;
-  background: linear-gradient(180deg, #6C5CE7 0%, #A29BFE 100%);
-  border-radius: 8rpx 8rpx 0 0;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.chart-bar.active {
-  background: linear-gradient(180deg, #FF6B6B 0%, #FFA8A8 100%);
-}
-
-.bar-label {
-  position: absolute;
-  bottom: -40rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 20rpx;
-  color: #9A97AA;
-  white-space: nowrap;
-}
-
-/* 科目分析 */
-.subject-card {
-  background-color: #FFFFFF;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-}
-
-.subject-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #4A4A4A;
-  margin-bottom: 30rpx;
-}
-
-.subject-item {
-  display: flex;
-  align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid #F0F0F0;
-}
-
-.subject-item:last-child {
-  border-bottom: none;
-}
-
-.subject-icon {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 24rpx;
-  font-size: 36rpx;
-}
-
-.subject-icon.listening {
-  background-color: #E8F5E9;
-}
-
-.subject-icon.reading {
-  background-color: #E3F2FD;
-}
-
-.subject-icon.writing {
-  background-color: #FFF3E0;
-}
-
-.subject-icon.speaking {
-  background-color: #FCE4EC;
-}
-
-.subject-info {
-  flex: 1;
-}
-
-.subject-name {
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #4A4A4A;
-  margin-bottom: 8rpx;
-}
-
-.subject-progress {
-  font-size: 24rpx;
-  color: #9A97AA;
-}
-
-.subject-score {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #6C5CE7;
-}
-
-/* 学习建议 */
-.suggestions-card {
-  background-color: #FFFFFF;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-}
-
-.suggestions-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #4A4A4A;
-  margin-bottom: 30rpx;
-}
-
-.suggestion-item {
-  display: flex;
   align-items: flex-start;
-  padding: 20rpx;
-  background-color: #F8F9FA;
-  border-radius: 12rpx;
-  margin-bottom: 20rpx;
+  padding: 40rpx 0 32rpx;
 }
 
-.suggestion-item:last-child {
-  margin-bottom: 0;
-}
-
-.suggestion-icon {
-  width: 60rpx;
-  height: 60rpx;
-  border-radius: 50%;
-  background-color: #E8E5FF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 20rpx;
-  font-size: 28rpx;
-  flex-shrink: 0;
-}
-
-.suggestion-content {
+.header-content {
   flex: 1;
 }
 
-.suggestion-text {
-  font-size: 28rpx;
+.title {
+  font-size: 44rpx;
+  font-weight: 800;
   color: #4A4A4A;
-  line-height: 1.6;
+  display: block;
+  margin-bottom: 12rpx;
+  letter-spacing: -0.5rpx;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  color: #9A97AA;
+  display: block;
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16rpx;
+}
+
+.date-badge {
+  background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
+  border-radius: 32rpx;
+  padding: 16rpx 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(108, 92, 231, 0.3);
+}
+
+.date-text {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
 /* 分享按钮 */
 .share-btn {
-  width: 100%;
-  height: 96rpx;
-  background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
-  border-radius: 48rpx;
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: 600;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8rpx;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+  border-radius: 32rpx;
+  padding: 12rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(255, 107, 107, 0.3);
   border: none;
-  margin-top: 40rpx;
+  margin: 0;
+  line-height: 1;
 }
 
 .share-btn::after {
   border: none;
+}
+
+.share-icon {
+  font-size: 28rpx;
+}
+
+.share-text {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* 核心数据概览 */
+.stats-overview {
+  margin-bottom: 32rpx;
+}
+
+.stat-card {
+  background: linear-gradient(145deg, #6C5CE7 0%, #8B7FE8 100%);
+  border-radius: 32rpx;
+  padding: 40rpx;
+  display: flex;
+  align-items: center;
+  gap: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(108, 92, 231, 0.25);
+}
+
+.stat-icon {
+  width: 88rpx;
+  height: 88rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 64rpx;
+  font-weight: 800;
+  color: #FFFFFF;
+  display: block;
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+  margin-top: 8rpx;
+}
+
+/* 迷你统计网格 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+}
+
+.stat-mini {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.mini-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #6C5CE7;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.mini-label {
+  font-size: 22rpx;
+  color: #9A97AA;
+  display: block;
+}
+
+/* 卡片通用样式 */
+.section-card {
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28rpx;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.card-subtitle {
+  font-size: 24rpx;
+  color: #9A97AA;
+  display: block;
+}
+
+/* 趋势图图例 */
+.trend-legend {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  background: #F8F4FF;
+  padding: 12rpx 20rpx;
+  border-radius: 24rpx;
+}
+
+.legend-dot {
+  width: 16rpx;
+  height: 16rpx;
+  background: #6C5CE7;
+  border-radius: 50%;
+}
+
+.legend-text {
+  font-size: 22rpx;
+  color: #6C5CE7;
+  font-weight: 500;
+}
+
+/* 图表容器 */
+.chart-container {
+  background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 100%);
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.trend-canvas {
+  width: 100%;
+  height: 280rpx;
+}
+
+.trend-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20rpx;
+}
+
+.trend-label {
+  font-size: 22rpx;
+  color: #9A97AA;
+  text-align: center;
+  flex: 1;
+}
+
+/* 科目趋势图 - 两科一行 */
+.subject-charts-row {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.subject-chart-item {
+  flex: 1;
+  background: linear-gradient(145deg, #FAFAFA 0%, #F5F5F5 100%);
+  border-radius: 20rpx;
+  padding: 20rpx;
+}
+
+.subject-chart-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.subject-icon {
+  font-size: 32rpx;
+}
+
+.subject-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+}
+
+.mini-chart-container {
+  height: 160rpx;
+}
+
+.mini-chart-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* 总成绩趋势 */
+.total-score-section {
+  margin-top: 32rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx dashed #E8E8E8;
+}
+
+.total-score-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.total-score-icon {
+  font-size: 36rpx;
+}
+
+.total-score-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A4A4A;
+}
+
+.total-chart-container {
+  background: linear-gradient(145deg, #FFF8E7 0%, #FFF3D9 100%);
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.total-chart-canvas {
+  width: 100%;
+  height: 240rpx;
+}
+
+.total-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20rpx;
+}
+
+.total-chart-label {
+  font-size: 20rpx;
+  color: #9A97AA;
+  text-align: center;
+  flex: 1;
+}
+
+/* 底部留白 */
+.footer-space {
+  height: 40rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 80rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: #9A97AA;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.empty-sub {
+  font-size: 24rpx;
+  color: #B8B5C4;
+}
+
+/* 隐藏的画布 - 使用 visibility 而不是移出屏幕 */
+.share-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 750px;
+  height: 1500px;
+  visibility: hidden;
+  z-index: -1;
 }

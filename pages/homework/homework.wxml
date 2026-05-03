@@ -1,152 +1,41 @@
-<!--pages/homework/homework.wxml - 打卡记录页面-->
+<!--pages/homework/homework.wxml - 作业页面-->
 <view class="page">
 
   <!-- Header -->
   <view class="header">
-    <text class="title">打卡记录</text>
+    <text class="title" bindlongpress="onTitleLongPress">作业</text>
   </view>
 
-  <!-- Stats 统计区域 -->
-  <view class="stats-card">
-    <text class="streak-num">{{streakDays}}</text>
-    <text class="streak-label">连续打卡天数</text>
-    <view class="stats-row">
-      <view class="stats-item">
-        <text class="stats-value">{{weekCheckin}} / 7</text>
-        <text class="stats-label">本周打卡</text>
-      </view>
-      <view class="stats-divider"></view>
-      <view class="stats-item">
-        <text class="stats-value">{{monthCheckin}} / 30</text>
-        <text class="stats-label">本月打卡</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 打卡日历（热力图背景 + 月份切换） -->
+  <!-- 未完成作业区域 -->
   <view class="section-card">
-    <!-- 月份选择导航 -->
-    <view class="month-nav">
-      <view class="month-btn" bindtap="prevMonth">
-        <text class="month-arrow">‹</text>
-      </view>
-      <text class="month-label">{{monthLabel}}</text>
-      <view class="month-btn {{!canGoNext ? 'month-btn-disabled' : ''}}" bindtap="nextMonth">
-        <text class="month-arrow">›</text>
-      </view>
+    <view class="section-header">
+      <text class="section-title">📚 待完成作业</text>
+      <text class="section-subtitle" wx:if="{{pendingHomework.length > 0}}">{{pendingHomework.length}} 个待完成</text>
+      <text class="section-subtitle" wx:else>暂无待完成作业</text>
     </view>
-    <view class="calendar-header">
-      <text class="cal-day-label" wx:for="{{dayLabels}}" wx:key="index">{{item}}</text>
-    </view>
-    <view class="calendar-grid">
-      <view
-        class="calendar-cell"
-        wx:for="{{calendarDays}}"
-        wx:key="day"
-        style="background-color: {{item.heatColor}};"
-        data-date="{{item.date}}"
-        data-count="{{item.heatCount}}"
-        bindtap="onTapCalendarCell"
-      >
-        <text class="cal-day-num {{item.isEmpty ? 'cal-day-empty' : (item.hasCheckin ? 'cal-day-active' : 'cal-day-inactive')}}">{{item.day}}</text>
-        <view class="cal-type-bars" wx:if="{{!item.isEmpty}}">
-          <view
-            class="cal-type-bar"
-            wx:for="{{item.types}}"
-            wx:for-item="type"
-            wx:key="index"
-            style="background-color: {{type.color}};"
-          ></view>
-        </view>
-      </view>
-    </view>
-    <!-- 热力图例 -->
-    <view class="heatmap-legend">
-      <text class="legend-label">少</text>
-      <view class="legend-cell" style="background-color: #FFF9F5;"></view>
-      <view class="legend-cell" style="background-color: rgba(167,251,245,0.2);"></view>
-      <view class="legend-cell" style="background-color: rgba(167,251,245,0.5);"></view>
-      <view class="legend-cell" style="background-color: rgba(167,251,245,0.75);"></view>
-      <view class="legend-cell" style="background-color: #A7FBF5;"></view>
-      <text class="legend-label">多</text>
-    </view>
-  </view>
-
-  <!-- 打卡记录列表 -->
-  <view class="section-card">
-    <text class="section-title">近期打卡</text>
-    <view class="checkin-list">
-      <view class="checkin-item" wx:for="{{checkinList}}" wx:key="id">
-        <view class="checkin-date-col">
-          <text class="checkin-date-day">{{item.day}}</text>
-          <text class="checkin-date-month">{{item.month}}月</text>
-        </view>
-        <view class="checkin-content-col">
-          <view class="checkin-types">
-            <text class="checkin-type-tag" wx:for="{{item.types}}" wx:for-item="t" wx:key="id" style="background-color: {{t.color}};">{{t.label}}</text>
+    <view class="homework-list" wx:if="{{pendingHomework.length > 0}}">
+      <view class="homework-item {{item.isOverdue ? 'homework-overdue' : ''}} {{item.isUrgent ? 'homework-urgent' : ''}}" wx:for="{{pendingHomework}}" wx:key="id" data-id="{{item.id}}" bindtap="onHomeworkTap">
+        <view class="homework-main">
+          <view class="homework-info">
+            <text class="homework-title">{{item.title}}</text>
+            <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
+            <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
           </view>
-          <text class="checkin-text">{{item.content}}</text>
-        </view>
-      </view>
-      <view class="empty-tip" wx:if="{{checkinList.length === 0}}">
-        <text>暂无打卡记录，点击右下角按钮开始打卡吧~</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 底部占位 -->
-  <view style="height: 320rpx;"></view>
-
-  <!-- 打卡按钮（悬浮） -->
-  <view class="fab-btn" bindtap="showCheckinForm">
-    <image class="fab-icon" src="{{iconPlus}}" mode="aspectFit"/>
-  </view>
-
-  <!-- 打卡表单弹窗 -->
-  <view class="modal-mask" wx:if="{{showForm}}" bindtap="hideCheckinForm">
-    <view class="modal-content" catchtap="preventBubble">
-      <text class="modal-title">今日打卡</text>
-
-      <!-- 打卡类型选择 -->
-      <view class="form-group">
-        <text class="form-label">打卡类型（可多选）</text>
-        <view class="type-options">
-          <view
-            class="type-option {{typeItem.selected ? 'type-option-active' : ''}}"
-            wx:for="{{checkinTypes}}"
-            wx:for-item="typeItem"
-            wx:key="*this"
-            style="{{typeItem.selected ? 'background-color:' + typeItem.color + '; border-color:' + typeItem.color + ';' : ''}}"
-            data-id="{{typeItem.id}}"
-            catchtap="toggleType"
-          >
-            <text class="type-option-text {{typeItem.selected ? 'type-option-text-active' : ''}}">{{typeItem.label}}</text>
-            <view class="check-icon {{typeItem.selected ? 'check-icon-show' : ''}}">✓</view>
+          <view class="homework-meta">
+            <view class="homework-subject">
+              <text class="subject-tag">{{item.subjectLabel}}</text>
+            </view>
+            <view class="homework-deadline {{item.isOverdue ? 'deadline-overdue' : ''}} {{item.isUrgent ? 'deadline-urgent' : ''}}">
+              <text class="deadline-icon">⏰</text>
+              <text class="deadline-text">{{item.isOverdue ? '已逾期' : (item.daysLeft === 0 ? '今天截止' : item.daysLeft + '天后截止')}}</text>
+            </view>
           </view>
         </view>
+        <view class="homework-arrow">›</view>
       </view>
-
-      <!-- 打卡内容输入 -->
-      <view class="form-group">
-        <text class="form-label">打卡内容 *</text>
-        <textarea
-          class="form-textarea"
-          placeholder="今天学习了什么呢？记录一下吧~"
-          maxlength="500"
-          value="{{checkinContent}}"
-          bindinput="onContentInput"
-        ></textarea>
-      </view>
-
-      <!-- 操作按钮 -->
-      <view class="modal-btns">
-        <view class="modal-btn-cancel" bindtap="hideCheckinForm">
-          <text>取消</text>
-        </view>
-        <view class="modal-btn-confirm" bindtap="submitCheckin">
-          <text>确认打卡</text>
-        </view>
-      </view>
+    </view>
+    <view class="empty-homework" wx:else>
+      <text class="empty-text">🎉 太棒了！当前没有待完成的作业</text>
     </view>
   </view>
 

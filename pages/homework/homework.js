@@ -1,339 +1,193 @@
-// pages/homework/homework.js - 打卡记录页面逻辑
+// pages/homework/homework.js - 作业页面逻辑
 const cloudDB = require('../../utils/cloudDB');
-const cloudStorage = require('../../utils/cloudStorage');
-const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
   data: {
-    checkinTypes: [
-      { id: 'listening', label: '听力', color: '#A7FBF5' },
-      { id: 'speaking',  label: '口语', color: '#E8D4F8' },
-      { id: 'reading',   label: '阅读', color: '#FFD4B8' },
-      { id: 'writing',   label: '写作', color: '#FFE8F0' },
-      { id: 'homework',  label: '作业', color: '#D4E8FF' },
-    ],
-    selectedTypes: [],
-    checkinContent: '',
-    showForm: false,
-
-    streakDays: 0,
-    weekCheckin: 0,
-    monthCheckin: 0,
-
-    displayedYear: new Date().getFullYear(),
-    displayedMonth: new Date().getMonth(),
-    maxYear: new Date().getFullYear(),
-    maxMonth: new Date().getMonth(),
-    monthLabel: '',
-    canGoNext: false,
-
-    dayLabels: ['日', '一', '二', '三', '四', '五', '六'],
-    calendarDays: [],
-    checkinList: [],
-    // 云存储图标（使用临时 URL）
-    iconSettings: '',
-    iconPlus: '',
+    // 未完成作业列表
+    pendingHomework: [],
   },
 
   async onLoad() {
-    await this.loadImageUrls();
-    this.updateMonthLabel();
-    this.initCalendar();
-    this.loadStats();
-    this.loadCheckinList();
+    this.loadPendingHomework();
+  },
+
+  onShow() {
+    this.loadPendingHomework();
   },
 
   /**
-   * 加载云存储图片临时 URL
+   * 加载未完成的作业
+   * 兼容新旧数据格式
    */
-  async loadImageUrls() {
+  async loadPendingHomework() {
     try {
-      const fileIDs = [CLOUD_IMAGES.iconPlus];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      this.setData({
-        iconPlus: urlMap[CLOUD_IMAGES.iconPlus] || '',
-      });
+      const db = wx.cloud.database();
+      const _ = db.command;
+
+      // 查询所有作业，不过滤状态（在内存中过滤以兼容旧数据）
+      const res = await cloudDB.getMy('homework', (q) =>
+        q.orderBy('deadline', 'asc')
+      );
+
+      console.log('[loadPendingHomework] 作业查询结果:', res);
+
+      if (res.success) {
+        // 过滤未完成作业（兼容新旧数据格式）
+        const pendingList = res.data.filter(hw => {
+          // 新格式：status 字段
+          if (hw.status) {
+            return ['pending', 'assigned', 'in_progress'].includes(hw.status);
+          }
+          // 旧格式：submitted 字段
+          if (hw.submitted !== undefined) {
+            return !hw.submitted;
+          }
+          // 默认视为未完成
+          return true;
+        });
+
+        const homeworkList = pendingList.map(hw => this.formatHomeworkData(hw));
+
+        console.log('[loadPendingHomework] 处理后的待完成作业列表:', homeworkList);
+        this.setData({ pendingHomework: homeworkList });
+      }
     } catch (e) {
-      // 加载图片 URL 失败
+      console.error('加载未完成作业失败', e);
     }
   },
 
-  updateMonthLabel() {
-    const { displayedYear, displayedMonth } = this.data;
-    const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-    this.setData({
-      monthLabel: `${displayedYear}年${monthNames[displayedMonth]}`,
-      canGoNext: displayedYear < this.data.maxYear || (displayedYear === this.data.maxYear && displayedMonth < this.data.maxMonth),
+  /**
+   * 格式化作业数据（统一新旧格式）
+   */
+  formatHomeworkData(hw) {
+    const deadline = hw.deadline ? new Date(hw.deadline) : null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysLeft = deadline ? Math.ceil((deadline - today) / (1000 * 60 * 60 * 24)) : null;
+
+    // 兼容新旧字段
+    const subject = hw.subject || this.mapTypeToSubject(hw.type) || '综合';
+    const description = hw.description || hw.content || '';
+    const status = hw.status || (hw.submitted ? 'completed' : 'pending');
+
+    return {
+      id: hw._id,
+      title: hw.title || '未命名作业',
+      subject: subject,
+      subjectLabel: this.getSubjectLabel(subject),
+      deadline: hw.deadline,
+      deadlineFormatted: deadline ? `${deadline.getMonth() + 1}月${deadline.getDate()}日` : '无截止日期',
+      daysLeft: daysLeft,
+      isUrgent: daysLeft !== null && daysLeft <= 3 && daysLeft >= 0,
+      isOverdue: daysLeft !== null && daysLeft < 0,
+      description: description,
+      status: status,
+      courseName: hw.courseName || '',
+      score: hw.score,
+      totalScore: hw.totalScore,
+    };
+  },
+
+  /**
+   * 将旧 type 字段映射到 subject
+   */
+  mapTypeToSubject(type) {
+    const typeMap = {
+      'listening': '听力',
+      'reading': '阅读',
+      'writing': '写作',
+      'speaking': '口语',
+    };
+    return typeMap[type] || type;
+  },
+
+  /**
+   * 获取科目显示标签
+   */
+  getSubjectLabel(subject) {
+    const labelMap = {
+      'listening': '听力',
+      'reading': '阅读',
+      'writing': '写作',
+      'speaking': '口语',
+      '听力': '听力',
+      '阅读': '阅读',
+      '写作': '写作',
+      '口语': '口语',
+    };
+    return labelMap[subject] || subject;
+  },
+
+  /**
+   * 点击作业卡片
+   */
+  onHomeworkTap(e) {
+    const { id } = e.currentTarget.dataset;
+    wx.navigateTo({
+      url: `/pages/homework-detail/homework-detail?id=${id}`
     });
   },
 
-  prevMonth() {
-    let { displayedYear, displayedMonth } = this.data;
-    if (displayedMonth === 0) { displayedMonth = 11; displayedYear--; }
-    else { displayedMonth--; }
-    this.setData({ displayedYear, displayedMonth });
-    this.updateMonthLabel();
-    this.initCalendar();
-  },
-
-  nextMonth() {
-    const { displayedYear, displayedMonth, maxYear, maxMonth } = this.data;
-    if (displayedYear > maxYear || (displayedYear === maxYear && displayedMonth >= maxMonth)) return;
-    let y = displayedYear, m = displayedMonth;
-    if (m === 11) { m = 0; y++; } else { m++; }
-    this.setData({ displayedYear: y, displayedMonth: m });
-    this.updateMonthLabel();
-    this.initCalendar();
-  },
-
   /**
-   * 加载打卡统计数据（从云数据库）
+   * 创建示例作业（用于测试）
    */
-  async loadStats() {
+  async createSampleHomework() {
     try {
-      const today = this.formatDate(new Date());
+      const db = wx.cloud.database();
       const now = new Date();
-      
-      // 计算本周一（周一为一周开始）
-      const weekStart = new Date(now);
-      const dayOfWeek = weekStart.getDay(); // 0=周日, 1=周一, ...
-      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      weekStart.setDate(weekStart.getDate() - daysFromMonday);
-      const weekStartStr = this.formatDate(weekStart);
-      
-      // 计算本月1号
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthStartStr = this.formatDate(monthStart);
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const nextWeek = new Date(now);
+      nextWeek.setDate(nextWeek.getDate() + 7);
 
-      // 只查询当前用户的打卡记录
-      const myCheckins = await cloudDB.getMy('checkins');
-
-      let streakDays = 0, weekCheckin = 0, monthCheckin = 0;
-      
-      if (myCheckins.success && myCheckins.data.length > 0) {
-        const myDates = myCheckins.data.map(c => c.date);
-        
-        // 去重统计（同一天多次打卡只算一次）
-        const uniqueDates = [...new Set(myDates)];
-        
-        // 计算连续打卡天数
-        const sorted = [...uniqueDates].sort().reverse();
-        let checkDate = new Date(today);
-        for (const d of sorted) {
-          const expected = this.formatDate(checkDate);
-          if (d === expected) {
-            streakDays++;
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else if (d < expected) {
-            // 如果日期小于预期，说明有间断，停止计算
-            break;
-          }
+      const sampleHomeworks = [
+        {
+          title: '雅思听力练习 - Section 3',
+          subject: '听力',
+          description: '完成剑桥雅思15 Test 2 的听力 Section 3，注意抓取关键词',
+          deadline: tomorrow.toISOString(),
+          status: 'pending',
+        },
+        {
+          title: '写作 Task 2 议论文',
+          subject: '写作',
+          description: '题目：Some people think that the best way to reduce crime is to give longer prison sentences. To what extent do you agree or disagree?',
+          deadline: nextWeek.toISOString(),
+          status: 'pending',
+        },
+        {
+          title: '口语 Part 2 准备',
+          subject: '口语',
+          description: '准备一个 Describe a memorable journey 的话题，练习2分钟陈述',
+          deadline: tomorrow.toISOString(),
+          status: 'assigned',
         }
+      ];
 
-        // 本周打卡天数（去重）
-        weekCheckin = uniqueDates.filter(d => d >= weekStartStr && d <= today).length;
-        
-        // 本月打卡天数（去重）
-        monthCheckin = uniqueDates.filter(d => d >= monthStartStr && d <= today).length;
+      for (const hw of sampleHomeworks) {
+        await cloudDB.addMy('homework', hw);
       }
 
-      this.setData({ streakDays, weekCheckin, monthCheckin });
+      wx.showToast({ title: '示例作业已创建', icon: 'success' });
+      this.loadPendingHomework();
     } catch (e) {
-      // 加载统计数据失败
+      console.error('创建示例作业失败', e);
+      wx.showToast({ title: '创建失败', icon: 'none' });
     }
   },
 
   /**
-   * 初始化日历（从云数据库加载热力数据）
+   * 长按标题创建示例数据
    */
-  async initCalendar() {
-    const now = new Date();
-    const { displayedYear, displayedMonth, maxYear, maxMonth } = this.data;
-    const isCurrentMonth = displayedYear === maxYear && displayedMonth === maxMonth;
-    const daysInMonth = new Date(displayedYear, displayedMonth + 1, 0).getDate();
-    const firstDay = new Date(displayedYear, displayedMonth, 1).getDay();
-
-    // 查询当月所有打卡数据
-    const monthStart = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-01`;
-    const monthEnd = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
-
-    let dateCountMap = {};
-    let checkinRes = null;
-    try {
-      checkinRes = await cloudDB.getMy('checkins', (q) =>
-        q.where({
-          date: wx.cloud.database().command.gte(monthStart),
-        }).orderBy('date', 'asc')
-      );
-      if (checkinRes.success && checkinRes.data.length > 0) {
-        checkinRes.data.forEach(c => {
-          dateCountMap[c.date] = (dateCountMap[c.date] || 0) + 1;
-        });
+  onTitleLongPress() {
+    wx.showModal({
+      title: '创建测试数据',
+      content: '是否创建示例作业数据用于测试？',
+      success: (res) => {
+        if (res.confirm) {
+          this.createSampleHomework();
+        }
       }
-    } catch (e) {
-      // 加载日历数据失败
-    }
-
-    const days = [];
-    for (let i = 0; i < firstDay; i++) {
-      days.push({ day: '', isEmpty: true, heatColor: 'transparent', hasCheckin: false, types: [] });
-    }
-
-    const today = this.formatDate(now);
-    const typeList = this.data.checkinTypes;
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const date = new Date(displayedYear, displayedMonth, d);
-      const isFuture = isCurrentMonth && date > now;
-      const count = isFuture ? 0 : (dateCountMap[dateStr] || 0);
-      const hasCheckin = count > 0;
-
-      // 获取该日期的打卡类型（最多取3个）
-      let types = [];
-      if (hasCheckin && checkinRes && checkinRes.success) {
-        const dayCheckins = checkinRes.data.filter(c => c.date === dateStr);
-        // 从 types 数组中提取所有类型ID（数据库中存储的是 types 数组）
-        const allTypes = dayCheckins.flatMap(c => c.types || []);
-        const uniqueTypes = [...new Set(allTypes.filter(Boolean))];
-        types = uniqueTypes.slice(0, 3).map(tid => typeList.find(t => t.id === tid) || typeList[0]);
-      }
-
-      days.push({
-        day: d,
-        isEmpty: false,
-        date: dateStr,
-        heatColor: this.getHeatColor(count),
-        heatCount: count,
-        hasCheckin,
-        types,
-      });
-    }
-
-    this.setData({ calendarDays: days });
-  },
-
-  getHeatColor(count) {
-    if (count === 0) return '#FFF9F5';
-    if (count === 1) return 'rgba(167,251,245,0.2)';
-    if (count === 2) return 'rgba(167,251,245,0.5)';
-    if (count === 3) return 'rgba(167,251,245,0.75)';
-    return '#A7FBF5';
-  },
-
-  formatDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  },
-
-  onTapCalendarCell(e) {
-    const { date, count } = e.currentTarget.dataset;
-    if (!date) return;
-    wx.showToast({ title: `${date}: ${count}次打卡`, icon: 'none', duration: 1200 });
-  },
-
-  /**
-   * 从云数据库加载打卡列表
-   */
-  async loadCheckinList() {
-    try {
-      const res = await cloudDB.getMy('checkins', (q) => q.orderBy('_createTime', 'desc').limit(20));
-      if (res.success) {
-        const typeList = this.data.checkinTypes;
-        const list = res.data.map(c => {
-          const dateParts = c.date ? c.date.split('-') : ['', '', ''];
-          const month = dateParts[1] ? parseInt(dateParts[1], 10) : '';
-          const day = dateParts[2] ? parseInt(dateParts[2], 10) : '';
-          // 将类型ID映射为包含label和color的对象
-          const mappedTypes = (c.types || []).map(tid => {
-            const typeObj = typeList.find(t => t.id === tid);
-            return typeObj || { id: tid, label: tid, color: '#A7FBF5' };
-          });
-          return {
-            id: c._id,
-            date: c.date,
-            month: month,
-            day: day,
-            types: mappedTypes,
-            content: c.content || '',
-          };
-        });
-        this.setData({ checkinList: list });
-      }
-    } catch (e) {
-      // 加载打卡列表失败
-    }
-  },
-
-  showCheckinForm() {
-    // 重置选中状态
-    const checkinTypes = this.data.checkinTypes.map(t => ({ ...t, selected: false }));
-    this.setData({ showForm: true, selectedTypes: [], checkinTypes, checkinContent: '' });
-  },
-  hideCheckinForm() {
-    const checkinTypes = this.data.checkinTypes.map(t => ({ ...t, selected: false }));
-    this.setData({ showForm: false, selectedTypes: [], checkinTypes, checkinContent: '' });
-  },
-  preventBubble() {},
-
-  toggleType(e) {
-    const id = e.currentTarget.dataset.id;
-    let selected = this.data.selectedTypes.slice();
-    const idx = selected.indexOf(id);
-    if (idx > -1) selected.splice(idx, 1);
-    else selected.push(id);
-    // 更新 checkinTypes 的选中状态
-    const checkinTypes = this.data.checkinTypes.map(t => ({
-      ...t,
-      selected: selected.includes(t.id)
-    }));
-    this.setData({ selectedTypes: selected, checkinTypes });
-  },
-
-  onContentInput(e) { this.setData({ checkinContent: e.detail.value }); },
-
-  /**
-   * 提交打卡（保存到云数据库）
-   */
-  async submitCheckin() {
-    const { selectedTypes, checkinContent, checkinTypes } = this.data;
-    if (selectedTypes.length === 0) {
-      wx.showToast({ title: '请选择打卡类型', icon: 'none' });
-      return;
-    }
-    if (!checkinContent.trim()) {
-      wx.showToast({ title: '请输入打卡内容', icon: 'none' });
-      return;
-    }
-
-    const now = new Date();
-    const typeObjs = selectedTypes.map(id => checkinTypes.find(t => t.id === id));
-
-    try {
-      const res = await cloudDB.addMy('checkins', {
-        date: this.formatDate(now),
-        types: selectedTypes,
-        content: checkinContent,
-      });
-
-      if (res.success) {
-        // 刷新列表和统计
-        await Promise.all([this.loadCheckinList(), this.loadStats(), this.initCalendar()]);
-        this.setData({
-          showForm: false,
-          selectedTypes: [],
-          checkinContent: '',
-        });
-        wx.vibrateShort({ type: 'medium' });
-        wx.showToast({ title: '打卡成功！', icon: 'success' });
-      } else {
-        wx.showToast({ title: '打卡失败', icon: 'none' });
-      }
-    } catch (e) {
-      wx.showToast({ title: '打卡失败', icon: 'none' });
-    }
-  },
-
-  onSettings() {
-    wx.showToast({ title: '设置功能开发中', icon: 'none' });
+    });
   },
 });
