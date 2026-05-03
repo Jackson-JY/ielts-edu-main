@@ -40,28 +40,26 @@ Page({
     }
   },
 
-  /**
-   * 格式化作业详情数据（兼容新旧格式）
-   */
   formatHomeworkDetail(hw) {
     const deadline = hw.deadline ? new Date(hw.deadline) : null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const daysLeft = deadline ? Math.ceil((deadline - today) / (1000 * 60 * 60 * 24)) : null;
 
-    // 兼容新旧字段
     const subject = hw.subject || this.mapTypeToSubject(hw.type) || '综合';
     const description = hw.description || hw.content || '';
     const status = hw.status || (hw.submitted ? 'completed' : 'pending');
 
-    // 格式化创建时间
     let createTimeFormatted = '';
     if (hw._createTime) {
       const createDate = new Date(hw._createTime);
-      createTimeFormatted = `${createDate.getFullYear()}-${String(createDate.getMonth() + 1).padStart(2, '0')}-${String(createDate.getDate()).padStart(2, '0')}`;
+      createTimeFormatted = createDate.getFullYear() + '-' +
+        String(createDate.getMonth() + 1).padStart(2, '0') + '-' +
+        String(createDate.getDate()).padStart(2, '0');
     } else if (hw.date) {
       createTimeFormatted = hw.date;
-    }\n
+    }
+
     return {
       id: hw._id,
       title: hw.title || '未命名作业',
@@ -69,7 +67,7 @@ Page({
       subjectLabel: this.getSubjectLabel(subject),
       description: description,
       deadline: hw.deadline,
-      deadlineFormatted: deadline ? `${deadline.getFullYear()}年${deadline.getMonth() + 1}月${deadline.getDate()}日` : '无截止日期',
+      deadlineFormatted: deadline ? (deadline.getFullYear() + '年' + (deadline.getMonth() + 1) + '月' + deadline.getDate() + '日') : '无截止日期',
       daysLeft: daysLeft,
       isUrgent: daysLeft !== null && daysLeft <= 3 && daysLeft >= 0,
       isOverdue: daysLeft !== null && daysLeft < 0,
@@ -85,9 +83,6 @@ Page({
     };
   },
 
-  /**
-   * 将旧 type 字段映射到 subject
-   */
   mapTypeToSubject(type) {
     const typeMap = {
       'listening': '听力',
@@ -98,9 +93,6 @@ Page({
     return typeMap[type] || type;
   },
 
-  /**
-   * 获取科目显示标签
-   */
   getSubjectLabel(subject) {
     const labelMap = {
       'listening': '听力',
@@ -115,7 +107,6 @@ Page({
     return labelMap[subject] || subject;
   },
 
-  // 标记作业完成
   async markAsComplete() {
     const { homework } = this.data;
     if (!homework || homework.isCompleted) return;
@@ -132,20 +123,17 @@ Page({
       });
 
       wx.showToast({ title: '已完成作业！', icon: 'success' });
-      
-      // 更新本地状态
       this.setData({
         'homework.status': 'completed',
         'homework.isCompleted': true,
       });
-      
-      // 返回上一页并刷新
+
       const pages = getCurrentPages();
       const prevPage = pages[pages.length - 2];
       if (prevPage && prevPage.loadPendingHomework) {
         prevPage.loadPendingHomework();
       }
-      
+
       setTimeout(() => {
         wx.navigateBack();
       }, 1500);
@@ -155,12 +143,10 @@ Page({
     }
   },
 
-  // 返回上一页
   goBack() {
     wx.navigateBack();
   },
 
-  // 预览附件
   previewAttachment(e) {
     const { url } = e.currentTarget.dataset;
     if (url) {

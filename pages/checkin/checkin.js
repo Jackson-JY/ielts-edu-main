@@ -1,5 +1,7 @@
 // pages/checkin/checkin.js
 const cloudDB = require('../../utils/cloudDB');
+const { formatDate } = require('../../utils/dateUtil');
+const { calculateStreak } = require('../../utils/checkinUtil');
 
 Page({
   data: {
@@ -83,7 +85,7 @@ Page({
    * 检查今日打卡状态
    */
   async checkTodayStatus() {
-    const today = this.formatDate(new Date());
+    const today = formatDate(new Date());
     try {
       const res = await cloudDB.getMy('checkins', (q) =>
         q.where({ date: today })
@@ -106,18 +108,8 @@ Page({
       // 计算连续打卡
       let currentStreak = 0;
       if (res.success && res.data.length > 0) {
-        const sorted = res.data.map(c => c.date).sort().reverse();
-        const today = this.formatDate(new Date());
-        let checkDate = new Date();
-        for (const d of sorted) {
-          const expected = this.formatDate(checkDate);
-          if (d === expected) {
-            currentStreak++;
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else {
-            break;
-          }
-        }
+        const dates = res.data.map(c => c.date);
+        currentStreak = calculateStreak(dates);
       }
 
       // 简单计算成就数（每7天连续获得1个）
@@ -165,10 +157,6 @@ Page({
     return `${Math.floor(days / 7)}周前`;
   },
 
-  formatDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  },
-
   prevMonth() {
     let { currentMonth, currentYear } = this.data;
     if (currentMonth === 1) { currentMonth = 12; currentYear -= 1; }
@@ -195,7 +183,7 @@ Page({
     }
 
     try {
-      const today = this.formatDate(new Date());
+      const today = formatDate(new Date());
       const res = await cloudDB.addMy('checkins', {
         date: today,
         types: ['checkin'],

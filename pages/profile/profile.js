@@ -4,6 +4,7 @@ const { formatDate } = require('../../utils/dateUtil');
 const cloudDB = require('../../utils/cloudDB');
 const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
+const { calculateStreak, calculateWeekCheckins, calculateMonthCheckins } = require('../../utils/checkinUtil');
 
 Page({
   data: {
@@ -470,8 +471,6 @@ Page({
     }
   },
 
-  stopPropagation() {},
-
   goToAssessmentResult() {
     wx.navigateTo({ url: '/pages/assessment/result/result' });
   },
@@ -531,19 +530,7 @@ Page({
    */
   async loadCheckinStats() {
     try {
-      const today = this.formatDate(new Date());
-      const now = new Date();
-      
-      // 计算本周一（周一为一周开始）
-      const weekStart = new Date(now);
-      const dayOfWeek = weekStart.getDay();
-      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      weekStart.setDate(weekStart.getDate() - daysFromMonday);
-      const weekStartStr = this.formatDate(weekStart);
-      
-      // 计算本月1号
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthStartStr = this.formatDate(monthStart);
+      const today = formatDate(new Date());
 
       const myCheckins = await cloudDB.getMy('checkins');
 
@@ -553,21 +540,10 @@ Page({
         const myDates = myCheckins.data.map(c => c.date);
         const uniqueDates = [...new Set(myDates)];
         
-        // 计算连续打卡天数
-        const sorted = [...uniqueDates].sort().reverse();
-        let checkDate = new Date(today);
-        for (const d of sorted) {
-          const expected = this.formatDate(checkDate);
-          if (d === expected) {
-            streakDays++;
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else if (d < expected) {
-            break;
-          }
-        }
-
-        weekCheckin = uniqueDates.filter(d => d >= weekStartStr && d <= today).length;
-        monthCheckin = uniqueDates.filter(d => d >= monthStartStr && d <= today).length;
+        // 使用工具类计算打卡统计
+        streakDays = calculateStreak(uniqueDates);
+        weekCheckin = calculateWeekCheckins(uniqueDates);
+        monthCheckin = calculateMonthCheckins(uniqueDates);
       }
 
       this.setData({ streakDays, weekCheckin, monthCheckin });
@@ -610,7 +586,7 @@ Page({
       days.push({ day: '', isEmpty: true, heatColor: 'transparent', hasCheckin: false, types: [], isToday: false });
     }
 
-    const today = this.formatDate(now);
+    const today = formatDate(now);
     const typeList = checkinTypes;
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -650,10 +626,6 @@ Page({
     if (count === 2) return 'rgba(167,251,245,0.5)';
     if (count === 3) return 'rgba(167,251,245,0.75)';
     return '#A7FBF5';
-  },
-
-  formatDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   },
 
   onTapCalendarCell(e) {
@@ -746,7 +718,7 @@ Page({
     }
 
     const selectedTypes = this.data.checkinTypeList.filter(t => t.selected).map(t => t.id);
-    const today = this.formatDate(new Date());
+    const today = formatDate(new Date());
     
     wx.showLoading({ title: '提交中...' });
 

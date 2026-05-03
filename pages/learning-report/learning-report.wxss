@@ -159,15 +159,6 @@ page {
   display: block;
 }
 
-/* 卡片通用样式 */
-.section-card {
-  background: #FFFFFF;
-  border-radius: 32rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
-}
-
 .card-header {
   display: flex;
   justify-content: space-between;

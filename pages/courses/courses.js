@@ -70,7 +70,9 @@ Page({
     return typeMap[type] || '';
   },
 
-  onShow() {},
+  onShow() {
+    this.loadCourses();
+  },
 
   initDate() {
     const now = new Date();

@@ -3,6 +3,8 @@ const app = getApp();
 const cloudDB = require('../../utils/cloudDB');
 const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
+const { formatDate } = require('../../utils/dateUtil');
+const { calculateStreak } = require('../../utils/checkinUtil');
 
 Page({
   data: {
@@ -108,7 +110,7 @@ Page({
         }
       }
 
-      const today = this.formatDate(new Date());
+      const today = formatDate(new Date());
 
       // 并行加载多个数据源
       const [coursesRes, homeworkRes, userRes, checkinRes] = await Promise.all([
@@ -142,23 +144,8 @@ Page({
 
       // 计算连续打卡天数
       if (checkinRes.success && checkinRes.data.length > 0) {
-        const dates = checkinRes.data
-          .map(c => c.date)
-          .sort()
-          .reverse();
-        const todayStr = today;
-        let checkDate = new Date(todayStr);
-        streakDays = 0;
-        // 从今天往前推算连续打卡
-        for (let i = 0; i < dates.length; i++) {
-          const expected = this.formatDate(checkDate);
-          if (dates[i] === expected) {
-            streakDays++;
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else {
-            break;
-          }
-        }
+        const dates = checkinRes.data.map(c => c.date);
+        streakDays = calculateStreak(dates);
       }
 
       this.setData({
@@ -173,14 +160,6 @@ Page({
     } catch (e) {
       console.error("加载用户数据失败", e);
     }
-  },
-
-  // 格式化日期为 YYYY-MM-DD
-  formatDate(d) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   },
 
   // 跳转到课程页

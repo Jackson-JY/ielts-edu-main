@@ -1,5 +1,6 @@
 // pages/learning-report/learning-report.js
 const cloudDB = require('../../utils/cloudDB');
+const { formatDate } = require('../../utils/dateUtil');
 
 Page({
   data: {
@@ -490,7 +491,7 @@ Page({
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
-      const dateStr = this.formatDate(date);
+      const dateStr = formatDate(date);
       const dayCheckins = checkins.filter(c => c.date === dateStr);
       const hours = dayCheckins.length * 1.5;
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -755,10 +756,6 @@ Page({
           ctx.fillText(p.total.toFixed(1), p.x, p.y - 10);
         });
       });
-  },
-
-  formatDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   },
 
   getCurrentRange() {

@@ -49,7 +49,9 @@ Page({
     }
   },
 
-  onShow() {},
+  onShow() {
+    this.loadExamResult();
+  },
 
   /**
    * 从云数据库加载最新测评结果

@@ -1,12 +1,5 @@
 /**
  * 云存储工具函数
- * 用于获取云存储文件的临时 URL
- */
-
-const app = getApp();
-
-/**
- * 获取云存储文件临时 URL
  * @param {string} fileID - 云存储文件 ID (cloud://...)
  * @returns {Promise<string>} 临时 URL
  */

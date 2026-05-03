@@ -2,6 +2,7 @@
 const cloudDB = require('../../utils/cloudDB');
 const { getTempUrl } = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
+const { formatDate } = require('../../utils/dateUtil');
 
 Page({
   data: {
@@ -52,7 +53,7 @@ Page({
       const date = new Date(now);
       date.setDate(now.getDate() + i);
       dates.push({
-        date: this.formatDate(date),
+        date: formatDate(date),
         weekday: weekdays[date.getDay()],
         day: date.getDate(),
         month: (date.getMonth() + 1) + '月',
@@ -131,13 +132,6 @@ Page({
     } finally {
       this.setData({ isLoading: false });
     }
-  },
-
-  formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   },
 
   selectDate(e) {
