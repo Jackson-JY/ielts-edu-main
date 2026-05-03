@@ -40,15 +40,15 @@
         <view class="ability-icon">
           <image class="icon" src="{{iconTarget}}" mode="aspectFit"/>
         </view>
-        <text class="ability-value">{{vocabulary}}</text>
-        <text class="ability-label">词汇量</text>
+        <text class="ability-value">{{targetScore}}</text>
+        <text class="ability-label">目标分数</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
           <image class="icon" src="{{iconChart}}" mode="aspectFit"/>
         </view>
-        <text class="ability-value">{{cefrLevel}}</text>
-        <text class="ability-label">CEFR 等级</text>
+        <text class="ability-value">{{currentScore}}</text>
+        <text class="ability-label">当前分数</text>
       </view>
       <view class="ability-item">
         <view class="ability-icon">

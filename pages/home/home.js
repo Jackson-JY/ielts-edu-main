@@ -11,8 +11,8 @@ Page({
     todayCourses: 0,
     submittedHomework: 0,
     totalHomework: 0,
-    vocabulary: 0,
-    cefrLevel: "A1",
+    targetScore: 0,
+    currentScore: 0,
     studyDays: 0,
     streakDays: 0,
     // 云存储图标（使用临时 URL）
@@ -132,11 +132,11 @@ Page({
         : 0;
 
       // 更新用户数据（使用默认值或从数据库获取）
-      let vocabulary = 2450, cefrLevel = "B1", studyDays = 28, streakDays = 7;
+      let targetScore = 7.0, currentScore = 5.5, studyDays = 28, streakDays = 7;
       if (userRes.success && userRes.data.length > 0) {
         const user = userRes.data[0];
-        vocabulary = user.vocabulary || 2450;
-        cefrLevel = user.cefrLevel || "B1";
+        targetScore = user.targetScore || 7.0;
+        currentScore = user.currentScore || 5.5;
         studyDays = user.studyDays || 28;
       }
 
@@ -165,8 +165,8 @@ Page({
         todayCourses,
         submittedHomework,
         totalHomework,
-        vocabulary,
-        cefrLevel,
+        targetScore,
+        currentScore,
         studyDays,
         streakDays,
       });
