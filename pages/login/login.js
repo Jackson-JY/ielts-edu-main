@@ -67,6 +67,7 @@ Page({
             avatarUrl: user.avatarUrl || '',
             openId,
             userId: user._id,
+            isAdmin: user.isAdmin === true,
           },
           false,
         );

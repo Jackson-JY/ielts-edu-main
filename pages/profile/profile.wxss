@@ -1103,3 +1103,18 @@
   pointer-events: none;
   filter: grayscale(0.5);
 }
+
+/* 管理员菜单 */
+.admin-menu {
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+  border: 2rpx solid #FFD54F;
+}
+
+.admin-badge {
+  background: #FFD54F;
+  color: #333;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-weight: 500;
+}

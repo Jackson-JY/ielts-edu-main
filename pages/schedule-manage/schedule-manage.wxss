@@ -1,0 +1,541 @@
+/* pages/schedule-manage/schedule-manage.wxss */
+.page {
+  min-height: 100vh;
+  background: #FFF5F5;
+  padding-bottom: 40rpx;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  background: #FFF;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.back-btn, .add-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #F5F5F5;
+}
+
+.back-icon {
+  font-size: 40rpx;
+  color: #333;
+  line-height: 1;
+}
+
+.add-btn {
+  background: #A7FBF5;
+}
+
+.add-icon {
+  font-size: 36rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.page-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.loading-container, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #9A97AA;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.empty-sub {
+  font-size: 26rpx;
+  color: #9A97AA;
+}
+
+.schedule-list {
+  padding: 24rpx 32rpx;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.list-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.list-count {
+  font-size: 24rpx;
+  color: #9A97AA;
+}
+
+.schedule-item {
+  display: flex;
+  background: #FFF;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.schedule-item.past {
+  opacity: 0.6;
+}
+
+.schedule-date-badge {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.date-day {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.date-month {
+  font-size: 20rpx;
+  color: #666;
+}
+
+.schedule-content {
+  flex: 1;
+}
+
+.schedule-title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.schedule-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-right: 12rpx;
+}
+
+.subject-tag {
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+}
+
+.subject-text {
+  font-size: 22rpx;
+  color: #333;
+}
+
+.schedule-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.info-item {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.schedule-desc {
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.4;
+}
+
+.schedule-actions {
+  display: flex;
+  align-items: flex-start;
+  margin-left: 16rpx;
+}
+
+.action-btn {
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+}
+
+.action-btn.delete {
+  background: #FFE8E8;
+  color: #FF6B6B;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  position: absolute;
+  left: 32rpx;
+  right: 32rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #FFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  margin-bottom: 32rpx;
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.modal-subtitle {
+  font-size: 26rpx;
+  color: #9A97AA;
+}
+
+.form-group {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  font-size: 26rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  background: #F8F8F8;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  background: #F8F8F8;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.form-picker {
+  height: 80rpx;
+  background: #F8F8F8;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 28rpx;
+}
+
+.picker-arrow {
+  font-size: 32rpx;
+  color: #9A97AA;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.time-picker {
+  flex: 1;
+}
+
+.time-separator {
+  font-size: 28rpx;
+  color: #9A97AA;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+}
+
+.modal-btn.cancel {
+  background: #F5F5F5;
+  color: #666;
+}
+
+.modal-btn.confirm {
+  background: #A7FBF5;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 弹窗可滚动 */
+.modal-scroll {
+  max-height: 85vh;
+}
+
+/* 排课模式选择 */
+.mode-selector {
+  display: flex;
+  gap: 16rpx;
+}
+
+.mode-btn {
+  flex: 1;
+  height: 72rpx;
+  background: #F8F8F8;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background: #A7FBF5;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 学生选择器 */
+.student-picker {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-picker .placeholder {
+  color: #9A97AA;
+}
+
+/* 循环排课配置 */
+.repeat-config {
+  background: #F8F8F8;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.repeat-config .form-group {
+  margin-bottom: 20rpx;
+}
+
+.repeat-config .form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* 星期选择器 */
+.weekday-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.weekday-btn {
+  width: 80rpx;
+  height: 64rpx;
+  background: #FFF;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.weekday-btn.active {
+  background: #A7FBF5;
+  border-color: #00897B;
+  color: #00897B;
+  font-weight: 500;
+}
+
+/* 循环提示 */
+.repeat-tip {
+  background: #FFF9E6;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  margin-top: 16rpx;
+}
+
+.repeat-tip text {
+  font-size: 24rpx;
+  color: #996600;
+  line-height: 1.5;
+}
+
+/* 循环标签 */
+.repeat-tag {
+  font-size: 22rpx;
+  color: #00897B;
+  background: #E0F2F1;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+}
+
+/* 学生选择弹窗 */
+.student-picker-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.picker-content {
+  width: 100%;
+  max-height: 70vh;
+  background: #ffffff;
+  border-radius: 40rpx 40rpx 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+}
+
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40rpx;
+  border-bottom: 1rpx solid #E0E0E0;
+}
+
+.picker-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #424242;
+}
+
+.close-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #9E9E9E;
+  background: #F5F5F5;
+  border-radius: 50%;
+}
+
+.search-box {
+  padding: 24rpx 40rpx;
+}
+
+.search-input {
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  padding: 24rpx 32rpx;
+  font-size: 28rpx;
+}
+
+.student-list {
+  flex: 1;
+  max-height: 50vh;
+  padding: 0 40rpx;
+}
+
+.student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 0;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.student-name {
+  font-size: 28rpx;
+  color: #424242;
+}
+
+.student-selected .student-name {
+  color: #00897B;
+  font-weight: bold;
+}
+
+.check-icon {
+  color: #00897B;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #9E9E9E;
+  font-size: 28rpx;
+}

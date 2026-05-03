@@ -14,7 +14,8 @@
     "pages/assessment/reading/reading",
     "pages/assessment/writing/writing",
     "pages/assessment/result/result",
-    "pages/homework-detail/homework-detail"
+    "pages/homework-detail/homework-detail",
+    "pages/schedule-manage/schedule-manage"
   ],
   "window": {
     "navigationBarTitleText": "雅思学习",

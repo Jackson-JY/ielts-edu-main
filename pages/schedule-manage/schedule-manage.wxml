@@ -1,0 +1,336 @@
+<!-- pages/schedule-manage/schedule-manage.wxml - 管理员排课页面 -->
+<wxs module="utils">
+module.exports = {
+  includes: function(arr, val) {
+    return arr.indexOf(val) !== -1;
+  }
+}
+</wxs>
+
+<view class="page">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <text class="page-title">排课管理</text>
+    <view class="add-btn" bindtap="showAddModal">
+      <text class="add-icon">+</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 无权限提示 -->
+  <view class="empty-state" wx:elif="{{!isAdmin}}">
+    <text class="empty-icon">🔒</text>
+    <text class="empty-text">您没有管理员权限</text>
+  </view>
+
+  <!-- 课程列表 -->
+  <view class="schedule-list" wx:else>
+    <view class="list-header">
+      <text class="list-title">课程列表</text>
+      <text class="list-count">共 {{scheduleList.length}} 节</text>
+    </view>
+
+    <view class="schedule-item {{item.isPast ? 'past' : ''}}" 
+          wx:for="{{scheduleList}}" 
+          wx:key="id"
+          data-schedule="{{item}}"
+          bindtap="editSchedule">
+      <view class="schedule-date-badge" style="background-color: {{item.subjectColor}};">
+        <text class="date-day">{{item.date.split('-')[2]}}</text>
+        <text class="date-month">{{item.date.split('-')[1]}}月</text>
+      </view>
+      
+      <view class="schedule-content">
+        <view class="schedule-title-row">
+          <text class="schedule-title">{{item.title}}</text>
+          <view class="subject-tag" style="background-color: {{item.subjectColor}};">
+            <text class="subject-text">{{item.subject}}</text>
+          </view>
+        </view>
+        
+        <view class="schedule-info">
+          <text class="info-item">🕐 {{item.startTime}}-{{item.endTime}}</text>
+          <text class="info-item" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
+          <text class="info-item" wx:if="{{item.teacher}}">👨‍🏫 {{item.teacher}}</text>
+          <text class="info-item" wx:if="{{item.location}}">📍 {{item.location}}</text>
+        </view>
+        
+        <view class="schedule-info" wx:if="{{item.scheduleMode === '循环'}}">
+          <text class="repeat-tag">🔄 循环课程</text>
+        </view>
+        
+        <text class="schedule-desc" wx:if="{{item.description}}">{{item.description}}</text>
+      </view>
+
+      <view class="schedule-actions">
+        <view class="action-btn delete" catchtap="deleteSchedule" data-schedule="{{item}}">
+          <text>删除</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && scheduleList.length === 0}}">
+      <text class="empty-icon">📅</text>
+      <text class="empty-text">暂无课程安排</text>
+      <text class="empty-sub">点击右上角添加课程</text>
+    </view>
+  </view>
+
+  <!-- 添加/编辑弹窗 -->
+  <view class="modal-overlay" wx:if="{{showAddModal}}">
+    <view class="modal-mask" catchtap="hideModal"></view>
+    <view class="modal-content modal-scroll" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">{{editingSchedule ? '编辑课程' : '添加课程'}}</text>
+        <text class="modal-subtitle">设置课程时间地点</text>
+      </view>
+      
+      <!-- 排课模式选择 -->
+      <view class="form-group">
+        <text class="form-label">排课方式</text>
+        <view class="mode-selector">
+          <view 
+            class="mode-btn {{scheduleMode === 'single' ? 'active' : ''}}"
+            data-mode="single"
+            catchtap="onScheduleModeChange"
+          >
+            <text>单节课</text>
+          </view>
+          <view 
+            class="mode-btn {{scheduleMode === '循环' ? 'active' : ''}}"
+            data-mode="循环"
+            catchtap="onScheduleModeChange"
+          >
+            <text>循环排课</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 课程名称 -->
+      <view class="form-group">
+        <text class="form-label">课程名称 *</text>
+        <input 
+          class="form-input" 
+          placeholder="如：雅思听力强化"
+          value="{{formData.title}}"
+          data-field="title"
+          bindinput="onFormInput"
+        />
+      </view>
+
+      <!-- 学生选择 -->
+      <view class="form-group">
+        <text class="form-label">选择学生</text>
+        <view class="form-input student-picker" catchtap="onStudentInputTap">
+          <text class="{{formData.studentName ? '' : 'placeholder'}}">
+            {{formData.studentName || '点击选择学生'}}
+          </text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 科目选择 -->
+      <view class="form-group">
+        <text class="form-label">科目</text>
+        <picker mode="selector" range="{{subjects}}" value="{{subjects.indexOf(formData.subject)}}" bindchange="onSubjectChange">
+          <view class="form-picker">
+            <text>{{formData.subject}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 日期选择 -->
+      <view class="form-group">
+        <text class="form-label">开始日期 *</text>
+        <picker mode="date" value="{{formData.date}}" start="{{maxDate}}" bindchange="onFormInput" data-field="date">
+          <view class="form-picker">
+            <text>{{formData.date || '选择日期'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 时间选择 -->
+      <view class="form-group">
+        <text class="form-label">时间</text>
+        <view class="time-row">
+          <picker mode="time" value="{{formData.startTime}}" bindchange="onFormInput" data-field="startTime">
+            <view class="form-picker time-picker">
+              <text>{{formData.startTime}}</text>
+            </view>
+          </picker>
+          <text class="time-separator">至</text>
+          <picker mode="time" value="{{formData.endTime}}" bindchange="onFormInput" data-field="endTime">
+            <view class="form-picker time-picker">
+              <text>{{formData.endTime}}</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <!-- 循环排课配置 -->
+      <view class="repeat-config" wx:if="{{scheduleMode === '循环'}}">
+        <view class="form-group">
+          <text class="form-label">重复星期</text>
+          <view class="weekday-selector">
+            <view 
+              class="weekday-btn {{utils.includes(repeatConfig.weekdays, 1) ? 'active' : ''}}"
+              data-weekday="1"
+              catchtap="onWeekdayToggle"
+            >
+              <text>周一</text>
+            </view>
+            <view 
+              class="weekday-btn {{utils.includes(repeatConfig.weekdays, 2) ? 'active' : ''}}"
+              data-weekday="2"
+              catchtap="onWeekdayToggle"
+            >
+              <text>周二</text>
+            </view>
+            <view 
+              class="weekday-btn {{utils.includes(repeatConfig.weekdays, 3) ? 'active' : ''}}"
+              data-weekday="3"
+              catchtap="onWeekdayToggle"
+            >
+              <text>周三</text>
+            </view>
+            <view 
+              class="weekday-btn {{utils.includes(repeatConfig.weekdays, 4) ? 'active' : ''}}"
+              data-weekday="4"
+              catchtap="onWeekdayToggle"
+            >
+              <text>周四</text>
+            </view>
+            <view 
+              class="weekday-btn {{utils.includes(repeatConfig.weekdays, 5) ? 'active' : ''}}"
+              data-weekday="5"
+              catchtap="onWeekdayToggle"
+            >
+              <text>周五</text>
+            </view>
+            <view 
+              class="weekday-btn {{utils.includes(repeatConfig.weekdays, 6) ? 'active' : ''}}"
+              data-weekday="6"
+              catchtap="onWeekdayToggle"
+            >
+              <text>周六</text>
+            </view>
+            <view 
+              class="weekday-btn {{utils.includes(repeatConfig.weekdays, 7) ? 'active' : ''}}"
+              data-weekday="7"
+              catchtap="onWeekdayToggle"
+            >
+              <text>周日</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">重复周数</text>
+          <picker mode="selector" range="{{[1,2,3,4,5,6,7,8]}}" value="{{repeatConfig.weekCount - 1}}" bindchange="onWeekCountChange">
+            <view class="form-picker">
+              <text>{{repeatConfig.weekCount}} 周</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="repeat-tip">
+          <text>将从 {{formData.date}} 开始，连续 {{repeatConfig.weekCount}} 周的所选星期自动排课</text>
+        </view>
+      </view>
+
+      <!-- 教师 -->
+      <view class="form-group">
+        <text class="form-label">教师</text>
+        <input 
+          class="form-input" 
+          placeholder="授课教师姓名"
+          value="{{formData.teacher}}"
+          data-field="teacher"
+          bindinput="onFormInput"
+        />
+      </view>
+
+      <!-- 地点 -->
+      <view class="form-group">
+        <text class="form-label">上课地点</text>
+        <input 
+          class="form-input" 
+          placeholder="如：在线/教室301"
+          value="{{formData.location}}"
+          data-field="location"
+          bindinput="onFormInput"
+        />
+      </view>
+
+      <!-- 描述 -->
+      <view class="form-group">
+        <text class="form-label">课程描述</text>
+        <textarea 
+          class="form-textarea" 
+          placeholder="课程简介..."
+          value="{{formData.description}}"
+          data-field="description"
+          bindinput="onFormInput"
+          maxlength="200"
+        />
+      </view>
+
+      <view class="modal-buttons">
+        <view class="modal-btn cancel" catchtap="hideModal">
+          <text>取消</text>
+        </view>
+        <view class="modal-btn confirm" catchtap="saveSchedule">
+          <text>保存</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 学生选择弹窗 -->
+  <view class="student-picker-modal" wx:if="{{showStudentPicker}}" catchtap="onCloseStudentPicker">
+    <view class="picker-content" catchtap="">
+      <view class="picker-header">
+        <text class="picker-title">选择学生</text>
+        <view class="close-btn" bindtap="onCloseStudentPicker">×</view>
+      </view>
+      
+      <!-- 搜索框 -->
+      <view class="search-box">
+        <input
+          class="search-input"
+          placeholder="搜索学生姓名"
+          value="{{studentSearchKeyword}}"
+          bindinput="onStudentSearch"
+        />
+      </view>
+      
+      <!-- 学生列表 -->
+      <scroll-view class="student-list" scroll-y>
+        <view 
+          class="student-item {{item.id === formData.studentId ? 'student-selected' : ''}}"
+          wx:for="{{filteredStudents}}"
+          wx:key="id"
+          bindtap="onSelectStudent"
+          data-student="{{item}}"
+        >
+          <text class="student-name">{{item.name}}</text>
+          <view class="check-icon" wx:if="{{item.id === formData.studentId}}">✓</view>
+        </view>
+        <view class="empty-tip" wx:if="{{filteredStudents.length === 0}}">
+          <text>未找到匹配的学生</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

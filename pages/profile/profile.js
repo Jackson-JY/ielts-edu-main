@@ -26,6 +26,7 @@ Page({
     isLoading: false,
     isLoggedIn: false,
     isGuest: false,
+    isAdmin: false,
     avatarUrl: '',
     defaultAvatarUrl: '',
     // 云存储图标（使用临时 URL）
@@ -161,15 +162,34 @@ Page({
   /**
    * 加载用户数据
    */
-  loadUserData() {
+  async loadUserData() {
     try {
       const userInfo = app.globalData.userInfo;
       const isLoggedIn = app.globalData.isLoggedIn;
       const isGuest = userInfo && userInfo.isGuest;
       
+      // 优先从数据库获取最新用户信息
+      let isAdmin = userInfo && userInfo.isAdmin === true;
+      
+      if (isLoggedIn && userInfo && userInfo.userId) {
+        try {
+          const res = await cloudDB.getMy('users');
+          if (res.success && res.data.length > 0) {
+            const dbUser = res.data[0];
+            isAdmin = dbUser.isAdmin === true;
+            // 更新 globalData
+            userInfo.isAdmin = isAdmin;
+            app.globalData.userInfo = userInfo;
+          }
+        } catch (e) {
+          console.error('获取用户信息失败', e);
+        }
+      }
+      
       this.setData({
         isLoggedIn: isLoggedIn,
         isGuest: isGuest || false,
+        isAdmin: isAdmin,
       });
       
       if (userInfo && userInfo.nickName) {
@@ -493,6 +513,10 @@ Page({
 
   goToOrders() {
     wx.showToast({ title: '功能开发中', icon: 'none' });
+  },
+
+  goToScheduleManage() {
+    wx.navigateTo({ url: '/pages/schedule-manage/schedule-manage' });
   },
 
   // ========== 打卡统计和日历热力图方法 ==========
