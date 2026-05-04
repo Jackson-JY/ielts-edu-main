@@ -48,16 +48,17 @@
         <block wx:for="{{filteredCourses}}" wx:key="_id">
           <view class="course-card">
             <view class="course-header" bindtap="toggleExpand" data-id="{{item._id}}">
-              <image class="course-type-icon" src="{{item.type === 'speaking' ? iconSpeaking : item.type === 'listening' ? iconListening : item.type === 'reading' ? iconReading : item.type === 'writing' ? iconWriting : iconBook}}" mode="aspectFit"/>
+              <image class="course-type-icon" src="{{item.subject === '听力' ? iconListening : item.subject === '口语' ? iconSpeaking : item.subject === '阅读' ? iconReading : item.subject === '写作' ? iconWriting : iconBook}}" mode="aspectFit"/>
               <view class="course-info">
                 <text class="course-name">{{item.title}}</text>
                 <view class="course-meta">
-                  <text class="meta-item">{{item.time}}</text>
+                  <text class="meta-item">{{item.date}} {{item.startTime}}-{{item.endTime}}</text>
                   <text class="meta-item">{{item.duration}}</text>
                   <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
                     <text>{{item.status}}</text>
                   </view>
                 </view>
+                <text class="course-desc" wx:if="{{item.description}}">{{item.description}}</text>
               </view>
               <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
               <view class="expand-icon" wx:else>∨</view>
@@ -82,9 +83,9 @@
                 <!-- 科目选择 -->
                 <view class="form-group">
                   <text class="form-label">作业科目</text>
-                  <picker mode="selector" range="{{['听力', '阅读', '写作', '口语', '综合']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
+                  <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
                     <view class="form-picker">
-                      <text>{{homework[item._id].subject || (item.type === 'speaking' ? '口语' : item.type === 'listening' ? '听力' : item.type === 'reading' ? '阅读' : item.type === 'writing' ? '写作' : '综合')}}</text>
+                      <text>{{homework[item._id].subject || item.subject || '阅读'}}</text>
                       <text class="picker-arrow">›</text>
                     </view>
                   </picker>
@@ -157,16 +158,17 @@
       <block wx:for="{{filteredCourses}}" wx:key="_id">
         <view class="course-card">
           <view class="course-header" bindtap="toggleExpand" data-id="{{item._id}}">
-            <image class="course-type-icon" src="{{item.type === 'speaking' ? iconSpeaking : item.type === 'listening' ? iconListening : item.type === 'reading' ? iconReading : item.type === 'writing' ? iconWriting : iconBook}}" mode="aspectFit"/>
+            <image class="course-type-icon" src="{{item.subject === '听力' ? iconListening : item.subject === '口语' ? iconSpeaking : item.subject === '阅读' ? iconReading : item.subject === '写作' ? iconWriting : iconBook}}" mode="aspectFit"/>
             <view class="course-info">
               <text class="course-name">{{item.title}}</text>
               <view class="course-meta">
-                <text class="meta-item">{{item.time}}</text>
+                <text class="meta-item">{{item.date}} {{item.startTime}}-{{item.endTime}}</text>
                 <text class="meta-item">{{item.duration}}</text>
                 <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
                   <text>{{item.status}}</text>
                 </view>
               </view>
+              <text class="course-desc" wx:if="{{item.description}}">{{item.description}}</text>
             </view>
             <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
             <view class="expand-icon" wx:else>∨</view>
@@ -191,9 +193,9 @@
               <!-- 科目选择 -->
               <view class="form-group">
                 <text class="form-label">作业科目</text>
-                <picker mode="selector" range="{{['听力', '阅读', '写作', '口语', '综合']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
+                <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
                   <view class="form-picker">
-                    <text>{{homework[item._id].subject || (item.type === 'speaking' ? '口语' : item.type === 'listening' ? '听力' : item.type === 'reading' ? '阅读' : item.type === 'writing' ? '写作' : '综合')}}</text>
+                    <text>{{homework[item._id].subject || item.subject || '阅读'}}</text>
                     <text class="picker-arrow">›</text>
                   </view>
                 </picker>
@@ -275,16 +277,17 @@
       <block wx:for="{{filteredCourses}}" wx:key="_id">
         <view class="course-card">
           <view class="course-header" bindtap="toggleExpand" data-id="{{item._id}}">
-            <image class="course-type-icon" src="{{item.type === 'speaking' ? iconSpeaking : item.type === 'listening' ? iconListening : item.type === 'reading' ? iconReading : item.type === 'writing' ? iconWriting : iconBook}}" mode="aspectFit"/>
+            <image class="course-type-icon" src="{{item.subject === '听力' ? iconListening : item.subject === '口语' ? iconSpeaking : item.subject === '阅读' ? iconReading : item.subject === '写作' ? iconWriting : iconBook}}" mode="aspectFit"/>
             <view class="course-info">
               <text class="course-name">{{item.title}}</text>
               <view class="course-meta">
-                <text class="meta-item">{{item.time}}</text>
+                <text class="meta-item">{{item.date}} {{item.startTime}}-{{item.endTime}}</text>
                 <text class="meta-item">{{item.duration}}</text>
                 <view class="status-badge {{item.status === '已完成' ? 'status-completed' : 'status-pending'}}">
                   <text>{{item.status}}</text>
                 </view>
               </view>
+              <text class="course-desc" wx:if="{{item.description}}">{{item.description}}</text>
             </view>
             <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
             <view class="expand-icon" wx:else>∨</view>
@@ -309,9 +312,9 @@
               <!-- 科目选择 -->
               <view class="form-group">
                 <text class="form-label">作业科目</text>
-                <picker mode="selector" range="{{['听力', '阅读', '写作', '口语', '综合']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
+                <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
                   <view class="form-picker">
-                    <text>{{homework[item._id].subject || (item.type === 'speaking' ? '口语' : item.type === 'listening' ? '听力' : item.type === 'reading' ? '阅读' : item.type === 'writing' ? '写作' : '综合')}}</text>
+                    <text>{{homework[item._id].subject || item.subject || '阅读'}}</text>
                     <text class="picker-arrow">›</text>
                   </view>
                 </picker>

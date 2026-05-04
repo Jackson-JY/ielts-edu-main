@@ -24,6 +24,7 @@ Page({
     iconListening: '',
     iconReading: '',
     iconWriting: '',
+    iconBook: '',
   },
 
   onLoad() {
@@ -40,15 +41,14 @@ Page({
       const fileIDs = [
         CLOUD_IMAGES.iconMic,
         CLOUD_IMAGES.iconHeadphones,
-        CLOUD_IMAGES.iconDocument,
-        CLOUD_IMAGES.iconPen,
         CLOUD_IMAGES.iconBook,
+        CLOUD_IMAGES.iconPen,
       ];
       const urlMap = await cloudStorage.getTempUrls(fileIDs);
       this.setData({
         iconSpeaking: urlMap[CLOUD_IMAGES.iconMic] || '',
         iconListening: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
-        iconReading: urlMap[CLOUD_IMAGES.iconDocument] || '',
+        iconReading: urlMap[CLOUD_IMAGES.iconBook] || '',
         iconWriting: urlMap[CLOUD_IMAGES.iconPen] || '',
         iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
       });
@@ -173,6 +173,11 @@ Page({
       if (res.success) {
         courses = res.data;
       }
+      // 根据当前时间计算课程状态
+      courses = courses.map(course => ({
+        ...course,
+        status: this.isCourseCompleted(course.date, course.endTime) ? '已完成' : '待上课'
+      }));
       this.setData({ courses }, () => {
         this.filterCourses();
       });
@@ -184,6 +189,21 @@ Page({
     } finally {
       this.setData({ isLoading: false });
     }
+  },
+
+  /**
+   * 判断课程是否已完成（根据结束时间）
+   * @param {string} date - 课程日期 YYYY-MM-DD
+   * @param {string} endTime - 结束时间 HH:mm
+   * @returns {boolean}
+   */
+  isCourseCompleted(date, endTime) {
+    if (!date || !endTime) return false;
+    const now = new Date();
+    const [year, month, day] = date.split('-');
+    const [hour, minute] = endTime.split(':');
+    const courseEndTime = new Date(year, month - 1, day, hour, minute);
+    return now > courseEndTime;
   },
 
   /**
@@ -290,7 +310,7 @@ Page({
     const value = e.detail.value;
     const homework = this.data.homework;
     if (!homework[id]) homework[id] = {};
-    const subjects = ['听力', '阅读', '写作', '口语', '综合'];
+    const subjects = ['听力', '阅读', '写作', '口语'];
     homework[id].subject = subjects[value];
     this.setData({ homework });
   },
