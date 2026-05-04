@@ -75,6 +75,8 @@ Page({
       isCompleted: status === 'completed' || hw.submitted === true,
       courseName: hw.courseName || '',
       courseId: hw.courseId || '',
+      completion: hw.completion || 0,
+      timeSpent: hw.timeSpent || 0,
       score: hw.score,
       totalScore: hw.totalScore,
       feedback: hw.feedback || '',
@@ -107,40 +109,59 @@ Page({
     return labelMap[subject] || subject;
   },
 
-  async markAsComplete() {
+  async updateHomeworkStatus() {
     const { homework } = this.data;
-    if (!homework || homework.isCompleted) return;
+    if (!homework) return;
 
     try {
       const db = wx.cloud.database();
+      const updateData = {
+        status: homework.completion >= 100 ? 'completed' : 'pending',
+        submitted: homework.completion >= 100,
+        completion: parseInt(homework.completion) || 0,
+        timeSpent: parseInt(homework.timeSpent) || 0,
+      };
+      
+      if (homework.completion >= 100) {
+        updateData.completedAt = db.serverDate();
+        updateData.submittedAt = db.serverDate();
+      }
+      
       await db.collection('homework').doc(homework.id).update({
-        data: {
-          status: 'completed',
-          submitted: true,
-          completedAt: db.serverDate(),
-          submittedAt: db.serverDate(),
-        }
+        data: updateData
       });
 
-      wx.showToast({ title: '已完成作业！', icon: 'success' });
+      wx.showToast({ title: '作业状态已更新！', icon: 'success' });
       this.setData({
-        'homework.status': 'completed',
-        'homework.isCompleted': true,
+        'homework.status': updateData.status,
+        'homework.isCompleted': updateData.submitted,
       });
 
       const pages = getCurrentPages();
       const prevPage = pages[pages.length - 2];
-      if (prevPage && prevPage.loadPendingHomework) {
-        prevPage.loadPendingHomework();
+      if (prevPage && prevPage.loadAllHomework) {
+        prevPage.loadAllHomework();
       }
-
-      setTimeout(() => {
-        wx.navigateBack();
-      }, 1500);
     } catch (e) {
-      console.error('标记完成失败', e);
+      console.error('更新作业状态失败', e);
       wx.showToast({ title: '操作失败', icon: 'none' });
     }
+  },
+
+  // 完成度输入
+  onCompletionInput(e) {
+    const value = e.detail.value;
+    this.setData({
+      'homework.completion': value
+    });
+  },
+
+  // 累计时长输入
+  onTimeSpentInput(e) {
+    const value = e.detail.value;
+    this.setData({
+      'homework.timeSpent': value
+    });
   },
 
   goBack() {

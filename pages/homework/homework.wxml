@@ -8,34 +8,73 @@
 
   <!-- 未完成作业区域 -->
   <view class="section-card">
-    <view class="section-header">
-      <text class="section-title">📚 待完成作业</text>
-      <text class="section-subtitle" wx:if="{{pendingHomework.length > 0}}">{{pendingHomework.length}} 个待完成</text>
-      <text class="section-subtitle" wx:else>暂无待完成作业</text>
+    <view class="section-header" bindtap="togglePendingList">
+      <view class="section-title-row">
+        <text class="section-title">📚 待完成作业</text>
+        <text class="section-subtitle" wx:if="{{pendingHomework.length > 0}}">{{pendingHomework.length}} 个待完成</text>
+        <text class="section-subtitle" wx:else>暂无待完成作业</text>
+      </view>
+      <text class="expand-icon" wx:if="{{pendingHomework.length > 2}}">{{pendingExpanded ? '∧' : '∨'}}</text>
     </view>
     <view class="homework-list" wx:if="{{pendingHomework.length > 0}}">
-      <view class="homework-item {{item.isOverdue ? 'homework-overdue' : ''}} {{item.isUrgent ? 'homework-urgent' : ''}}" wx:for="{{pendingHomework}}" wx:key="id" data-id="{{item.id}}" bindtap="onHomeworkTap">
-        <view class="homework-main">
-          <view class="homework-info">
-            <text class="homework-title">{{item.title}}</text>
-            <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
-            <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
-          </view>
-          <view class="homework-meta">
-            <view class="homework-subject">
-              <text class="subject-tag">{{item.subjectLabel}}</text>
+      <block wx:for="{{pendingExpanded ? pendingHomework : (pendingHomework.length > 0 ? [pendingHomework[0], pendingHomework[1]] : [])}}" wx:key="id">
+        <view class="homework-item {{item.isOverdue ? 'homework-overdue' : ''}} {{item.isUrgent ? 'homework-urgent' : ''}}" data-id="{{item.id}}" bindtap="onHomeworkTap">
+          <view class="homework-main">
+            <view class="homework-info">
+              <text class="homework-title">{{item.title}}</text>
+              <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
+              <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
             </view>
-            <view class="homework-deadline {{item.isOverdue ? 'deadline-overdue' : ''}} {{item.isUrgent ? 'deadline-urgent' : ''}}">
-              <text class="deadline-icon">⏰</text>
-              <text class="deadline-text">{{item.isOverdue ? '已逾期' : (item.daysLeft === 0 ? '今天截止' : item.daysLeft + '天后截止')}}</text>
+            <view class="homework-meta">
+              <view class="homework-subject">
+                <text class="subject-tag">{{item.subjectLabel}}</text>
+              </view>
+              <view class="homework-deadline {{item.isOverdue ? 'deadline-overdue' : ''}} {{item.isUrgent ? 'deadline-urgent' : ''}}">
+                <text class="deadline-icon">⏰</text>
+                <text class="deadline-text">{{item.isOverdue ? '已逾期' : (item.daysLeft === 0 ? '今天截止' : item.daysLeft + '天后截止')}}</text>
+              </view>
             </view>
           </view>
+          <view class="homework-arrow">›</view>
         </view>
-        <view class="homework-arrow">›</view>
-      </view>
+      </block>
     </view>
     <view class="empty-homework" wx:else>
       <text class="empty-text">🎉 太棒了！当前没有待完成的作业</text>
+    </view>
+  </view>
+
+  <!-- 已完成作业区域 -->
+  <view class="section-card" wx:if="{{completedHomework.length > 0}}">
+    <view class="section-header" bindtap="toggleCompletedList">
+      <view class="section-title-row">
+        <text class="section-title">✅ 已完成作业</text>
+        <text class="section-subtitle">{{completedHomework.length}} 个已完成</text>
+      </view>
+      <text class="expand-icon">{{completedExpanded ? '∧' : '∨'}}</text>
+    </view>
+    <view class="homework-list">
+      <block wx:for="{{completedExpanded ? completedHomework : (completedHomework.length > 0 ? [completedHomework[0], completedHomework[1]] : [])}}" wx:key="id">
+        <view class="homework-item homework-completed" data-id="{{item.id}}" bindtap="onHomeworkTap">
+          <view class="homework-main">
+            <view class="homework-info">
+              <text class="homework-title">{{item.title}}</text>
+              <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
+              <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
+            </view>
+            <view class="homework-meta">
+              <view class="homework-subject">
+                <text class="subject-tag subject-tag-completed">{{item.subjectLabel}}</text>
+              </view>
+              <view class="homework-deadline">
+                <text class="deadline-icon">✓</text>
+                <text class="deadline-text">已完成</text>
+              </view>
+            </view>
+          </view>
+          <view class="homework-arrow">›</view>
+        </view>
+      </block>
     </view>
   </view>
 

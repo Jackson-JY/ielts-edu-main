@@ -5,55 +5,79 @@ Page({
   data: {
     // 未完成作业列表
     pendingHomework: [],
+    // 已完成作业列表
+    completedHomework: [],
+    // 折叠状态
+    pendingExpanded: false,
+    completedExpanded: false,
   },
 
   async onLoad() {
-    this.loadPendingHomework();
+    this.loadAllHomework();
   },
 
   onShow() {
-    this.loadPendingHomework();
+    this.loadAllHomework();
   },
 
   /**
-   * 加载未完成的作业
-   * 兼容新旧数据格式
+   * 加载所有作业并分类
    */
-  async loadPendingHomework() {
+  async loadAllHomework() {
     try {
-      const db = wx.cloud.database();
-      const _ = db.command;
-
-      // 查询所有作业，不过滤状态（在内存中过滤以兼容旧数据）
       const res = await cloudDB.getMy('homework', (q) =>
-        q.orderBy('deadline', 'asc')
+        q.orderBy('_updateTime', 'desc')
       );
 
-      console.log('[loadPendingHomework] 作业查询结果:', res);
-
       if (res.success) {
-        // 过滤未完成作业（兼容新旧数据格式）
+        // 过滤未完成作业
         const pendingList = res.data.filter(hw => {
-          // 新格式：status 字段
           if (hw.status) {
             return ['pending', 'assigned', 'in_progress'].includes(hw.status);
           }
-          // 旧格式：submitted 字段
           if (hw.submitted !== undefined) {
             return !hw.submitted;
           }
-          // 默认视为未完成
           return true;
         });
 
-        const homeworkList = pendingList.map(hw => this.formatHomeworkData(hw));
+        // 过滤已完成作业
+        const completedList = res.data.filter(hw => {
+          if (hw.status === 'completed' || hw.submitted === true) {
+            return true;
+          }
+          return false;
+        });
 
-        console.log('[loadPendingHomework] 处理后的待完成作业列表:', homeworkList);
-        this.setData({ pendingHomework: homeworkList });
+        const pendingHomework = pendingList.map(hw => this.formatHomeworkData(hw));
+        const completedHomework = completedList.map(hw => this.formatHomeworkData(hw));
+
+        this.setData({
+          pendingHomework,
+          completedHomework
+        });
       }
     } catch (e) {
-      console.error('加载未完成作业失败', e);
+      console.error('加载作业失败', e);
     }
+  },
+
+  /**
+   * 切换待完成列表折叠状态
+   */
+  togglePendingList() {
+    this.setData({
+      pendingExpanded: !this.data.pendingExpanded
+    });
+  },
+
+  /**
+   * 切换已完成列表折叠状态
+   */
+  toggleCompletedList() {
+    this.setData({
+      completedExpanded: !this.data.completedExpanded
+    });
   },
 
   /**

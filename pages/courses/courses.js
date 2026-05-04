@@ -267,8 +267,22 @@ Page({
 
   toggleExpand(e) {
     const id = e.currentTarget.dataset.id;
+    const newExpandedCourse = this.data.expandedCourse === id ? null : id;
+    
+    // 如果是展开，则为该课程的作业添加 subjectLabel
+    if (newExpandedCourse) {
+      const homework = { ...this.data.homework };
+      const course = this.data.courses.find(c => c._id === id);
+      if (course && !homework[id]?.subjectLabel) {
+        const subjectLabel = this.getSubjectLabel(homework[id]?.subject || course.subject);
+        homework[id] = { ...homework[id], subjectLabel };
+        this.setData({ expandedCourse: newExpandedCourse, homework });
+        return;
+      }
+    }
+    
     this.setData({
-      expandedCourse: this.data.expandedCourse === id ? null : id,
+      expandedCourse: newExpandedCourse,
     });
   },
 
@@ -328,16 +342,27 @@ Page({
   },
 
   /**
-   * 获取课程类型对应的科目
+   * 获取科目显示标签（与 homework.js 保持一致）
    */
-  getSubjectFromCourseType(courseType) {
-    const typeMap = {
+  getSubjectLabel(subject) {
+    const labelMap = {
       'listening': '听力',
       'reading': '阅读',
       'writing': '写作',
       'speaking': '口语',
+      '听力': '听力',
+      '阅读': '阅读',
+      '写作': '写作',
+      '口语': '口语',
     };
-    return typeMap[courseType] || '综合';
+    return labelMap[subject] || subject || '阅读';
+  },
+
+  /**
+   * 获取课程类型对应的科目
+   */
+  getSubjectFromCourseType(courseType) {
+    return this.getSubjectLabel(courseType);
   },
 
   /**

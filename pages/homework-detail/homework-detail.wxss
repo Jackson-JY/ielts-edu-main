@@ -135,6 +135,31 @@
   font-weight: 600;
 }
 
+/* 输入框样式 */
+.input-item {
+  padding: 16rpx 0;
+}
+.input-wrapper {
+  display: flex;
+  align-items: center;
+}
+.info-input {
+  text-align: right;
+  font-size: 28rpx;
+  color: #4A4A4A;
+  font-weight: 500;
+  min-width: 120rpx;
+  padding: 8rpx 12rpx;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(154, 151, 170, 0.2);
+}
+.input-suffix {
+  font-size: 28rpx;
+  color: #9A97AA;
+  margin-left: 8rpx;
+}
+
 /* 内容卡片 */
 .content-card {
   background: linear-gradient(145deg, #FFFDFB 0%, #FFF9F5 100%);

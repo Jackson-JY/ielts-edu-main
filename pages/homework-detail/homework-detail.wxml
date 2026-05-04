@@ -49,6 +49,39 @@
         <text class="info-value">{{homework.createTimeFormatted}}</text>
       </view>
 
+      <!-- 完成度输入 -->
+      <view class="info-item input-item">
+        <text class="info-label">📊 完成度</text>
+        <view class="input-wrapper">
+          <input 
+            class="info-input" 
+            type="number" 
+            placeholder="0" 
+            value="{{homework.completion}}"
+            bindinput="onCompletionInput"
+            max="100"
+            min="0"
+          />
+          <text class="input-suffix">%</text>
+        </view>
+      </view>
+
+      <!-- 累计时长输入 -->
+      <view class="info-item input-item">
+        <text class="info-label">⏱️ 累计时长</text>
+        <view class="input-wrapper">
+          <input 
+            class="info-input" 
+            type="number" 
+            placeholder="0" 
+            value="{{homework.timeSpent}}"
+            bindinput="onTimeSpentInput"
+            min="0"
+          />
+          <text class="input-suffix">分钟</text>
+        </view>
+      </view>
+
       <view class="info-item" wx:if="{{homework.score !== undefined && homework.score !== null}}">
         <text class="info-label">⭐ 得分</text>
         <text class="info-value">{{homework.score}}/{{homework.totalScore || 100}}</text>
@@ -80,14 +113,9 @@
     </view>
 
     <!-- 完成按钮 -->
-    <view class="action-section" wx:if="{{!homework.isCompleted}}">
-      <button class="complete-btn" bindtap="markAsComplete">
-        <text>标记为已完成</text>
-      </button>
-    </view>
-    <view class="action-section" wx:else>
-      <button class="complete-btn btn-completed" disabled>
-        <text>✓ 已完成</text>
+    <view class="action-section">
+      <button class="complete-btn" bindtap="updateHomeworkStatus">
+        <text>更新作业状态</text>
       </button>
     </view>
   </block>

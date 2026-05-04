@@ -85,7 +85,7 @@
                   <text class="form-label">作业科目</text>
                   <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
                     <view class="form-picker">
-                      <text>{{homework[item._id].subject || item.subject || '阅读'}}</text>
+                      <text>{{homework[item._id].subjectLabel || homework[item._id].subject || item.subject || '阅读'}}</text>
                       <text class="picker-arrow">›</text>
                     </view>
                   </picker>
@@ -195,7 +195,7 @@
                 <text class="form-label">作业科目</text>
                 <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
                   <view class="form-picker">
-                    <text>{{homework[item._id].subject || item.subject || '阅读'}}</text>
+                    <text>{{homework[item._id].subjectLabel || homework[item._id].subject || item.subject || '阅读'}}</text>
                     <text class="picker-arrow">›</text>
                   </view>
                 </picker>
@@ -314,7 +314,7 @@
                 <text class="form-label">作业科目</text>
                 <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
                   <view class="form-picker">
-                    <text>{{homework[item._id].subject || item.subject || '阅读'}}</text>
+                    <text>{{homework[item._id].subjectLabel || homework[item._id].subject || item.subject || '阅读'}}</text>
                     <text class="picker-arrow">›</text>
                   </view>
                 </picker>
