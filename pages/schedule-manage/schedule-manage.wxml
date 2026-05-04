@@ -30,57 +30,145 @@ module.exports = {
     <text class="empty-text">您没有管理员权限</text>
   </view>
 
-  <!-- 课程列表 -->
-  <view class="schedule-list" wx:else>
-    <view class="list-header">
-      <text class="list-title">课程列表</text>
-      <text class="list-count">共 {{scheduleList.length}} 节</text>
+  <!-- 课程视图区域 -->
+  <view class="schedule-view" wx:else>
+    <!-- 视图切换 + 日期导航 -->
+    <view class="view-header">
+      <view class="date-nav">
+        <view class="nav-btn" bindtap="changeDate" data-direction="-1">
+          <text class="nav-icon">‹</text>
+        </view>
+        <text class="date-text">{{dateRangeText}}</text>
+        <view class="nav-btn" bindtap="changeDate" data-direction="1">
+          <text class="nav-icon">›</text>
+        </view>
+      </view>
+      <view class="view-tabs">
+        <view class="view-tab {{viewMode === 'day' ? 'active' : ''}}" bindtap="switchViewMode" data-mode="day">
+          <text>日</text>
+        </view>
+        <view class="view-tab {{viewMode === 'week' ? 'active' : ''}}" bindtap="switchViewMode" data-mode="week">
+          <text>周</text>
+        </view>
+        <view class="view-tab {{viewMode === 'month' ? 'active' : ''}}" bindtap="switchViewMode" data-mode="month">
+          <text>月</text>
+        </view>
+      </view>
     </view>
 
-    <view class="schedule-item {{item.isPast ? 'past' : ''}}" 
-          wx:for="{{scheduleList}}" 
-          wx:key="id"
-          data-schedule="{{item}}"
-          bindtap="editSchedule">
-      <view class="schedule-date-badge" style="background-color: {{item.subjectColor}};">
-        <text class="date-day">{{item.date.split('-')[2]}}</text>
-        <text class="date-month">{{item.date.split('-')[1]}}月</text>
+    <!-- 学生筛选 -->
+    <view class="student-filter-bar">
+      <view class="filter-btn {{selectedStudentId ? 'active' : ''}}" bindtap="toggleStudentFilter">
+        <text>{{selectedStudentId ? (studentListMap[selectedStudentId] || '已筛选') : '全部学生'}}</text>
+        <text class="filter-arrow">▼</text>
       </view>
-      
-      <view class="schedule-content">
-        <view class="schedule-title-row">
-          <text class="schedule-title">{{item.title}}</text>
-          <view class="subject-tag" style="background-color: {{item.subjectColor}};">
-            <text class="subject-text">{{item.subject}}</text>
+      <text class="schedule-count">共 {{filteredScheduleList.length}} 节</text>
+    </view>
+
+    <!-- 学生筛选下拉 -->
+    <view class="filter-dropdown" wx:if="{{showStudentFilter}}">
+      <view class="filter-overlay" bindtap="toggleStudentFilter"></view>
+      <view class="filter-content">
+        <view class="filter-item {{selectedStudentId === '' ? 'selected' : ''}}" bindtap="onFilterStudentTap" data-id="" data-name="全部学生">
+          <text>全部学生</text>
+          <text class="check" wx:if="{{selectedStudentId === ''}}">✓</text>
+        </view>
+        <view class="filter-item {{selectedStudentId === item.id ? 'selected' : ''}}" 
+              wx:for="{{studentList}}" 
+              wx:key="id"
+              bindtap="onFilterStudentTap" 
+              data-id="{{item.id}}" 
+              data-name="{{item.name}}">
+          <text>{{item.name}}</text>
+          <text class="check" wx:if="{{selectedStudentId === item.id}}">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 日视图：星期导航 + 课程列表 -->
+    <view wx:if="{{viewMode === 'day' || viewMode === 'week'}}">
+      <!-- 星期选择器 -->
+      <scroll-view scroll-x class="weekday-scroll">
+        <view class="weekday-row">
+          <view class="weekday-item {{selectedDay === item.day && selectedDate === item.date ? 'selected' : ''}} {{item.courseCount > 0 ? 'has-course' : ''}}"
+                wx:for="{{weekDays}}"
+                wx:key="date"
+                bindtap="selectDay"
+                data-day="{{item.day}}"
+                data-date="{{item.date}}">
+            <text class="weekday-name">{{item.dayName}}</text>
+            <text class="weekday-num">{{item.day}}</text>
+            <view class="course-dot" wx:if="{{item.courseCount > 0}}"></view>
           </view>
         </view>
-        
-        <view class="schedule-info">
-          <text class="info-item">🕐 {{item.startTime}}-{{item.endTime}}</text>
-          <text class="info-item" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
-          <text class="info-item" wx:if="{{item.teacher}}">👨‍🏫 {{item.teacher}}</text>
-          <text class="info-item" wx:if="{{item.location}}">📍 {{item.location}}</text>
-        </view>
-        
-        <view class="schedule-info" wx:if="{{item.scheduleMode === '循环'}}">
-          <text class="repeat-tag">🔄 循环课程</text>
-        </view>
-        
-        <text class="schedule-desc" wx:if="{{item.description}}">{{item.description}}</text>
-      </view>
+      </scroll-view>
+    </view>
 
-      <view class="schedule-actions">
-        <view class="action-btn delete" catchtap="deleteSchedule" data-schedule="{{item}}">
-          <text>删除</text>
+    <!-- 月视图：日期网格 -->
+    <view class="month-grid" wx:if="{{viewMode === 'month'}}">
+      <view class="month-weekday-header">
+        <text class="month-weekday" wx:for="{{dayNames}}" wx:key="index">{{item}}</text>
+      </view>
+      <view class="month-days-grid">
+        <view class="month-day-cell" 
+              wx:for="{{monthDays}}"
+              wx:key="index">
+          <view wx:if="{{item}}" 
+                class="month-day {{item.isToday ? 'today' : ''}} {{item.courseCount > 0 ? 'has-course' : ''}} {{selectedDate === item.date ? 'selected' : ''}}"
+                bindtap="selectDay"
+                data-day="{{item.day}}"
+                data-date="{{item.date}}">
+            <text>{{item.day}}</text>
+            <view class="course-dot-small" wx:if="{{item.courseCount > 0}}"></view>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- 空状态 -->
-    <view class="empty-state" wx:if="{{!loading && scheduleList.length === 0}}">
-      <text class="empty-icon">📅</text>
-      <text class="empty-text">暂无课程安排</text>
-      <text class="empty-sub">点击右上角添加课程</text>
+    <!-- 课程列表 -->
+    <view class="schedule-list">
+      <view class="schedule-item {{item.isPast ? 'past' : ''}}" 
+            wx:for="{{filteredScheduleList}}" 
+            wx:key="id"
+            data-schedule="{{item}}"
+            bindtap="editSchedule">
+        <view class="schedule-icon-wrapper">
+          <image class="subject-icon" src="{{item.subjectIcon}}" mode="aspectFit" wx:if="{{item.subjectIcon}}"/>
+          <text class="subject-icon-text" wx:else>{{item.subject}}</text>
+        </view>
+        
+        <view class="schedule-content">
+          <view class="schedule-title-row">
+            <text class="schedule-title">{{item.title}}</text>
+          </view>
+          
+          <view class="schedule-info">
+            <text class="info-item">📅 {{item.date}} {{item.startTime}}-{{item.endTime}}</text>
+            <text class="info-item" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
+            <text class="info-item" wx:if="{{item.teacher}}">👨‍🏫 {{item.teacher}}</text>
+            <text class="info-item" wx:if="{{item.location}}">📍 {{item.location}}</text>
+          </view>
+          
+          <view class="schedule-info" wx:if="{{item.scheduleMode === '循环'}}">
+            <text class="repeat-tag">🔄 循环课程</text>
+          </view>
+          
+          <text class="schedule-desc" wx:if="{{item.description}}">{{item.description}}</text>
+        </view>
+
+        <view class="schedule-actions">
+          <view class="action-btn delete" catchtap="deleteSchedule" data-schedule="{{item}}">
+            <text>删除</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{!loading && filteredScheduleList.length === 0}}">
+        <text class="empty-icon">📅</text>
+        <text class="empty-text">暂无课程安排</text>
+        <text class="empty-sub">点击右上角添加课程</text>
+      </view>
     </view>
   </view>
 

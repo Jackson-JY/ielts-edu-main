@@ -1,12 +1,15 @@
 // pages/schedule-manage/schedule-manage.js - 管理员排课页面
 const app = getApp();
 const cloudDB = require('../../utils/cloudDB');
+const { CLOUD_IMAGES } = require('../../config/images');
+const cloudStorage = require('../../utils/cloudStorage');
 
 Page({
   data: {
     isAdmin: false,
     loading: true,
     scheduleList: [],
+    filteredScheduleList: [],
     showAddModal: false,
     editingSchedule: null,
     // 排课模式: 'single' 单节课, '循环' 循环排课
@@ -29,27 +32,67 @@ Page({
       studentName: '',
       studentId: '',
     },
-    subjects: ['听力', '阅读', '写作', '口语', '综合'],
+    subjects: ['听力', '阅读', '写作', '口语'],
     subjectColors: {
       '听力': '#A7FBF5',
       '阅读': '#FFD4B8',
       '写作': '#FFE8F0',
       '口语': '#E8D4F8',
-      '综合': '#D4E8FF',
     },
+    // 云存储图标
+    iconHeadphones: '',
+    iconBook: '',
+    iconPen: '',
+    iconMic: '',
     maxDate: '',
     // 学生列表
     studentList: [],
     showStudentPicker: false,
     filteredStudents: [],
     studentSearchKeyword: '',
+    // 视图相关
+    viewMode: 'day', // day/week/month
+    selectedDate: '',
+    selectedDay: null,
+    weekDays: [],
+    monthDays: [],
+    dayNames: ['日', '一', '二', '三', '四', '五', '六'],
+    dateRangeText: '',
+    // 学生筛选
+    selectedStudentId: '', // 空字符串表示全部学生
+    showStudentFilter: false,
+    studentListMap: {}, // 学生 ID 到姓名的映射
   },
 
   onLoad() {
     this.initMaxDate();
+    this.initDate();
     this.checkAdminAndLoad();
     // 加载学生列表
     this.loadStudents();
+    // 加载云存储图标
+    this.loadIcons();
+  },
+
+  // 加载云存储图标
+  async loadIcons() {
+    try {
+      const fileIDs = [
+        CLOUD_IMAGES.iconHeadphones,
+        CLOUD_IMAGES.iconMic,
+        CLOUD_IMAGES.iconBook,
+        CLOUD_IMAGES.iconPen,
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        iconHeadphones: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
+        iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
+        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconPen: urlMap[CLOUD_IMAGES.iconPen] || '',
+      });
+    } catch (e) {
+      console.error('加载图标失败', e);
+    }
   },
 
   initMaxDate() {
@@ -58,6 +101,20 @@ Page({
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     this.setData({ maxDate: year + '-' + month + '-' + day });
+  },
+
+  initDate() {
+    const now = new Date();
+    const currentDate = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0');
+    this.setData({
+      selectedDate: currentDate,
+      selectedDay: now.getDate(),
+    });
+    this.updateDateRangeText();
+    this.updateWeekDays();
+    this.updateMonthDays();
   },
 
   checkAdminAndLoad() {
@@ -82,12 +139,14 @@ Page({
     wx.showLoading({ title: '加载中...' });
     try {
       const res = await cloudDB.collection('courses')
-        .orderBy('date', 'desc')
+        .orderBy('date', 'asc')
         .orderBy('startTime', 'asc')
         .get();
       
       const scheduleList = (res.data || []).map(item => this.formatSchedule(item));
-      this.setData({ scheduleList, loading: false });
+      this.setData({ scheduleList, loading: false }, () => {
+        this.applyFilters();
+      });
     } catch (e) {
       console.error('加载排课失败', e);
       wx.showToast({ title: '加载失败', icon: 'none' });
@@ -97,12 +156,232 @@ Page({
     }
   },
 
+  // ======================================================
+  // 视图切换和日期导航
+  // ======================================================
+
+  switchViewMode(e) {
+    const mode = e.currentTarget.dataset.mode;
+    const now = new Date();
+    const currentDate = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0');
+    this.setData({
+      viewMode: mode,
+      selectedDate: currentDate,
+      selectedDay: now.getDate(),
+    });
+    if (mode === 'week') {
+      this.updateWeekDays();
+    } else if (mode === 'month') {
+      this.updateMonthDays();
+    }
+    this.updateDateRangeText();
+    this.applyFilters();
+  },
+
+  changeDate(e) {
+    const direction = parseInt(e.currentTarget.dataset.direction);
+    const current = new Date(this.data.selectedDate);
+    if (this.data.viewMode === 'day') {
+      current.setDate(current.getDate() + direction);
+    } else if (this.data.viewMode === 'week') {
+      current.setDate(current.getDate() + direction * 7);
+    } else {
+      current.setMonth(current.getMonth() + direction);
+    }
+    const newDate = current.getFullYear() + '-' +
+      String(current.getMonth() + 1).padStart(2, '0') + '-' +
+      String(current.getDate()).padStart(2, '0');
+    this.setData({
+      selectedDate: newDate,
+      selectedDay: current.getDate(),
+    });
+    this.updateDateRangeText();
+    if (this.data.viewMode === 'week') {
+      this.updateWeekDays();
+    } else if (this.data.viewMode === 'month') {
+      this.updateMonthDays();
+    }
+    this.applyFilters();
+  },
+
+  selectDay(e) {
+    const day = e.currentTarget.dataset.day;
+    const date = e.currentTarget.dataset.date;
+    if (!date) return;
+    this.setData({
+      selectedDay: day,
+      selectedDate: date,
+    });
+    this.updateDateRangeText();
+    this.applyFilters();
+  },
+
+  updateDateRangeText() {
+    const selected = new Date(this.data.selectedDate);
+    let dateRangeText = '';
+    if (this.data.viewMode === 'day') {
+      dateRangeText = `${selected.getMonth() + 1}月${selected.getDate()}日`;
+    } else if (this.data.viewMode === 'week') {
+      const weekStart = new Date(selected);
+      weekStart.setDate(selected.getDate() - selected.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      dateRangeText = `${weekStart.getMonth() + 1}月${weekStart.getDate()}日 - ${weekEnd.getMonth() + 1}月${weekEnd.getDate()}日`;
+    } else {
+      dateRangeText = `${selected.getFullYear()}年${selected.getMonth() + 1}月`;
+    }
+    this.setData({ dateRangeText });
+  },
+
+  updateWeekDays() {
+    const selected = new Date(this.data.selectedDate);
+    const weekStart = new Date(selected);
+    weekStart.setDate(selected.getDate() - selected.getDay());
+    const today = this.getTodayStr();
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(weekStart);
+      day.setDate(weekStart.getDate() + i);
+      const dateStr = this.formatDate(day);
+      const courseCount = this.getSchedulesForDate(dateStr).length;
+      weekDays.push({
+        day: day.getDate(),
+        dayName: this.data.dayNames[i],
+        date: dateStr,
+        isToday: dateStr === today,
+        courseCount,
+      });
+    }
+    this.setData({ weekDays });
+  },
+
+  updateMonthDays() {
+    const selected = new Date(this.data.selectedDate);
+    const year = selected.getFullYear();
+    const month = selected.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+    const today = this.getTodayStr();
+    const monthDays = [];
+    for (let i = 0; i < startDay; i++) {
+      monthDays.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dateStr = this.formatDate(new Date(year, month, i));
+      const courseCount = this.getSchedulesForDate(dateStr).length;
+      monthDays.push({
+        day: i,
+        date: dateStr,
+        isToday: dateStr === today,
+        courseCount,
+      });
+    }
+    this.setData({ monthDays });
+  },
+
+  formatDate(date) {
+    return date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0');
+  },
+
+  getTodayStr() {
+    const now = new Date();
+    return this.formatDate(now);
+  },
+
+  getSchedulesForDate(dateStr) {
+    const { scheduleList, selectedStudentId } = this.data;
+    let filtered = scheduleList.filter(c => c.date === dateStr);
+    if (selectedStudentId) {
+      filtered = filtered.filter(c => c.studentId === selectedStudentId);
+    }
+    return filtered;
+  },
+
+  // ======================================================
+  // 学生筛选
+  // ======================================================
+
+  toggleStudentFilter() {
+    this.setData({
+      showStudentFilter: !this.data.showStudentFilter
+    });
+  },
+
+  onFilterStudentTap(e) {
+    const studentId = e.currentTarget.dataset.id || '';
+    const studentName = e.currentTarget.dataset.name || '全部学生';
+    this.setData({
+      selectedStudentId: studentId,
+      showStudentFilter: false,
+    });
+    this.applyFilters();
+    wx.showToast({ title: '已筛选: ' + studentName, icon: 'none', duration: 1000 });
+  },
+
+  applyFilters() {
+    const { scheduleList, selectedDate, selectedStudentId } = this.data;
+    let filtered = [];
+    
+    if (this.data.viewMode === 'day') {
+      // 日视图：显示选中日期的课程
+      filtered = scheduleList.filter(c => c.date === selectedDate);
+    } else if (this.data.viewMode === 'week') {
+      // 周视图：显示本周所有课程
+      const weekStart = new Date(selectedDate);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      
+      filtered = scheduleList.filter(c => {
+        const courseDate = new Date(c.date);
+        return courseDate >= weekStart && courseDate <= weekEnd;
+      });
+    } else {
+      // 月视图：显示本月所有课程
+      const selected = new Date(selectedDate);
+      const year = selected.getFullYear();
+      const month = selected.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      
+      filtered = scheduleList.filter(c => {
+        const courseDate = new Date(c.date);
+        return courseDate >= firstDay && courseDate <= lastDay;
+      });
+    }
+    
+    // 应用学生筛选
+    if (selectedStudentId) {
+      filtered = filtered.filter(c => c.studentId === selectedStudentId);
+    }
+    
+    this.setData({ filteredScheduleList: filtered }, () => {
+      this.updateWeekDays();
+      this.updateMonthDays();
+    });
+  },
+
   formatSchedule(item) {
     const subjectColor = this.data.subjectColors[item.subject] || '#D4E8FF';
+    // 根据科目获取对应图标
+    let icon = this.data.iconBook; // 默认阅读图标
+    switch (item.subject) {
+      case '听力': icon = this.data.iconHeadphones; break;
+      case '口语': icon = this.data.iconMic; break;
+      case '阅读': icon = this.data.iconBook; break;
+      case '写作': icon = this.data.iconPen; break;
+    }
     return {
       ...item,
       id: item._id,
       subjectColor,
+      subjectIcon: icon,
       isPast: this.isPastSchedule(item.date, item.endTime),
     };
   },
@@ -210,7 +489,7 @@ Page({
           res = await db.collection('courses').add({ data });
         }
 
-        if (res.errMsg && res.errMsg.includes('ok')) {
+        if (res.errMsg && res.errMsg.indexOf('ok') !== -1) {
           wx.showToast({ title: '保存成功', icon: 'success' });
           this.hideModal();
           this.loadSchedules();
@@ -422,9 +701,16 @@ Page({
         name: user.nickName || '未命名用户'
       }));
       
+      // 构建学生 ID 到姓名的映射
+      const studentListMap = {};
+      studentList.forEach(s => {
+        studentListMap[s.id] = s.name;
+      });
+      
       this.setData({
         studentList,
-        filteredStudents: studentList
+        filteredStudents: studentList,
+        studentListMap
       });
     } catch (e) {
       console.error('加载学生列表失败', e);

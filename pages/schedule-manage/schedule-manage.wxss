@@ -106,10 +106,31 @@
   padding: 24rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+  align-items: flex-start;
 }
 
 .schedule-item.past {
   opacity: 0.6;
+}
+
+.schedule-icon-wrapper {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.subject-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.subject-icon-text {
+  font-size: 24rpx;
+  color: #666;
 }
 
 .schedule-date-badge {
@@ -538,4 +559,275 @@
   padding: 80rpx 0;
   color: #9E9E9E;
   font-size: 28rpx;
+}
+
+/* ======================================================
+   新增：视图切换和日历相关样式
+   ====================================================== */
+
+.schedule-view {
+  padding: 24rpx 32rpx;
+}
+
+/* 视图头部：日期导航 + 视图切换 */
+.view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.nav-btn {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5F5F5;
+  border-radius: 50%;
+}
+
+.nav-icon {
+  font-size: 32rpx;
+  color: #666;
+  font-weight: bold;
+}
+
+.date-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  min-width: 200rpx;
+  text-align: center;
+}
+
+.view-tabs {
+  display: flex;
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  padding: 4rpx;
+}
+
+.view-tab {
+  padding: 12rpx 28rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.view-tab.active {
+  background: #A7FBF5;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 学生筛选栏 */
+.student-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
+  background: #F5F5F5;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.filter-btn.active {
+  background: #E0F2F1;
+  color: #00897B;
+}
+
+.filter-arrow {
+  font-size: 20rpx;
+}
+
+.schedule-count {
+  font-size: 24rpx;
+  color: #9A97AA;
+}
+
+/* 筛选下拉 */
+.filter-dropdown {
+  position: relative;
+  margin-bottom: 20rpx;
+  z-index: 100;
+}
+
+.filter-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 99;
+}
+
+.filter-content {
+  position: relative;
+  background: #FFF;
+  border-radius: 16rpx;
+  padding: 16rpx 0;
+  max-height: 400rpx;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.1);
+}
+
+.filter-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.filter-item.selected {
+  color: #00897B;
+  background: #E0F2F1;
+}
+
+.filter-item .check {
+  color: #00897B;
+  font-weight: bold;
+}
+
+/* 星期选择器 */
+.weekday-scroll {
+  white-space: nowrap;
+  margin-bottom: 24rpx;
+}
+
+.weekday-row {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 8rpx 0;
+}
+
+.weekday-item {
+  width: 80rpx;
+  height: 100rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #F5F5F5;
+  border-radius: 16rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.weekday-item.selected {
+  background: #A7FBF5;
+}
+
+.weekday-item.has-course {
+  background: #FFF;
+  border: 2rpx solid #00897B;
+}
+
+.weekday-item.has-course.selected {
+  background: #A7FBF5;
+}
+
+.weekday-name {
+  font-size: 22rpx;
+  color: #9A97AA;
+  margin-bottom: 4rpx;
+}
+
+.weekday-num {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.course-dot {
+  position: absolute;
+  bottom: 8rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: #00897B;
+  border-radius: 50%;
+}
+
+/* 月视图网格 */
+.month-grid {
+  margin-bottom: 24rpx;
+}
+
+.month-weekday-header {
+  display: flex;
+  margin-bottom: 16rpx;
+}
+
+.month-weekday {
+  flex: 1;
+  text-align: center;
+  font-size: 24rpx;
+  color: #9A97AA;
+  padding: 8rpx 0;
+}
+
+.month-days-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.month-day-cell {
+  width: calc(100% / 7);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.month-day {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 28rpx;
+  color: #333;
+  position: relative;
+}
+
+.month-day.today {
+  border: 2rpx solid #00897B;
+}
+
+.month-day.selected {
+  background: #A7FBF5;
+}
+
+.month-day.has-course {
+  color: #00897B;
+  font-weight: 600;
+}
+
+.course-dot-small {
+  position: absolute;
+  bottom: 4rpx;
+  width: 6rpx;
+  height: 6rpx;
+  background: #00897B;
+  border-radius: 50%;
 }
