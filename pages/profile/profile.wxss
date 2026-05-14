@@ -1118,3 +1118,168 @@
   border-radius: 8rpx;
   font-weight: 500;
 }
+
+/* 打卡提醒按钮 */
+.reminder-btn {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #FFFDFB 0%, #FFF9F5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(154, 151, 170, 0.15);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.reminder-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 2rpx 6rpx rgba(154, 151, 170, 0.1);
+}
+
+.reminder-icon {
+  font-size: 32rpx;
+}
+
+/* 打卡提醒弹窗 */
+.reminder-modal {
+  gap: 28rpx;
+}
+
+.reminder-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reminder-switch {
+  transform: scale(0.85);
+}
+
+/* 频次选择网格 */
+.frequency-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12rpx;
+}
+
+.frequency-item {
+  padding: 18rpx 4rpx;
+  background: linear-gradient(145deg, #F8F8F8 0%, #F0F0F0 100%);
+  border-radius: 20rpx;
+  border: 2rpx solid transparent;
+  text-align: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+}
+
+.frequency-item:active {
+  transform: scale(0.95);
+}
+
+.frequency-item.selected {
+  background: linear-gradient(145deg, rgba(167, 251, 245, 0.3) 0%, rgba(167, 251, 245, 0.15) 100%);
+  border-color: #A7FBF5;
+  box-shadow: 
+    0 4rpx 16rpx rgba(167, 251, 245, 0.4),
+    inset 0 1rpx 0 rgba(255,255,255,0.8);
+}
+
+.frequency-text {
+  font-size: 24rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.frequency-item.selected .frequency-text {
+  color: #2D6B64;
+  font-weight: 700;
+}
+
+/* 科目选择网格 */
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.subject-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(145deg, #F8F8F8 0%, #F0F0F0 100%);
+  border-radius: 24rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+}
+
+.subject-item:active {
+  transform: scale(0.95);
+}
+
+.subject-item.selected {
+  background: linear-gradient(145deg, rgba(167, 251, 245, 0.3) 0%, rgba(167, 251, 245, 0.15) 100%);
+  border-color: #A7FBF5;
+  box-shadow: 
+    0 4rpx 16rpx rgba(167, 251, 245, 0.4),
+    inset 0 1rpx 0 rgba(255,255,255,0.8);
+}
+
+.subject-color {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  box-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.subject-text {
+  font-size: 26rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.subject-item.selected .subject-text {
+  color: #2D6B64;
+  font-weight: 700;
+}
+
+/* 时间选择器样式 */
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(180deg, #F8F4FF 0%, #F0E8FF 100%);
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+}
+
+.time-picker:active {
+  border-color: #E8D4F8;
+  background: linear-gradient(180deg, #FFFDFB 0%, #FFF9F5 100%);
+}
+
+.time-icon-text {
+  font-size: 24rpx;
+  margin-right: 8rpx;
+}
+
+.time-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #4A4A4A;
+  font-weight: 500;
+}
+
+.time-arrow {
+  font-size: 28rpx;
+  color: #9A97AA;
+}

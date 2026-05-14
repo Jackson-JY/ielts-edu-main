@@ -63,7 +63,7 @@ exports.main = async (event, context) => {
       
       // 6. 确保有 subject 字段
       if (!hw.subject && !hw.type) {
-        updateData.subject = '综合';
+        updateData.subject = '阅读';
         needsUpdate = true;
       }
       

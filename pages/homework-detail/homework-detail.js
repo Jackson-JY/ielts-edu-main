@@ -1,19 +1,52 @@
 // pages/homework-detail/homework-detail.js - 作业详情页
 const cloudDB = require('../../utils/cloudDB');
+const cloudStorage = require('../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
   data: {
     homework: null,
     loading: true,
+    // 科目图标
+    iconListening: '',
+    iconSpeaking: '',
+    iconReading: '',
+    iconWriting: '',
+    iconBook: '',
   },
 
   async onLoad(options) {
+    await this.loadIcons();
     const { id } = options;
     if (id) {
       await this.loadHomeworkDetail(id);
     } else {
       wx.showToast({ title: '作业ID无效', icon: 'none' });
       wx.navigateBack();
+    }
+  },
+
+  /**
+   * 加载云存储图标
+   */
+  async loadIcons() {
+    try {
+      const fileIDs = [
+        CLOUD_IMAGES.iconHeadphones,
+        CLOUD_IMAGES.iconMic,
+        CLOUD_IMAGES.iconBook,
+        CLOUD_IMAGES.iconPen,
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        iconListening: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
+        iconSpeaking: urlMap[CLOUD_IMAGES.iconMic] || '',
+        iconReading: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconWriting: urlMap[CLOUD_IMAGES.iconPen] || '',
+        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+      });
+    } catch (e) {
+      console.error('[作业详情] 加载图标失败', e);
     }
   },
 
@@ -46,7 +79,7 @@ Page({
     today.setHours(0, 0, 0, 0);
     const daysLeft = deadline ? Math.ceil((deadline - today) / (1000 * 60 * 60 * 24)) : null;
 
-    const subject = hw.subject || this.mapTypeToSubject(hw.type) || '综合';
+    const subject = hw.subject || this.mapTypeToSubject(hw.type) || '阅读';
     const description = hw.description || hw.content || '';
     const status = hw.status || (hw.submitted ? 'completed' : 'pending');
 
@@ -65,6 +98,8 @@ Page({
       title: hw.title || '未命名作业',
       subject: subject,
       subjectLabel: this.getSubjectLabel(subject),
+      subjectColor: this.getSubjectColor(subject),
+      subjectIcon: this.getSubjectIcon(subject),
       description: description,
       deadline: hw.deadline,
       deadlineFormatted: deadline ? (deadline.getFullYear() + '年' + (deadline.getMonth() + 1) + '月' + deadline.getDate() + '日') : '无截止日期',
@@ -107,6 +142,32 @@ Page({
       '口语': '口语',
     };
     return labelMap[subject] || subject;
+  },
+
+  /**
+   * 获取科目对应的颜色
+   */
+  getSubjectColor(subject) {
+    const colorMap = {
+      '听力': '#A7FBF5',
+      '阅读': '#FFD4B8',
+      '写作': '#FFE8F0',
+      '口语': '#E8D4F8',
+    };
+    return colorMap[subject] || '#D4E8FF';
+  },
+
+  /**
+   * 获取科目对应的图标
+   */
+  getSubjectIcon(subject) {
+    const iconMap = {
+      '听力': this.data.iconListening,
+      '阅读': this.data.iconReading,
+      '写作': this.data.iconWriting,
+      '口语': this.data.iconSpeaking,
+    };
+    return iconMap[subject] || this.data.iconBook;
   },
 
   async updateHomeworkStatus() {

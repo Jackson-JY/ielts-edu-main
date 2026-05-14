@@ -76,13 +76,17 @@
   padding-left: 80rpx;
 }
 .subject-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
   font-size: 24rpx;
-  color: #6C5CE7;
-  background: rgba(108, 92, 231, 0.1);
+  color: #424242;
   padding: 8rpx 20rpx;
   border-radius: 20rpx;
   margin-bottom: 16rpx;
+}
+.subject-label {
+  font-weight: 500;
 }
 .homework-title {
   display: block;

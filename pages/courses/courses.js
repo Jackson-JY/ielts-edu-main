@@ -164,11 +164,29 @@ Page({
 
   /**
    * 从云数据库加载当前用户的课程数据
+   * @description 只加载与当前登录用户相关的课程（通过 studentId 关联）
    */
   async loadCourses() {
     this.setData({ isLoading: true });
     try {
-      const res = await cloudDB.getMy('courses');
+      const app = getApp();
+      const userId = app.globalData.userInfo && app.globalData.userInfo.userId;
+
+      // 如果用户未登录，返回空数据
+      if (!userId) {
+        this.setData({ courses: [] }, () => {
+          this.filterCourses();
+        });
+        return;
+      }
+
+      // 查询当前用户的课程（通过 studentId 关联）
+      const res = await cloudDB.get('courses', (dbQuery) => {
+        return dbQuery.where({
+          studentId: userId
+        }).orderBy('date', 'asc').orderBy('startTime', 'asc');
+      });
+
       let courses = [];
       if (res.success) {
         courses = res.data;
@@ -269,21 +287,75 @@ Page({
     const id = e.currentTarget.dataset.id;
     const newExpandedCourse = this.data.expandedCourse === id ? null : id;
     
-    // 如果是展开，则为该课程的作业添加 subjectLabel
+    // 如果是展开，则加载该课程的作业数据
     if (newExpandedCourse) {
-      const homework = { ...this.data.homework };
-      const course = this.data.courses.find(c => c._id === id);
-      if (course && !homework[id]?.subjectLabel) {
-        const subjectLabel = this.getSubjectLabel(homework[id]?.subject || course.subject);
-        homework[id] = { ...homework[id], subjectLabel };
-        this.setData({ expandedCourse: newExpandedCourse, homework });
-        return;
-      }
+      this.loadHomeworkForCourse(id);
+      return;
     }
     
     this.setData({
       expandedCourse: newExpandedCourse,
     });
+  },
+
+  /**
+   * 加载课程对应的作业数据
+   */
+  async loadHomeworkForCourse(courseId) {
+    try {
+      const course = this.data.courses.find(c => c._id === courseId);
+      
+      // 查询该课程的作业记录
+      const res = await cloudDB.get('homework', (q) =>
+        q.where({ courseId: courseId }).orderBy('assignedAt', 'desc')
+      );
+      
+      const homework = { ...this.data.homework };
+      
+      if (res.success && res.data.length > 0) {
+        // 使用最新一条作业记录回显
+        const latestHomework = res.data[0];
+        homework[courseId] = {
+          ...homework[courseId],
+          title: latestHomework.title || '',
+          description: latestHomework.description || latestHomework.content || '',
+          content: latestHomework.content || '',
+          subject: latestHomework.subject || course?.subject || '阅读',
+          subjectLabel: this.getSubjectLabel(latestHomework.subject || course?.subject),
+          deadline: latestHomework.deadline ? this.formatDateForDisplay(latestHomework.deadline) : '',
+          estimatedTime: latestHomework.estimatedTime || '',
+        };
+      } else {
+        // 没有作业记录，初始化空表单
+        homework[courseId] = {
+          ...homework[courseId],
+          subject: course?.subject || '阅读',
+          subjectLabel: this.getSubjectLabel(course?.subject),
+        };
+      }
+      
+      this.setData({
+        expandedCourse: courseId,
+        homework,
+      });
+    } catch (e) {
+      console.error('加载作业数据失败', e);
+      this.setData({ expandedCourse: courseId });
+    }
+  },
+
+  /**
+   * 格式化日期显示（从 Date 或字符串转为 YYYY-MM-DD）
+   */
+  formatDateForDisplay(date) {
+    if (!date) return '';
+    if (typeof date === 'string') {
+      return date.substring(0, 10);
+    }
+    const d = new Date(date);
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
   },
 
   onHomeworkTitleInput(e) {
@@ -338,6 +410,18 @@ Page({
     const homework = this.data.homework;
     if (!homework[id]) homework[id] = {};
     homework[id].description = value;
+    this.setData({ homework });
+  },
+
+  /**
+   * 预估作业完成耗时输入
+   */
+  onHomeworkEstimatedTimeInput(e) {
+    const id = e.currentTarget.dataset.id;
+    const value = e.detail.value;
+    const homework = this.data.homework;
+    if (!homework[id]) homework[id] = {};
+    homework[id].estimatedTime = value;
     this.setData({ homework });
   },
 
@@ -397,6 +481,9 @@ Page({
         
         // 截止时间
         deadline: homework.deadline ? new Date(homework.deadline) : null,
+        
+        // 预估作业完成耗时（分钟）
+        estimatedTime: parseInt(homework.estimatedTime) || 0,
         
         // 状态
         status: 'pending',

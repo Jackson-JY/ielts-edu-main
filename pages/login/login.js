@@ -115,8 +115,8 @@ Page({
     try {
       let finalAvatarUrl = tempAvatarUrl;
 
-      // 如果用户选择了头像，上传到云存储
-      if (tempAvatarUrl && tempAvatarUrl.startsWith('http')) {
+      // 如果用户选择了头像（本地临时文件），上传到云存储
+      if (tempAvatarUrl && (tempAvatarUrl.startsWith('wxfile://') || tempAvatarUrl.startsWith('http'))) {
         finalAvatarUrl = await this._uploadAvatar(tempAvatarUrl);
       }
 

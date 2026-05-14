@@ -27,7 +27,10 @@
             </view>
             <view class="homework-meta">
               <view class="homework-subject">
-                <text class="subject-tag">{{item.subjectLabel}}</text>
+                <view class="subject-tag" style="background-color: {{item.subjectColor}}">
+                  <image class="subject-icon" src="{{item.subjectIcon}}" mode="aspectFit"/>
+                  <text class="subject-label">{{item.subjectLabel}}</text>
+                </view>
               </view>
               <view class="homework-deadline {{item.isOverdue ? 'deadline-overdue' : ''}} {{item.isUrgent ? 'deadline-urgent' : ''}}">
                 <text class="deadline-icon">⏰</text>
@@ -64,7 +67,10 @@
             </view>
             <view class="homework-meta">
               <view class="homework-subject">
-                <text class="subject-tag subject-tag-completed">{{item.subjectLabel}}</text>
+                <view class="subject-tag" style="background-color: {{item.subjectColor}}">
+                  <image class="subject-icon" src="{{item.subjectIcon}}" mode="aspectFit"/>
+                  <text class="subject-label">{{item.subjectLabel}}</text>
+                </view>
               </view>
               <view class="homework-deadline">
                 <text class="deadline-icon">✓</text>

@@ -412,6 +412,10 @@ module.exports = {
           bindtap="onSelectStudent"
           data-student="{{item}}"
         >
+          <view class="student-avatar">
+            <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/>
+            <text wx:else class="avatar-placeholder">{{item.name.length > 0 ? item.name[0] : '?'}}</text>
+          </view>
           <text class="student-name">{{item.name}}</text>
           <view class="check-icon" wx:if="{{item.id === formData.studentId}}">✓</view>
         </view>

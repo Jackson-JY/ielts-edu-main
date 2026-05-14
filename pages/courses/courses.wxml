@@ -102,6 +102,19 @@
                   </picker>
                 </view>
 
+                <!-- 预估作业完成耗时 -->
+                <view class="form-group">
+                  <text class="form-label">预估完成耗时（分钟）</text>
+                  <input 
+                    class="form-input" 
+                    type="number"
+                    placeholder="请输入预估完成时间" 
+                    value="{{homework[item._id].estimatedTime || ''}}"
+                    bindinput="onHomeworkEstimatedTimeInput"
+                    data-id="{{item._id}}"
+                  />
+                </view>
+
                 <!-- 作业描述 -->
                 <view class="form-group">
                   <text class="form-label">作业描述</text>
@@ -210,6 +223,19 @@
                     <text class="picker-arrow">›</text>
                   </view>
                 </picker>
+              </view>
+
+              <!-- 预估作业完成耗时 -->
+              <view class="form-group">
+                <text class="form-label">预估完成耗时（分钟）</text>
+                <input 
+                  class="form-input" 
+                  type="number"
+                  placeholder="请输入预估完成时间" 
+                  value="{{homework[item._id].estimatedTime || ''}}"
+                  bindinput="onHomeworkEstimatedTimeInput"
+                  data-id="{{item._id}}"
+                />
               </view>
 
               <!-- 作业描述 -->
@@ -329,6 +355,19 @@
                     <text class="picker-arrow">›</text>
                   </view>
                 </picker>
+              </view>
+
+              <!-- 预估作业完成耗时 -->
+              <view class="form-group">
+                <text class="form-label">预估完成耗时（分钟）</text>
+                <input 
+                  class="form-input" 
+                  type="number"
+                  placeholder="请输入预估完成时间" 
+                  value="{{homework[item._id].estimatedTime || ''}}"
+                  bindinput="onHomeworkEstimatedTimeInput"
+                  data-id="{{item._id}}"
+                />
               </view>
 
               <!-- 作业描述 -->

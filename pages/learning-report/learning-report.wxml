@@ -117,6 +117,76 @@
         </block>
       </view>
     </view>
+
+    <!-- 成绩详情表格 -->
+    <view class="section-card" wx:if="{{examScores.length > 0}}">
+      <view class="card-header">
+        <text class="card-title">📋 成绩详情</text>
+        <text class="card-subtitle">各科目成绩一览</text>
+      </view>
+      <scroll-view scroll-x class="score-table-wrapper">
+        <view class="score-table">
+          <!-- 表头：科目 + 提高 + 次数列（倒序，最后一次优先） -->
+          <view class="table-header">
+            <text class="table-cell header-cell subject-cell">科目</text>
+            <text class="table-cell header-cell improve-col">提高</text>
+            <block wx:for="{{examScoresReverse}}" wx:key="index">
+              <text class="table-cell header-cell date-col {{item.isLatest ? 'latest-col' : ''}}">第{{item.actualCount}}次</text>
+            </block>
+          </view>
+          <!-- 听力行 -->
+          <view class="table-row">
+            <text class="table-cell subject-cell">🎧 听力</text>
+            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].listeningImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].listeningImprovement < 0 ? 'improve-negative' : '')}}">
+              {{examScoresReverse[0].listeningImprovement > 0 ? '+' + examScoresReverse[0].listeningImprovement : (examScoresReverse[0].listeningImprovement < 0 ? examScoresReverse[0].listeningImprovement : '-')}}
+            </text>
+            <block wx:for="{{examScoresReverse}}" wx:key="index">
+              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.listening || '-'}}</text>
+            </block>
+          </view>
+          <!-- 阅读行 -->
+          <view class="table-row">
+            <text class="table-cell subject-cell">📖 阅读</text>
+            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].readingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].readingImprovement < 0 ? 'improve-negative' : '')}}">
+              {{examScoresReverse[0].readingImprovement > 0 ? '+' + examScoresReverse[0].readingImprovement : (examScoresReverse[0].readingImprovement < 0 ? examScoresReverse[0].readingImprovement : '-')}}
+            </text>
+            <block wx:for="{{examScoresReverse}}" wx:key="index">
+              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.reading || '-'}}</text>
+            </block>
+          </view>
+          <!-- 写作行 -->
+          <view class="table-row">
+            <text class="table-cell subject-cell">✍️ 写作</text>
+            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].writingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].writingImprovement < 0 ? 'improve-negative' : '')}}">
+              {{examScoresReverse[0].writingImprovement > 0 ? '+' + examScoresReverse[0].writingImprovement : (examScoresReverse[0].writingImprovement < 0 ? examScoresReverse[0].writingImprovement : '-')}}
+            </text>
+            <block wx:for="{{examScoresReverse}}" wx:key="index">
+              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.writing || '-'}}</text>
+            </block>
+          </view>
+          <!-- 口语行 -->
+          <view class="table-row">
+            <text class="table-cell subject-cell">🗣️ 口语</text>
+            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].speakingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].speakingImprovement < 0 ? 'improve-negative' : '')}}">
+              {{examScoresReverse[0].speakingImprovement > 0 ? '+' + examScoresReverse[0].speakingImprovement : (examScoresReverse[0].speakingImprovement < 0 ? examScoresReverse[0].speakingImprovement : '-')}}
+            </text>
+            <block wx:for="{{examScoresReverse}}" wx:key="index">
+              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.speaking || '-'}}</text>
+            </block>
+          </view>
+          <!-- 总分行 -->
+          <view class="table-row total-row">
+            <text class="table-cell subject-cell">🏆 总分</text>
+            <text class="table-cell improve-col total-improve {{examScoresReverse[0].improvement > 0 ? 'improve-positive' : (examScoresReverse[0].improvement < 0 ? 'improve-negative' : '')}}">
+              {{examScoresReverse[0].improvement > 0 ? '+' + examScoresReverse[0].improvement : (examScoresReverse[0].improvement < 0 ? examScoresReverse[0].improvement : '-')}}
+            </text>
+            <block wx:for="{{examScoresReverse}}" wx:key="index">
+              <text class="table-cell date-col total-cell {{item.isLatest ? 'latest-col' : ''}}">{{item.total || '-'}}</text>
+            </block>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
   </view>
 
   <!-- 底部留白 -->

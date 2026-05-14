@@ -687,33 +687,45 @@ Page({
   // ======================================================
   
   /**
-   * 加载学生列表
+   * 加载学生列表（获取所有用户）
+   * @description 通过云函数获取所有用户，绕过数据库权限限制
    */
   async loadStudents() {
     try {
-      const db = wx.cloud.database();
-      const res = await db.collection('users')
-        .field({ nickName: true, _id: true })
-        .get();
-      
-      const studentList = (res.data || []).map(user => ({
-        id: user._id,
-        name: user.nickName || '未命名用户'
-      }));
-      
-      // 构建学生 ID 到姓名的映射
-      const studentListMap = {};
-      studentList.forEach(s => {
-        studentListMap[s.id] = s.name;
+      wx.showLoading({ title: '加载用户...', mask: true });
+
+      const res = await wx.cloud.callFunction({
+        name: 'getAllUsers',
       });
-      
-      this.setData({
-        studentList,
-        filteredStudents: studentList,
-        studentListMap
-      });
+
+      wx.hideLoading();
+
+      if (res.result && res.result.success) {
+        const studentList = (res.result.data || []).map(user => ({
+          id: user._id,
+          name: user.nickName || '未命名用户',
+          avatarUrl: user.avatarUrl || '',
+        }));
+
+        // 构建学生 ID 到姓名的映射
+        const studentListMap = {};
+        studentList.forEach(s => {
+          studentListMap[s.id] = s.name;
+        });
+
+        this.setData({
+          studentList,
+          filteredStudents: studentList,
+          studentListMap
+        });
+      } else {
+        console.error('加载用户列表失败', res.result?.error);
+        wx.showToast({ title: '加载用户失败', icon: 'none' });
+      }
     } catch (e) {
       console.error('加载学生列表失败', e);
+      wx.hideLoading();
+      wx.showToast({ title: '加载用户失败', icon: 'none' });
     }
   },
 

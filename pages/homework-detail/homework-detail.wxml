@@ -19,7 +19,9 @@
 
     <!-- 标题区域 -->
     <view class="title-section">
-      <text class="subject-tag">{{homework.subjectLabel}}</text>
+      <view class="subject-tag" style="background-color: {{homework.subjectColor}}">
+        <text class="subject-label">{{homework.subjectLabel}}</text>
+      </view>
       <text class="homework-title">{{homework.title}}</text>
     </view>
 

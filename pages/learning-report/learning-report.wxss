@@ -361,3 +361,102 @@ page {
   visibility: hidden;
   z-index: -1;
 }
+
+/* 成绩详情表格 */
+.score-table-wrapper {
+  overflow-x: auto;
+  margin: 0 -16rpx;
+  padding: 0 16rpx;
+}
+
+.score-table {
+  display: inline-block;
+  min-width: 100%;
+}
+
+.table-header {
+  display: flex;
+  background: linear-gradient(145deg, #6C5CE7 0%, #A29BFE 100%);
+  border-radius: 16rpx 16rpx 0 0;
+  padding: 16rpx 0;
+}
+
+.table-row {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(154, 151, 170, 0.15);
+}
+
+.table-row:last-child {
+  border-bottom: none;
+  border-radius: 0 0 16rpx 16rpx;
+}
+
+.table-row.latest-row {
+  background: rgba(108, 92, 231, 0.08);
+}
+
+.table-cell {
+  font-size: 24rpx;
+  color: #4A4A4A;
+  text-align: center;
+  flex: 1;
+  min-width: 80rpx;
+}
+
+.header-cell {
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 24rpx;
+}
+
+.subject-cell {
+  min-width: 120rpx;
+  flex: none;
+  text-align: left;
+  padding-left: 16rpx;
+  font-weight: 500;
+}
+
+.date-col {
+  min-width: 100rpx;
+  flex: none;
+}
+
+.improve-col {
+  min-width: 100rpx;
+  flex: none;
+  text-align: right;
+  padding-right: 16rpx;
+  font-weight: 600;
+}
+
+.total-row {
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.total-cell {
+  font-weight: 700;
+  color: #FFC107;
+}
+
+.subject-improve {
+  font-weight: 500;
+}
+
+.total-improve {
+  font-weight: 700;
+}
+
+.improve-positive {
+  color: #4CAF50;
+}
+
+.improve-negative {
+  color: #FF6B6B;
+}
+
+.latest-col {
+  background: rgba(108, 92, 231, 0.1);
+  font-weight: 600;
+}

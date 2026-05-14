@@ -466,6 +466,38 @@ Page({
       if (examRes.success && examRes.data.length > 0) {
         examScores = examRes.data;
         examScoresReverse = [...examScores].reverse();
+        
+        // 计算每条成绩的提高分数（相对于第一次考试）
+        if (examScores.length > 1) {
+          const firstScore = examScores[0];
+          examScores = examScores.map((exam, index) => ({
+            ...exam,
+            isLatest: index === examScores.length - 1,
+            examCount: examScores.length,
+            actualCount: examScores.length - index, // 实际次数：8次考试则为8、7、6、5...
+            improvement: exam.total - firstScore.total,
+            listeningImprovement: (exam.listening || 0) - (firstScore.listening || 0),
+            readingImprovement: (exam.reading || 0) - (firstScore.reading || 0),
+            writingImprovement: (exam.writing || 0) - (firstScore.writing || 0),
+            speakingImprovement: (exam.speaking || 0) - (firstScore.speaking || 0),
+          }));
+          // 倒序数组：第一个是最新考试
+          examScoresReverse = [...examScores].reverse().map((exam, index) => ({
+            ...exam,
+            isLatest: index === 0, // 倒序后第一个是最新
+            actualCount: examScores.length - index, // 8、7、6、5...
+          }));
+        } else if (examScores.length === 1) {
+          examScores[0].isLatest = true;
+          examScores[0].improvement = 0;
+          examScores[0].examCount = 1;
+          examScores[0].actualCount = 1;
+          examScores[0].listeningImprovement = 0;
+          examScores[0].readingImprovement = 0;
+          examScores[0].writingImprovement = 0;
+          examScores[0].speakingImprovement = 0;
+          examScoresReverse = [...examScores];
+        }
       }
 
       this.setData({
