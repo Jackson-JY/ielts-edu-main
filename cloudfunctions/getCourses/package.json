@@ -1,0 +1,9 @@
+{
+  "name": "getCourses",
+  "version": "1.0.0",
+  "description": "获取课程列表（支持日期范围和分页）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

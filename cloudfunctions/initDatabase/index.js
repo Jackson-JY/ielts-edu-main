@@ -18,6 +18,8 @@ const collections = [
   'exam_scores',
   'assessment_results',
   'speaking_answers', // 口语测评答题记录
+  'reminder_settings', // 打卡提醒设置
+  'reminder_logs', // 打卡提醒发送日志
 ];
 
 exports.main = async (event, context) => {
@@ -35,15 +37,8 @@ exports.main = async (event, context) => {
     } catch (err) {
       // 集合不存在，尝试创建
       try {
-        // 通过添加一个空文档再删除来创建集合
-        const tempRes = await db.collection(collName).add({
-          data: {
-            _temp: true,
-            createTime: new Date(),
-          },
-        });
-        // 删除临时文档
-        await db.collection(collName).doc(tempRes._id).remove();
+        // 使用 createCollection 直接创建集合
+        await db.createCollection(collName);
         
         results.push({
           name: collName,
@@ -55,6 +50,7 @@ exports.main = async (event, context) => {
           name: collName,
           status: 'error',
           message: `创建失败: ${createErr.message}`,
+          errCode: createErr.errCode,
         });
       }
     }

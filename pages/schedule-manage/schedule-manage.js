@@ -135,17 +135,72 @@ Page({
     });
   },
 
+  // 计算当前视图的日期范围
+  getDateRange() {
+    const { selectedDate, viewMode } = this.data;
+    let startDate, endDate;
+    const selected = new Date(selectedDate);
+
+    if (viewMode === 'day') {
+      startDate = selectedDate;
+      endDate = selectedDate;
+    } else if (viewMode === 'week') {
+      const weekStart = new Date(selected);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      startDate = weekStart.toISOString().split('T')[0];
+      endDate = weekEnd.toISOString().split('T')[0];
+    } else {
+      const year = selected.getFullYear();
+      const month = selected.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      startDate = firstDay.toISOString().split('T')[0];
+      endDate = lastDay.toISOString().split('T')[0];
+    }
+
+    return { startDate, endDate };
+  },
+
   async loadSchedules() {
     wx.showLoading({ title: '加载中...' });
     try {
-      const res = await cloudDB.collection('courses')
-        .orderBy('date', 'asc')
-        .orderBy('startTime', 'asc')
-        .get();
+      const { startDate, endDate } = this.getDateRange();
       
-      const scheduleList = (res.data || []).map(item => this.formatSchedule(item));
+      // 使用云函数获取课程数据，绕过客户端数据库权限限制
+      let allData = [];
+      let skip = 0;
+      const pageSize = 100;
+      let total = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const res = await wx.cloud.callFunction({
+          name: 'getCourses',
+          data: {
+            startDate,
+            endDate,
+            skip,
+            limit: pageSize,
+          }
+        });
+
+        if (res.result && res.result.success) {
+          const list = res.result.data || [];
+          allData = allData.concat(list);
+          total = res.result.total;
+          skip += pageSize;
+          hasMore = list.length === pageSize && skip < total;
+        } else {
+          console.error('获取课程失败', res.result?.error);
+          hasMore = false;
+        }
+      }
+
+      const scheduleList = allData.map(item => this.formatSchedule(item));
       this.setData({ scheduleList, loading: false }, () => {
-        this.applyFilters();
+        this.applyStudentFilter();
       });
     } catch (e) {
       console.error('加载排课失败', e);
@@ -171,13 +226,8 @@ Page({
       selectedDate: currentDate,
       selectedDay: now.getDate(),
     });
-    if (mode === 'week') {
-      this.updateWeekDays();
-    } else if (mode === 'month') {
-      this.updateMonthDays();
-    }
     this.updateDateRangeText();
-    this.applyFilters();
+    this.loadSchedules(); // loadSchedules 完成后会调用 updateMonthDays
   },
 
   changeDate(e) {
@@ -200,22 +250,32 @@ Page({
     this.updateDateRangeText();
     if (this.data.viewMode === 'week') {
       this.updateWeekDays();
-    } else if (this.data.viewMode === 'month') {
-      this.updateMonthDays();
     }
-    this.applyFilters();
+    this.loadSchedules(); // loadSchedules 完成后会调用 updateMonthDays
   },
 
   selectDay(e) {
     const day = e.currentTarget.dataset.day;
     const date = e.currentTarget.dataset.date;
     if (!date) return;
-    this.setData({
-      selectedDay: day,
-      selectedDate: date,
-    });
-    this.updateDateRangeText();
-    this.applyFilters();
+    // 月视图或周视图点击日期时，切换到日视图
+    if (this.data.viewMode !== 'day') {
+      this.setData({
+        viewMode: 'day',
+        selectedDay: day,
+        selectedDate: date,
+      }, () => {
+        this.updateDateRangeText();
+        this.loadSchedules();
+      });
+    } else {
+      this.setData({
+        selectedDay: day,
+        selectedDate: date,
+      });
+      this.updateDateRangeText();
+      this.loadSchedules();
+    }
   },
 
   updateDateRangeText() {
@@ -296,7 +356,9 @@ Page({
 
   getSchedulesForDate(dateStr) {
     const { scheduleList, selectedStudentId } = this.data;
-    let filtered = scheduleList.filter(c => c.date === dateStr);
+    // 标准化日期格式：取前10位 YYYY-MM-DD
+    const normalizeDate = (d) => (d || '').substring(0, 10);
+    let filtered = scheduleList.filter(c => normalizeDate(c.date) === dateStr);
     if (selectedStudentId) {
       filtered = filtered.filter(c => c.studentId === selectedStudentId);
     }
@@ -320,47 +382,20 @@ Page({
       selectedStudentId: studentId,
       showStudentFilter: false,
     });
-    this.applyFilters();
+    this.applyStudentFilter(); // 只重新应用学生筛选，不查数据库
     wx.showToast({ title: '已筛选: ' + studentName, icon: 'none', duration: 1000 });
   },
 
-  applyFilters() {
-    const { scheduleList, selectedDate, selectedStudentId } = this.data;
-    let filtered = [];
-    
-    if (this.data.viewMode === 'day') {
-      // 日视图：显示选中日期的课程
-      filtered = scheduleList.filter(c => c.date === selectedDate);
-    } else if (this.data.viewMode === 'week') {
-      // 周视图：显示本周所有课程
-      const weekStart = new Date(selectedDate);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      
-      filtered = scheduleList.filter(c => {
-        const courseDate = new Date(c.date);
-        return courseDate >= weekStart && courseDate <= weekEnd;
-      });
-    } else {
-      // 月视图：显示本月所有课程
-      const selected = new Date(selectedDate);
-      const year = selected.getFullYear();
-      const month = selected.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      
-      filtered = scheduleList.filter(c => {
-        const courseDate = new Date(c.date);
-        return courseDate >= firstDay && courseDate <= lastDay;
-      });
-    }
-    
+  // 仅应用学生筛选（日期筛选已在数据库查询时完成）
+  applyStudentFilter() {
+    const { scheduleList, selectedStudentId } = this.data;
+    let filtered = scheduleList;
+
     // 应用学生筛选
     if (selectedStudentId) {
-      filtered = filtered.filter(c => c.studentId === selectedStudentId);
+      filtered = scheduleList.filter(c => c.studentId === selectedStudentId);
     }
-    
+
     this.setData({ filteredScheduleList: filtered }, () => {
       this.updateWeekDays();
       this.updateMonthDays();
@@ -377,12 +412,15 @@ Page({
       case '阅读': icon = this.data.iconBook; break;
       case '写作': icon = this.data.iconPen; break;
     }
+    // 标准化日期格式：取前10位 YYYY-MM-DD
+    const normalizedDate = (item.date || '').substring(0, 10);
     return {
       ...item,
       id: item._id,
+      date: normalizedDate, // 确保日期格式统一
       subjectColor,
       subjectIcon: icon,
-      isPast: this.isPastSchedule(item.date, item.endTime),
+      isPast: this.isPastSchedule(normalizedDate, item.endTime),
     };
   },
 
@@ -608,16 +646,22 @@ Page({
         if (res.confirm) {
           wx.showLoading({ title: '删除中...' });
           try {
-            const res = await wx.cloud.database()
-              .collection('courses')
-              .doc(schedule.id)
-              .remove();
-            
-            if (res.errMsg && res.errMsg.includes('ok')) {
+            // 使用云函数删除课程（管理员权限）
+            const result = await wx.cloud.callFunction({
+              name: 'deleteCourse',
+              data: {
+                id: schedule.id
+              }
+            });
+
+            if (result.result && result.result.success) {
               wx.showToast({ title: '已删除', icon: 'success' });
               this.loadSchedules();
             } else {
-              wx.showToast({ title: '删除失败', icon: 'none' });
+              wx.showToast({ 
+                title: result.result?.error || '删除失败', 
+                icon: 'none' 
+              });
             }
           } catch (e) {
             console.error('删除失败', e);

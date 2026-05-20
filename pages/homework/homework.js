@@ -25,15 +25,55 @@ Page({
       '写作': '#FFE8F0',
       '口语': '#E8D4F8',
     },
+    // 是否为管理员
+    isAdmin: false,
+    // 学生名称映射
+    studentNameMap: {},
   },
 
   async onLoad() {
-    this.loadAllHomework();
     this.loadIcons();
+    this.checkAdminAndLoad();
   },
 
   onShow() {
     this.loadAllHomework();
+  },
+
+  /**
+   * 检查管理员身份并加载数据
+   */
+  checkAdminAndLoad() {
+    const app = getApp();
+    const userInfo = app.globalData.userInfo;
+    const isAdmin = userInfo && userInfo.isAdmin === true;
+    this.setData({ isAdmin }, () => {
+      this.loadAllHomework();
+      if (isAdmin) {
+        this.loadStudentNames();
+      }
+    });
+  },
+
+  /**
+   * 加载学生名称映射（管理员使用）
+   */
+  async loadStudentNames() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getAllUsers',
+      });
+
+      if (res.result && res.result.success) {
+        const studentNameMap = {};
+        (res.result.data || []).forEach(user => {
+          studentNameMap[user._id] = user.nickName || '未命名用户';
+        });
+        this.setData({ studentNameMap });
+      }
+    } catch (e) {
+      console.error('加载学生名称映射失败', e);
+    }
   },
 
   /**
@@ -62,43 +102,87 @@ Page({
 
   /**
    * 加载所有作业并分类
+   * @description 管理员加载所有作业，普通用户只加载自己的作业
    */
   async loadAllHomework() {
     try {
-      const res = await cloudDB.getMy('homework', (q) =>
-        q.orderBy('_updateTime', 'desc')
-      );
+      let allHomework = [];
 
-      if (res.success) {
-        // 过滤未完成作业
-        const pendingList = res.data.filter(hw => {
-          if (hw.status) {
-            return ['pending', 'assigned', 'in_progress'].includes(hw.status);
-          }
-          if (hw.submitted !== undefined) {
-            return !hw.submitted;
-          }
-          return true;
-        });
+      if (this.data.isAdmin) {
+        // 管理员：使用云函数获取所有作业
+        allHomework = await this.loadAllHomeworkAdmin();
+      } else {
+        // 普通用户：使用原有方式查询自己的作业
+        const res = await cloudDB.getMy('homework', (q) =>
+          q.orderBy('_updateTime', 'desc')
+        );
 
-        // 过滤已完成作业
-        const completedList = res.data.filter(hw => {
-          if (hw.status === 'completed' || hw.submitted === true) {
-            return true;
-          }
-          return false;
-        });
-
-        const pendingHomework = pendingList.map(hw => this.formatHomeworkData(hw));
-        const completedHomework = completedList.map(hw => this.formatHomeworkData(hw));
-
-        this.setData({
-          pendingHomework,
-          completedHomework
-        });
+        if (res.success) {
+          allHomework = res.data;
+        }
       }
+
+      // 过滤未完成作业
+      const pendingList = allHomework.filter(hw => {
+        if (hw.status) {
+          return ['pending', 'assigned', 'in_progress'].includes(hw.status);
+        }
+        if (hw.submitted !== undefined) {
+          return !hw.submitted;
+        }
+        return true;
+      });
+
+      // 过滤已完成作业
+      const completedList = allHomework.filter(hw => {
+        if (hw.status === 'completed' || hw.submitted === true) {
+          return true;
+        }
+        return false;
+      });
+
+      const pendingHomework = pendingList.map(hw => this.formatHomeworkData(hw));
+      const completedHomework = completedList.map(hw => this.formatHomeworkData(hw));
+
+      this.setData({
+        pendingHomework,
+        completedHomework
+      });
     } catch (e) {
       console.error('加载作业失败', e);
+    }
+  },
+
+  /**
+   * 管理员加载所有作业（分页获取）
+   */
+  async loadAllHomeworkAdmin() {
+    try {
+      let allData = [];
+      let skip = 0;
+      const pageSize = 500;
+      let hasMore = true;
+
+      while (hasMore) {
+        const res = await wx.cloud.callFunction({
+          name: 'getAllHomework',
+          data: { skip, limit: pageSize }
+        });
+
+        if (res.result && res.result.success) {
+          const list = res.result.data || [];
+          allData = allData.concat(list);
+          skip += pageSize;
+          hasMore = list.length === pageSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      return allData;
+    } catch (e) {
+      console.error('管理员加载作业失败', e);
+      return [];
     }
   },
 
@@ -134,6 +218,12 @@ Page({
     const description = hw.description || hw.content || '';
     const status = hw.status || (hw.submitted ? 'completed' : 'pending');
 
+    // 管理员模式下显示学生名称
+    let studentName = '';
+    if (this.data.isAdmin && hw._openid) {
+      studentName = this.data.studentNameMap[hw._openid] || '';
+    }
+
     return {
       id: hw._id,
       title: hw.title || '未命名作业',
@@ -151,6 +241,7 @@ Page({
       courseName: hw.courseName || '',
       score: hw.score,
       totalScore: hw.totalScore,
+      studentName: studentName,
     };
   },
 

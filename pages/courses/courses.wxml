@@ -51,6 +51,7 @@
               <image class="course-type-icon" src="{{item.subject === '听力' ? iconListening : item.subject === '口语' ? iconSpeaking : item.subject === '阅读' ? iconReading : item.subject === '写作' ? iconWriting : iconBook}}" mode="aspectFit"/>
               <view class="course-info">
                 <text class="course-name">{{item.title}}</text>
+                <text class="course-student" wx:if="{{isAdmin && studentNameMap[item.studentId]}}">👤 {{studentNameMap[item.studentId]}}</text>
                 <view class="course-meta">
                   <text class="meta-item">{{item.date}} {{item.startTime}}-{{item.endTime}}</text>
                   <text class="meta-item">{{item.duration}}</text>

@@ -22,6 +22,7 @@
           <view class="homework-main">
             <view class="homework-info">
               <text class="homework-title">{{item.title}}</text>
+              <text class="homework-student" wx:if="{{isAdmin && item.studentName}}">👤 {{item.studentName}}</text>
               <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
               <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
             </view>
@@ -62,6 +63,7 @@
           <view class="homework-main">
             <view class="homework-info">
               <text class="homework-title">{{item.title}}</text>
+              <text class="homework-student" wx:if="{{isAdmin && item.studentName}}">👤 {{item.studentName}}</text>
               <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
               <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
             </view>

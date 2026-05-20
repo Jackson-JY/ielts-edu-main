@@ -913,7 +913,13 @@ Page({
     const subjectLabels = reminderSubjects.filter(s => s.selected).map(s => s.label);
     
     // 保存设置到云数据库
+    const app = getApp();
+    const userId = app.globalData.userInfo?.userId || app.globalData.userInfo?._id || '';
+    const openid = app.globalData.userInfo?.openid || app.globalData.openId || '';
+    
     const reminderSettings = {
+      userId: userId,
+      openid: openid,
       enabled: reminderEnabled,
       frequency: reminderFrequency,
       frequencyLabel: frequencyLabel,
@@ -921,6 +927,7 @@ Page({
       subjectLabels: subjectLabels,
       time: reminderTime,
       timeLabel: reminderTimeLabel,
+      updatedAt: new Date(),
     };
     
     try {
@@ -929,9 +936,17 @@ Page({
         // 已有记录，更新
         res = await cloudDB.update('reminder_settings', reminderSettingsId, reminderSettings);
       } else {
-        // 新增记录
-        res = await cloudDB.addMy('reminder_settings', reminderSettings);
-        if (res.success) {
+        // 新增记录，先检查是否已有该用户的设置
+        const existingRes = await cloudDB.getMy('reminder_settings');
+        if (existingRes.success && existingRes.data && existingRes.data.length > 0) {
+          // 已有设置，更新
+          const existingId = existingRes.data[0]._id;
+          res = await cloudDB.update('reminder_settings', existingId, reminderSettings);
+        } else {
+          // 新增记录
+          res = await cloudDB.addMy('reminder_settings', reminderSettings);
+        }
+        if (res.success && res.id) {
           this.setData({ reminderSettingsId: res.id });
         }
       }
@@ -939,7 +954,7 @@ Page({
       wx.hideLoading();
       
       if (res.success) {
-        // 设置订阅消息提醒（实际使用时需要调用微信订阅消息API）
+        // 设置订阅消息提醒
         if (reminderEnabled) {
           this.requestRemindSubscription(frequencyLabel, subjectLabels, reminderTimeLabel);
         }
@@ -962,14 +977,54 @@ Page({
   /**
    * 请求订阅消息
    */
-  requestRemindSubscription(frequency, subjects, time) {
+  async requestRemindSubscription(frequency, subjects, time) {
     // 实际的订阅消息功能需要在小程序后台配置模板消息
-    // 这里只是示例，实际使用时需要调用 wx.requestSubscribeMessage
-    wx.showToast({
-      title: `已设置${frequency} ${time}提醒${subjects.join('、')}`,
-      icon: 'none',
-      duration: 2000
-    });
+    // 模板ID需要在微信公众平台配置
+    const templateId = 'YOUR_TEMPLATE_ID'; // TODO: 替换为实际的订阅消息模板ID
+    
+    try {
+      // 请求用户授权订阅消息
+      const res = await new Promise((resolve, reject) => {
+        wx.requestSubscribeMessage({
+          tmplIds: [templateId],
+          success: (res) => {
+            console.log('[订阅消息] 请求成功', res);
+            resolve(res);
+          },
+          fail: (err) => {
+            console.error('[订阅消息] 请求失败', err);
+            reject(err);
+          }
+        });
+      });
+      
+      if (res[templateId] === 'accept') {
+        wx.showToast({
+          title: `已开启${frequency} ${time}提醒`,
+          icon: 'success',
+          duration: 2000
+        });
+      } else if (res[templateId] === 'reject') {
+        wx.showToast({
+          title: '您已拒绝订阅消息',
+          icon: 'none',
+          duration: 2000
+        });
+      } else {
+        wx.showToast({
+          title: `已设置${frequency} ${time}提醒`,
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    } catch (e) {
+      console.error('[订阅消息] 请求异常', e);
+      wx.showToast({
+        title: `已设置${frequency} ${time}提醒${subjects.join('、')}`,
+        icon: 'none',
+        duration: 2000
+      });
+    }
   },
 
   /**

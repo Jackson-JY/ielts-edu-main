@@ -25,12 +25,16 @@ Page({
     iconReading: '',
     iconWriting: '',
     iconBook: '',
+    // 是否为管理员
+    isAdmin: false,
+    // 学生名称映射
+    studentNameMap: {},
   },
 
   onLoad() {
     this.initDate();
     this.loadImageUrls();
-    this.loadCourses();
+    this.checkAdminAndLoad();
   },
 
   /**
@@ -72,6 +76,42 @@ Page({
 
   onShow() {
     this.loadCourses();
+  },
+
+  /**
+   * 检查管理员身份并加载数据
+   */
+  checkAdminAndLoad() {
+    const app = getApp();
+    const userInfo = app.globalData.userInfo;
+    const isAdmin = userInfo && userInfo.isAdmin === true;
+    this.setData({ isAdmin }, () => {
+      this.loadCourses();
+      if (isAdmin) {
+        this.loadStudentNames();
+      }
+    });
+  },
+
+  /**
+   * 加载学生名称映射（管理员使用）
+   */
+  async loadStudentNames() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'getAllUsers',
+      });
+
+      if (res.result && res.result.success) {
+        const studentNameMap = {};
+        (res.result.data || []).forEach(user => {
+          studentNameMap[user._id] = user.nickName || '未命名用户';
+        });
+        this.setData({ studentNameMap });
+      }
+    } catch (e) {
+      console.error('加载学生名称映射失败', e);
+    }
   },
 
   initDate() {
@@ -163,34 +203,43 @@ Page({
   },
 
   /**
-   * 从云数据库加载当前用户的课程数据
-   * @description 只加载与当前登录用户相关的课程（通过 studentId 关联）
+   * 从云数据库加载课程数据
+   * @description 管理员加载所有课程，普通用户只加载自己的课程
    */
   async loadCourses() {
     this.setData({ isLoading: true });
     try {
       const app = getApp();
-      const userId = app.globalData.userInfo && app.globalData.userInfo.userId;
+      const userInfo = app.globalData.userInfo;
+      const userId = userInfo && userInfo.userId;
+      const isAdmin = userInfo && userInfo.isAdmin === true;
 
       // 如果用户未登录，返回空数据
-      if (!userId) {
+      if (!userId && !isAdmin) {
         this.setData({ courses: [] }, () => {
           this.filterCourses();
         });
         return;
       }
 
-      // 查询当前用户的课程（通过 studentId 关联）
-      const res = await cloudDB.get('courses', (dbQuery) => {
-        return dbQuery.where({
-          studentId: userId
-        }).orderBy('date', 'asc').orderBy('startTime', 'asc');
-      });
-
       let courses = [];
-      if (res.success) {
-        courses = res.data;
+
+      if (isAdmin) {
+        // 管理员：使用云函数获取所有课程
+        courses = await this.loadAllCoursesAdmin();
+      } else {
+        // 普通用户：查询自己的课程（通过 studentId 关联）
+        const res = await cloudDB.get('courses', (dbQuery) => {
+          return dbQuery.where({
+            studentId: userId
+          }).orderBy('date', 'asc').orderBy('startTime', 'asc');
+        });
+
+        if (res.success) {
+          courses = res.data;
+        }
       }
+
       // 根据当前时间计算课程状态
       courses = courses.map(course => ({
         ...course,
@@ -206,6 +255,44 @@ Page({
       });
     } finally {
       this.setData({ isLoading: false });
+    }
+  },
+
+  /**
+   * 管理员加载所有课程（分页获取）
+   */
+  async loadAllCoursesAdmin() {
+    try {
+      let allData = [];
+      let skip = 0;
+      const pageSize = 500;
+      let hasMore = true;
+
+      while (hasMore) {
+        const res = await wx.cloud.callFunction({
+          name: 'getCourses',
+          data: {
+            startDate: '2020-01-01', // 获取所有历史课程
+            endDate: '2099-12-31',
+            skip,
+            limit: pageSize,
+          }
+        });
+
+        if (res.result && res.result.success) {
+          const list = res.result.data || [];
+          allData = allData.concat(list);
+          skip += pageSize;
+          hasMore = list.length === pageSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      return allData;
+    } catch (e) {
+      console.error('管理员加载课程失败', e);
+      return [];
     }
   },
 

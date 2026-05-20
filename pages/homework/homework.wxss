@@ -119,6 +119,12 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.homework-student {
+  font-size: 22rpx;
+  color: #E91E63;
+  font-weight: 500;
+  line-height: 1.4;
+}
 .homework-meta {
   display: flex;
   align-items: center;

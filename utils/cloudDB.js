@@ -60,10 +60,14 @@ const get = async (collName, query) => {
 
     if (typeof query === 'function') {
       dbQuery = query(dbQuery);
+      // query 函数已设置排序和 limit，直接获取
+      const res = await dbQuery.get();
+      return { success: true, data: res.data };
     } else if (query && typeof query === 'object') {
       dbQuery = dbQuery.where(query);
     }
 
+    // 只有在未通过 query 函数自定义查询时才使用默认排序
     const res = await dbQuery.orderBy('_createTime', 'desc').get();
     return { success: true, data: res.data };
   } catch (e) {
@@ -165,18 +169,14 @@ const addMy = async (collName, data) => {
 const getByDateRange = async (collName, dateField, startDate, endDate, extraQuery) => {
   try {
     const res = await get(collName, (dbQuery) => {
+      // 使用数组格式的 and 查询
       let q = dbQuery.where({
-        [dateField]: getDB().command.gte(startDate),
+        [dateField]: getDB().command.gte(startDate).and(getDB().command.lte(endDate))
       });
-      if (endDate) {
-        q = q.where({
-          [dateField]: getDB().command.lte(endDate),
-        });
-      }
       if (extraQuery) {
         q = q.where(extraQuery);
       }
-      return q.orderBy(dateField, 'asc');
+      return q.orderBy(dateField, 'asc').orderBy('startTime', 'asc').limit(500);
     });
     return res;
   } catch (e) {
