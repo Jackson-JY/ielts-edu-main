@@ -28,32 +28,47 @@
     <!-- 信息卡片 -->
     <view class="info-card">
       <view class="info-item" wx:if="{{homework.courseName}}">
-        <text class="info-label">📖 所属课程</text>
+        <view class="info-label">
+          <image class="info-icon" src="{{iconBook}}" mode="aspectFit"/>
+          <text>所属课程</text>
+        </view>
         <text class="info-value">{{homework.courseName}}</text>
       </view>
 
       <view class="info-item">
-        <text class="info-label">📅 截止日期</text>
+        <view class="info-label">
+          <image class="info-icon" src="{{iconCalendar}}" mode="aspectFit"/>
+          <text>截止日期</text>
+        </view>
         <text class="info-value {{homework.isOverdue ? 'text-overdue' : (homework.isUrgent ? 'text-urgent' : '')}}">
           {{homework.deadlineFormatted}}
         </text>
       </view>
       
       <view class="info-item" wx:if="{{homework.daysLeft !== null}}">
-        <text class="info-label">⏰ 剩余时间</text>
+        <view class="info-label">
+          <image class="info-icon" src="{{iconFire}}" mode="aspectFit"/>
+          <text>剩余时间</text>
+        </view>
         <text class="info-value {{homework.isOverdue ? 'text-overdue' : (homework.isUrgent ? 'text-urgent' : '')}}">
           {{homework.isOverdue ? '已逾期 ' + Math.abs(homework.daysLeft) + ' 天' : (homework.daysLeft === 0 ? '今天截止' : '还剩 ' + homework.daysLeft + ' 天')}}
         </text>
       </view>
 
       <view class="info-item" wx:if="{{homework.createTimeFormatted}}">
-        <text class="info-label">📝 布置时间</text>
+        <view class="info-label">
+          <image class="info-icon" src="{{iconDocument}}" mode="aspectFit"/>
+          <text>布置时间</text>
+        </view>
         <text class="info-value">{{homework.createTimeFormatted}}</text>
       </view>
 
       <!-- 完成度输入 -->
       <view class="info-item input-item">
-        <text class="info-label">📊 完成度</text>
+        <view class="info-label">
+          <image class="info-icon" src="{{iconChart}}" mode="aspectFit"/>
+          <text>完成度</text>
+        </view>
         <view class="input-wrapper">
           <input 
             class="info-input" 
@@ -70,7 +85,10 @@
 
       <!-- 累计时长输入 -->
       <view class="info-item input-item">
-        <text class="info-label">⏱️ 累计时长</text>
+        <view class="info-label">
+          <image class="info-icon" src="{{iconCalendar}}" mode="aspectFit"/>
+          <text>累计时长</text>
+        </view>
         <view class="input-wrapper">
           <input 
             class="info-input" 
@@ -85,7 +103,10 @@
       </view>
 
       <view class="info-item" wx:if="{{homework.score !== undefined && homework.score !== null}}">
-        <text class="info-label">⭐ 得分</text>
+        <view class="info-label">
+          <image class="info-icon" src="{{iconCheck}}" mode="aspectFit"/>
+          <text>得分</text>
+        </view>
         <text class="info-value">{{homework.score}}/{{homework.totalScore || 100}}</text>
       </view>
     </view>
@@ -98,16 +119,22 @@
 
     <!-- 老师评语 -->
     <view class="content-card feedback-card" wx:if="{{homework.feedback}}">
-      <text class="content-title">💬 老师评语</text>
+      <view class="content-title-row">
+        <image class="content-title-icon" src="{{iconDocument}}" mode="aspectFit"/>
+        <text class="content-title">老师评语</text>
+      </view>
       <text class="content-text">{{homework.feedback}}</text>
     </view>
 
     <!-- 附件列表 -->
     <view class="content-card" wx:if="{{homework.attachments && homework.attachments.length > 0}}">
-      <text class="content-title">📎 附件资料</text>
+      <view class="content-title-row">
+        <image class="content-title-icon" src="{{iconDocument}}" mode="aspectFit"/>
+        <text class="content-title">附件资料</text>
+      </view>
       <view class="attachment-list">
         <view class="attachment-item" wx:for="{{homework.attachments}}" wx:key="index" bindtap="previewAttachment" data-url="{{item.url}}">
-          <text class="attachment-icon">📄</text>
+          <image class="attachment-icon" src="{{iconDocument}}" mode="aspectFit"/>
           <text class="attachment-name">{{item.name}}</text>
           <text class="attachment-arrow">›</text>
         </view>

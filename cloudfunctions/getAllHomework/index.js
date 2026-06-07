@@ -6,6 +6,16 @@ cloud.init({
 
 const db = cloud.database();
 
+async function verifyAdmin() {
+  const wxContext = cloud.getWXContext();
+  const openid = wxContext.OPENID;
+
+  if (!openid) return false;
+
+  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
+  return !!(res.data && res.data[0] && res.data[0].isAdmin === true);
+}
+
 /**
  * 获取所有作业列表（管理员使用）
  * @param {Object} event - 传入参数
@@ -17,6 +27,16 @@ exports.main = async (event, context) => {
   const { skip = 0, limit = 100 } = event;
 
   try {
+    const isAdmin = await verifyAdmin();
+    if (!isAdmin) {
+      return {
+        success: false,
+        error: '无权获取作业列表，仅管理员可操作',
+        data: [],
+        total: 0,
+      };
+    }
+
     // 获取总数
     const countResult = await db.collection('homework').count();
 

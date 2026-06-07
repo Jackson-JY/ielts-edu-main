@@ -53,9 +53,10 @@ Page({
 
     let checkedDates = [];
     try {
+      const db = wx.cloud.database();
       const res = await cloudDB.getMy('checkins', (q) =>
         q.where({
-          date: wx.cloud.database().command.gte(monthStart),
+          date: db.command.gte(monthStart).and(db.command.lte(monthEnd)),
         })
       );
       if (res.success) {

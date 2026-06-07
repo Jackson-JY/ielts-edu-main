@@ -1,88 +1,92 @@
-<!--pages/homework/homework.wxml - 作业页面-->
+<!--pages/homework/homework.wxml - 作业页面（听说读写四模块）-->
 <view class="page">
 
   <!-- Header -->
   <view class="header">
-    <text class="title" bindlongpress="onTitleLongPress">作业</text>
+    <text class="title">作业</text>
+    <text class="subtitle" wx:if="{{!activeSubject}}">选择一个模块，查看对应作业</text>
   </view>
 
-  <!-- 未完成作业区域 -->
-  <view class="section-card">
-    <view class="section-header" bindtap="togglePendingList">
-      <view class="section-title-row">
-        <text class="section-title">📚 待完成作业</text>
-        <text class="section-subtitle" wx:if="{{pendingHomework.length > 0}}">{{pendingHomework.length}} 个待完成</text>
-        <text class="section-subtitle" wx:else>暂无待完成作业</text>
+  <!-- 听说读写模块宫格 -->
+  <view class="subject-grid" wx:if="{{!activeSubject}}">
+    <view class="subject-module-item"
+          wx:for="{{subjectModules}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          data-label="{{item.label}}"
+          bindtap="onTapSubjectModule">
+      <view class="subject-module-icon-wrap" style="background-color: {{item.bgColor}};">
+        <image class="subject-module-icon" src="{{item.icon}}" mode="aspectFit"/>
       </view>
-      <text class="expand-icon" wx:if="{{pendingHomework.length > 2}}">{{pendingExpanded ? '∧' : '∨'}}</text>
+      <text class="subject-module-label">{{item.label}}</text>
+      <text class="subject-module-count" wx:if="{{item.total > 0}}">{{item.completed}}/{{item.total}} 已完成</text>
+      <text class="subject-module-count" wx:else>暂无作业</text>
+      <view class="subject-module-progress" wx:if="{{item.total > 0}}">
+        <view class="subject-module-progress-fill" style="width: {{item.progress}}%;"></view>
+      </view>
+      <view class="subject-module-arrow">›</view>
     </view>
-    <view class="homework-list" wx:if="{{pendingHomework.length > 0}}">
-      <block wx:for="{{pendingExpanded ? pendingHomework : (pendingHomework.length > 0 ? [pendingHomework[0], pendingHomework[1]] : [])}}" wx:key="id">
-        <view class="homework-item {{item.isOverdue ? 'homework-overdue' : ''}} {{item.isUrgent ? 'homework-urgent' : ''}}" data-id="{{item.id}}" bindtap="onHomeworkTap">
-          <view class="homework-main">
-            <view class="homework-info">
-              <text class="homework-title">{{item.title}}</text>
-              <text class="homework-student" wx:if="{{isAdmin && item.studentName}}">👤 {{item.studentName}}</text>
-              <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
-              <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
-            </view>
-            <view class="homework-meta">
-              <view class="homework-subject">
-                <view class="subject-tag" style="background-color: {{item.subjectColor}}">
-                  <image class="subject-icon" src="{{item.subjectIcon}}" mode="aspectFit"/>
-                  <text class="subject-label">{{item.subjectLabel}}</text>
-                </view>
-              </view>
-              <view class="homework-deadline {{item.isOverdue ? 'deadline-overdue' : ''}} {{item.isUrgent ? 'deadline-urgent' : ''}}">
-                <text class="deadline-icon">⏰</text>
-                <text class="deadline-text">{{item.isOverdue ? '已逾期' : (item.daysLeft === 0 ? '今天截止' : item.daysLeft + '天后截止')}}</text>
-              </view>
-            </view>
+  </view>
+
+  <!-- 模块作业明细列表 -->
+  <view class="subject-detail" wx:if="{{activeSubject}}">
+    <view class="detail-header">
+      <view class="back-btn" bindtap="onBackToModules">
+        <text class="back-arrow">‹</text>
+        <text>返回</text>
+      </view>
+      <text class="detail-title">{{activeSubjectLabel}}作业</text>
+      <text class="detail-count">共 {{activeSubjectItems.length}} 项</text>
+    </view>
+
+    <view class="detail-list" wx:if="{{activeSubjectItems.length > 0}}">
+      <view class="detail-item {{item.isCompleted ? 'detail-item-completed' : ''}}"
+            wx:for="{{activeSubjectItems}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="onHomeworkTap">
+        <!-- 左栏：作业内容 -->
+        <view class="detail-col detail-col-left">
+          <text class="detail-student" wx:if="{{isAdmin && item.studentName}}">{{item.studentName}}</text>
+          <text class="detail-content">{{item.content}}</text>
+          <view class="detail-tags" wx:if="{{item.courseName || item.deadlineFormatted}}">
+            <text class="detail-tag" wx:if="{{item.courseName}}">{{item.courseName}}</text>
+            <text class="detail-tag" wx:if="{{item.deadlineFormatted}}">{{item.deadlineFormatted}}</text>
           </view>
-          <view class="homework-arrow">›</view>
         </view>
-      </block>
+
+        <!-- 右栏：时长 / 完成度 / 打卡选项 -->
+        <view class="detail-col detail-col-right">
+          <view class="detail-duration">
+            <text class="detail-duration-value">{{item.duration}}</text>
+            <text class="detail-duration-unit">分钟</text>
+          </view>
+          <view class="detail-progress-wrap">
+            <view class="detail-progress-track">
+              <view class="detail-progress-fill" style="width: {{item.completion}}%;"></view>
+            </view>
+            <text class="detail-progress-text">完成度 {{item.completion}}%</text>
+          </view>
+
+          <!-- 学员本人：可点击打卡/取消打卡 -->
+          <view class="detail-checkin {{item.isCompleted ? 'checked' : ''}}"
+                wx:if="{{!isAdmin}}"
+                data-id="{{item.id}}"
+                data-completed="{{item.isCompleted}}"
+                catchtap="onToggleHomeworkComplete">
+            <text wx:if="{{item.isCompleted}}">已完成 ✅</text>
+            <text wx:else>标记完成</text>
+          </view>
+          <!-- 管理员视角：仅展示状态，不可代为打卡 -->
+          <view class="detail-status-tag {{item.isCompleted ? 'completed' : ''}}" wx:else>
+            <text>{{item.isCompleted ? '已完成 ✅' : '进行中'}}</text>
+          </view>
+        </view>
+      </view>
     </view>
+
     <view class="empty-homework" wx:else>
-      <text class="empty-text">🎉 太棒了！当前没有待完成的作业</text>
-    </view>
-  </view>
-
-  <!-- 已完成作业区域 -->
-  <view class="section-card" wx:if="{{completedHomework.length > 0}}">
-    <view class="section-header" bindtap="toggleCompletedList">
-      <view class="section-title-row">
-        <text class="section-title">✅ 已完成作业</text>
-        <text class="section-subtitle">{{completedHomework.length}} 个已完成</text>
-      </view>
-      <text class="expand-icon">{{completedExpanded ? '∧' : '∨'}}</text>
-    </view>
-    <view class="homework-list">
-      <block wx:for="{{completedExpanded ? completedHomework : (completedHomework.length > 0 ? [completedHomework[0], completedHomework[1]] : [])}}" wx:key="id">
-        <view class="homework-item homework-completed" data-id="{{item.id}}" bindtap="onHomeworkTap">
-          <view class="homework-main">
-            <view class="homework-info">
-              <text class="homework-title">{{item.title}}</text>
-              <text class="homework-student" wx:if="{{isAdmin && item.studentName}}">👤 {{item.studentName}}</text>
-              <text class="homework-desc" wx:if="{{item.description}}">{{item.description}}</text>
-              <text class="homework-course" wx:if="{{item.courseName}}">📖 {{item.courseName}}</text>
-            </view>
-            <view class="homework-meta">
-              <view class="homework-subject">
-                <view class="subject-tag" style="background-color: {{item.subjectColor}}">
-                  <image class="subject-icon" src="{{item.subjectIcon}}" mode="aspectFit"/>
-                  <text class="subject-label">{{item.subjectLabel}}</text>
-                </view>
-              </view>
-              <view class="homework-deadline">
-                <text class="deadline-icon">✓</text>
-                <text class="deadline-text">已完成</text>
-              </view>
-            </view>
-          </view>
-          <view class="homework-arrow">›</view>
-        </view>
-      </block>
+      <text class="empty-text">该模块暂无作业</text>
     </view>
   </view>
 

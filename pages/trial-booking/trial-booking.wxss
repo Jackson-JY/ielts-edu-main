@@ -92,9 +92,18 @@ page {
 }
 
 .highlight-icon {
-  font-size: 48rpx;
+  width: 56rpx;
+  height: 56rpx;
   margin-right: 20rpx;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.highlight-icon-img {
+  width: 44rpx;
+  height: 44rpx;
 }
 
 .highlight-content {

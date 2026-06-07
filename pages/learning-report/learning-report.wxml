@@ -3,7 +3,10 @@
   <!-- 顶部标题区 -->
   <view class="header">
     <view class="header-content">
-      <text class="title">📊 学习报告</text>
+      <view class="title-row">
+        <image class="title-icon" src="{{iconChart}}" mode="aspectFit"/>
+        <text class="title">学习报告</text>
+      </view>
       <text class="subtitle">追踪你的雅思学习进度</text>
     </view>
     <view class="header-actions">
@@ -11,7 +14,7 @@
         <text class="date-text">{{currentDateRange}}</text>
       </view>
       <button class="share-btn" bindtap="generateShareImage">
-        <text class="share-icon">📤</text>
+        <image class="share-icon" src="{{iconDocument}}" mode="aspectFit"/>
         <text class="share-text">生成海报</text>
       </button>
     </view>
@@ -20,7 +23,9 @@
   <!-- 核心数据概览 -->
   <view class="stats-overview">
     <view class="stat-card primary">
-      <view class="stat-icon">⏱️</view>
+      <view class="stat-icon">
+        <image class="stat-icon-img" src="{{iconFire}}" mode="aspectFit"/>
+      </view>
       <view class="stat-content">
         <text class="stat-value">{{studyData.totalHours || 0}}</text>
         <text class="stat-label">总学习时长(小时)</text>
@@ -46,10 +51,32 @@
     </view>
   </view>
 
+  <!-- 听说读写打卡次数统计 -->
+  <view class="section-card">
+    <view class="card-header">
+      <view class="card-title-row">
+        <image class="card-title-icon" src="{{iconCheck}}" mode="aspectFit"/>
+        <text class="card-title">听说读写打卡统计</text>
+      </view>
+      <text class="card-subtitle">各项打卡次数一目了然</text>
+    </view>
+
+    <view class="subject-checkin-grid">
+      <view class="subject-checkin-item" wx:for="{{subjectCheckinStats}}" wx:key="id">
+        <image class="subject-checkin-icon" src="{{item.icon}}" mode="aspectFit"/>
+        <text class="subject-checkin-count">{{item.count}}</text>
+        <text class="subject-checkin-label">{{item.label}}打卡</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 科目成绩趋势图 -->
   <view class="section-card">
     <view class="card-header">
-      <text class="card-title">🎯 科目成绩趋势</text>
+      <view class="card-title-row">
+        <image class="card-title-icon" src="{{iconTarget}}" mode="aspectFit"/>
+        <text class="card-title">科目成绩趋势</text>
+      </view>
       <text class="card-subtitle">各科目成绩变化</text>
     </view>
     
@@ -58,7 +85,7 @@
       <!-- 听力趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <text class="subject-icon">🎧</text>
+          <image class="subject-icon" src="{{iconHeadphones}}" mode="aspectFit"/>
           <text class="subject-name">听力</text>
         </view>
         <view class="mini-chart-container">
@@ -69,7 +96,7 @@
       <!-- 阅读趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <text class="subject-icon">📖</text>
+          <image class="subject-icon" src="{{iconBook}}" mode="aspectFit"/>
           <text class="subject-name">阅读</text>
         </view>
         <view class="mini-chart-container">
@@ -82,7 +109,7 @@
       <!-- 写作趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <text class="subject-icon">✍️</text>
+          <image class="subject-icon" src="{{iconPen}}" mode="aspectFit"/>
           <text class="subject-name">写作</text>
         </view>
         <view class="mini-chart-container">
@@ -93,7 +120,7 @@
       <!-- 口语趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <text class="subject-icon">🗣️</text>
+          <image class="subject-icon" src="{{iconMic}}" mode="aspectFit"/>
           <text class="subject-name">口语</text>
         </view>
         <view class="mini-chart-container">
@@ -105,7 +132,7 @@
     <!-- 总成绩趋势 -->
     <view class="total-score-section">
       <view class="total-score-header">
-        <text class="total-score-icon">🏆</text>
+        <image class="total-score-icon" src="{{iconChart}}" mode="aspectFit"/>
         <text class="total-score-title">总成绩趋势</text>
       </view>
       <view class="total-chart-container">
@@ -121,7 +148,10 @@
     <!-- 成绩详情表格 -->
     <view class="section-card" wx:if="{{examScores.length > 0}}">
       <view class="card-header">
-        <text class="card-title">📋 成绩详情</text>
+        <view class="card-title-row">
+          <image class="card-title-icon" src="{{iconDocument}}" mode="aspectFit"/>
+          <text class="card-title">成绩详情</text>
+        </view>
         <text class="card-subtitle">各科目成绩一览</text>
       </view>
       <scroll-view scroll-x class="score-table-wrapper">
@@ -136,7 +166,10 @@
           </view>
           <!-- 听力行 -->
           <view class="table-row">
-            <text class="table-cell subject-cell">🎧 听力</text>
+            <view class="table-cell subject-cell subject-cell-with-icon">
+              <image class="table-subject-icon" src="{{iconHeadphones}}" mode="aspectFit"/>
+              <text>听力</text>
+            </view>
             <text class="table-cell improve-col subject-improve {{examScoresReverse[0].listeningImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].listeningImprovement < 0 ? 'improve-negative' : '')}}">
               {{examScoresReverse[0].listeningImprovement > 0 ? '+' + examScoresReverse[0].listeningImprovement : (examScoresReverse[0].listeningImprovement < 0 ? examScoresReverse[0].listeningImprovement : '-')}}
             </text>
@@ -146,7 +179,10 @@
           </view>
           <!-- 阅读行 -->
           <view class="table-row">
-            <text class="table-cell subject-cell">📖 阅读</text>
+            <view class="table-cell subject-cell subject-cell-with-icon">
+              <image class="table-subject-icon" src="{{iconBook}}" mode="aspectFit"/>
+              <text>阅读</text>
+            </view>
             <text class="table-cell improve-col subject-improve {{examScoresReverse[0].readingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].readingImprovement < 0 ? 'improve-negative' : '')}}">
               {{examScoresReverse[0].readingImprovement > 0 ? '+' + examScoresReverse[0].readingImprovement : (examScoresReverse[0].readingImprovement < 0 ? examScoresReverse[0].readingImprovement : '-')}}
             </text>
@@ -156,7 +192,10 @@
           </view>
           <!-- 写作行 -->
           <view class="table-row">
-            <text class="table-cell subject-cell">✍️ 写作</text>
+            <view class="table-cell subject-cell subject-cell-with-icon">
+              <image class="table-subject-icon" src="{{iconPen}}" mode="aspectFit"/>
+              <text>写作</text>
+            </view>
             <text class="table-cell improve-col subject-improve {{examScoresReverse[0].writingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].writingImprovement < 0 ? 'improve-negative' : '')}}">
               {{examScoresReverse[0].writingImprovement > 0 ? '+' + examScoresReverse[0].writingImprovement : (examScoresReverse[0].writingImprovement < 0 ? examScoresReverse[0].writingImprovement : '-')}}
             </text>
@@ -166,7 +205,10 @@
           </view>
           <!-- 口语行 -->
           <view class="table-row">
-            <text class="table-cell subject-cell">🗣️ 口语</text>
+            <view class="table-cell subject-cell subject-cell-with-icon">
+              <image class="table-subject-icon" src="{{iconMic}}" mode="aspectFit"/>
+              <text>口语</text>
+            </view>
             <text class="table-cell improve-col subject-improve {{examScoresReverse[0].speakingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].speakingImprovement < 0 ? 'improve-negative' : '')}}">
               {{examScoresReverse[0].speakingImprovement > 0 ? '+' + examScoresReverse[0].speakingImprovement : (examScoresReverse[0].speakingImprovement < 0 ? examScoresReverse[0].speakingImprovement : '-')}}
             </text>
@@ -176,7 +218,10 @@
           </view>
           <!-- 总分行 -->
           <view class="table-row total-row">
-            <text class="table-cell subject-cell">🏆 总分</text>
+            <view class="table-cell subject-cell subject-cell-with-icon">
+              <image class="table-subject-icon" src="{{iconChart}}" mode="aspectFit"/>
+              <text>总分</text>
+            </view>
             <text class="table-cell improve-col total-improve {{examScoresReverse[0].improvement > 0 ? 'improve-positive' : (examScoresReverse[0].improvement < 0 ? 'improve-negative' : '')}}">
               {{examScoresReverse[0].improvement > 0 ? '+' + examScoresReverse[0].improvement : (examScoresReverse[0].improvement < 0 ? examScoresReverse[0].improvement : '-')}}
             </text>

@@ -45,9 +45,6 @@ const LOCAL_IMAGES = {
   tabHomeworkActive: '/images/tab-homework-active.png',
   tabProfile: '/images/tab-profile.png',
   tabProfileActive: '/images/tab-profile-active.png',
-  // 小图标（仅保留小文件）
-  iconLogin: '/images/icon-login.png',
-  iconLogout: '/images/icon-logout.png',
 };
 
 module.exports = {

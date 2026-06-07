@@ -1,6 +1,6 @@
 // pages/trial-booking/trial-booking.js
 const cloudDB = require('../../utils/cloudDB');
-const { getTempUrl } = require('../../utils/cloudStorage');
+const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
 const { formatDate } = require('../../utils/dateUtil');
 
@@ -31,14 +31,35 @@ Page({
     validCoupons: {},
     // 课程封面图
     courseImageUrl: '',
+    iconTarget: '',
+    iconBook: '',
+    iconDocument: '',
   },
 
   async onLoad() {
     this.initAvailableDates();
     this.loadCoupons();
-    // 加载云存储的课程封面图
-    const courseImageUrl = await getTempUrl(CLOUD_IMAGES.trialCourse);
-    this.setData({ courseImageUrl });
+    await this.loadImages();
+  },
+
+  async loadImages() {
+    try {
+      const fileIDs = [
+        CLOUD_IMAGES.trialCourse,
+        CLOUD_IMAGES.iconTarget,
+        CLOUD_IMAGES.iconBook,
+        CLOUD_IMAGES.iconDocument,
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        courseImageUrl: urlMap[CLOUD_IMAGES.trialCourse] || '',
+        iconTarget: urlMap[CLOUD_IMAGES.iconTarget] || '',
+        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconDocument: urlMap[CLOUD_IMAGES.iconDocument] || '',
+      });
+    } catch (e) {
+      console.error('[试听预约] 加载图片失败', e);
+    }
   },
 
   /**

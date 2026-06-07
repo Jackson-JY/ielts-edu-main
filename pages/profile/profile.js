@@ -29,10 +29,12 @@ Page({
     isAdmin: false,
     avatarUrl: '',
     defaultAvatarUrl: '',
+    iconUser: '',
     // 云存储图标（使用临时 URL）
     iconTarget: '',
     iconChart: '',
     iconRefresh: '',
+    iconSettings: '',
     // 添加成绩弹窗图标
     iconCalendar: '',
     iconHeadphones: '',
@@ -75,30 +77,9 @@ Page({
       { id: 'homework',  label: '作业', color: '#D4E8FF', selected: false },
     ],
     checkinContent: '',
+    // 打卡时长（分钟）
+    checkinDuration: '',
     canSubmitCheckin: false,
-    // 打卡提醒设置
-    showReminderModal: false,
-    reminderEnabled: false,
-    reminderFrequency: [],
-    reminderFrequencyLabel: '',
-    reminderTime: '20:00',
-    reminderTimeLabel: '20:00',
-    reminderSubjects: [
-      { id: 'listening', label: '听力', color: '#A7FBF5', selected: false },
-      { id: 'speaking', label: '口语', color: '#E8D4F8', selected: false },
-      { id: 'reading', label: '阅读', color: '#FFD4B8', selected: false },
-      { id: 'writing', label: '写作', color: '#FFE8F0', selected: false },
-    ],
-    reminderSettingsId: '',
-    frequencyOptions: [
-      { label: '周一', value: 'monday' },
-      { label: '周二', value: 'tuesday' },
-      { label: '周三', value: 'wednesday' },
-      { label: '周四', value: 'thursday' },
-      { label: '周五', value: 'friday' },
-      { label: '周六', value: 'saturday' },
-      { label: '周日', value: 'sunday' },
-    ],
   },
 
   onLoad() {
@@ -135,6 +116,7 @@ Page({
     try {
       const fileIDs = [
         CLOUD_IMAGES.defaultAvatar,
+        CLOUD_IMAGES.iconUser,
         CLOUD_IMAGES.iconTarget,
         CLOUD_IMAGES.iconChart,
         CLOUD_IMAGES.iconRefresh,
@@ -147,6 +129,7 @@ Page({
       const urlMap = await cloudStorage.getTempUrls(fileIDs);
       this.setData({
         defaultAvatarUrl: urlMap[CLOUD_IMAGES.defaultAvatar] || '',
+        iconUser: urlMap[CLOUD_IMAGES.iconUser] || '',
         iconTarget: urlMap[CLOUD_IMAGES.iconTarget] || '',
         iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
         iconRefresh: urlMap[CLOUD_IMAGES.iconRefresh] || '',
@@ -610,13 +593,15 @@ Page({
     const firstDay = new Date(displayedYear, displayedMonth, 1).getDay();
 
     const monthStart = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-01`;
+    const monthEnd = `${displayedYear}-${String(displayedMonth + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
 
     let dateCountMap = {};
     let checkinRes = null;
     try {
+      const db = wx.cloud.database();
       checkinRes = await cloudDB.getMy('checkins', (q) =>
         q.where({
-          date: wx.cloud.database().command.gte(monthStart),
+          date: db.command.gte(monthStart).and(db.command.lte(monthEnd)),
         }).orderBy('date', 'asc')
       );
       if (checkinRes.success && checkinRes.data.length > 0) {
@@ -707,7 +692,8 @@ Page({
           id: item._id || item.id,
           time: `${hours}:${minutes}`,
           types: types,
-          content: item.content || ''
+          content: item.content || '',
+          duration: item.duration || 0
         };
       });
       
@@ -729,10 +715,11 @@ Page({
 
   // 显示打卡表单
   showCheckinForm() {
-    this.setData({ 
+    this.setData({
       showCheckinForm: true,
       checkinTypeList: this.data.checkinTypeList.map(t => ({ ...t, selected: false })),
       checkinContent: '',
+      checkinDuration: '',
       canSubmitCheckin: false
     });
   },
@@ -757,6 +744,13 @@ Page({
     this.setData({ checkinContent: e.detail.value });
   },
 
+  // 输入打卡时长（分钟）
+  onCheckinDurationInput(e) {
+    // 仅保留数字，避免脏数据
+    const value = (e.detail.value || '').replace(/[^\d]/g, '');
+    this.setData({ checkinDuration: value });
+  },
+
   // 提交打卡
   async submitCheckin() {
     if (!this.data.canSubmitCheckin) {
@@ -766,7 +760,8 @@ Page({
 
     const selectedTypes = this.data.checkinTypeList.filter(t => t.selected).map(t => t.id);
     const today = formatDate(new Date());
-    
+    const duration = parseInt(this.data.checkinDuration, 10);
+
     wx.showLoading({ title: '提交中...' });
 
     try {
@@ -774,9 +769,11 @@ Page({
         date: today,
         types: selectedTypes,
         content: this.data.checkinContent,
+        // 本次打卡时长（分钟），未填写则记为 0
+        duration: Number.isNaN(duration) ? 0 : duration,
         createdAt: new Date()
       };
-      
+
       const res = await cloudDB.addMy('checkins', checkinRecord);
       
       if (res.success) {
@@ -796,245 +793,4 @@ Page({
     }
   },
 
-  // ========== 打卡提醒相关方法 ==========
-
-  /**
-   * 显示打卡提醒设置弹窗（从云数据库加载）
-   */
-  async showReminderModal() {
-    // 加载已保存的提醒设置（从云数据库）
-    let reminderSettings = {
-      enabled: false,
-      frequency: [],
-      frequencyLabel: '',
-      subjects: [],
-      time: '20:00',
-      timeLabel: '20:00',
-    };
-    
-    try {
-      const res = await cloudDB.getMy('reminder_settings');
-      if (res.success && res.data && res.data.length > 0) {
-        reminderSettings = res.data[0];
-      }
-    } catch (e) {
-      console.error('加载提醒设置失败', e);
-    }
-    
-    const reminderSubjects = this.data.reminderSubjects.map(s => ({
-      ...s,
-      selected: reminderSettings.subjects ? reminderSettings.subjects.includes(s.id) : false
-    }));
-    
-    this.setData({
-      showReminderModal: true,
-      reminderEnabled: reminderSettings.enabled || false,
-      reminderFrequency: reminderSettings.frequency || [],
-      reminderFrequencyLabel: reminderSettings.frequencyLabel || '',
-      reminderSubjects: reminderSubjects,
-      reminderTime: reminderSettings.time || '20:00',
-      reminderTimeLabel: reminderSettings.timeLabel || '20:00',
-      reminderSettingsId: reminderSettings._id || '',
-    });
-  },
-
-  /**
-   * 关闭打卡提醒设置弹窗
-   */
-  hideReminderModal() {
-    this.setData({ showReminderModal: false });
-  },
-
-  /**
-   * 切换提醒开关
-   */
-  onReminderToggle(e) {
-    this.setData({ reminderEnabled: e.detail.value });
-  },
-
-  /**
-   * 选择提醒频次（多选）
-   */
-  selectFrequency(e) {
-    const value = e.currentTarget.dataset.value;
-    const { reminderFrequency } = this.data;
-    const index = reminderFrequency.indexOf(value);
-    if (index === -1) {
-      // 未选中，添加
-      reminderFrequency.push(value);
-    } else {
-      // 已选中，移除
-      reminderFrequency.splice(index, 1);
-    }
-    this.setData({ reminderFrequency });
-  },
-
-  /**
-   * 切换提醒科目
-   */
-  toggleReminderSubject(e) {
-    const id = e.currentTarget.dataset.id;
-    const reminderSubjects = this.data.reminderSubjects.map(item =>
-      item.id === id ? { ...item, selected: !item.selected } : item
-    );
-    this.setData({ reminderSubjects });
-  },
-
-  /**
-   * 保存提醒设置到云数据库
-   */
-  async saveReminder() {
-    const { reminderEnabled, reminderFrequency, reminderSubjects, reminderTime, reminderTimeLabel, reminderSettingsId } = this.data;
-    
-    // 获取选中的科目
-    const selectedSubjects = reminderSubjects.filter(s => s.selected).map(s => s.id);
-    
-    // 如果启用了提醒但没有选择科目，提示用户
-    if (reminderEnabled && selectedSubjects.length === 0) {
-      wx.showToast({ title: '请至少选择一个提醒科目', icon: 'none' });
-      return;
-    }
-    
-    // 如果启用了提醒但没有选择频次，提示用户
-    if (reminderEnabled && reminderFrequency.length === 0) {
-      wx.showToast({ title: '请至少选择一个提醒频次', icon: 'none' });
-      return;
-    }
-    
-    wx.showLoading({ title: '保存中...' });
-    
-    // 构建频次标签（多选时用逗号分隔）
-    const frequencyLabels = reminderFrequency.map(f => 
-      this.data.frequencyOptions.find(opt => opt.value === f)?.label || ''
-    ).filter(Boolean);
-    const frequencyLabel = frequencyLabels.join('、') || '每天';
-    
-    // 构建科目标签
-    const subjectLabels = reminderSubjects.filter(s => s.selected).map(s => s.label);
-    
-    // 保存设置到云数据库
-    const app = getApp();
-    const userId = app.globalData.userInfo?.userId || app.globalData.userInfo?._id || '';
-    const openid = app.globalData.userInfo?.openid || app.globalData.openId || '';
-    
-    const reminderSettings = {
-      userId: userId,
-      openid: openid,
-      enabled: reminderEnabled,
-      frequency: reminderFrequency,
-      frequencyLabel: frequencyLabel,
-      subjects: selectedSubjects,
-      subjectLabels: subjectLabels,
-      time: reminderTime,
-      timeLabel: reminderTimeLabel,
-      updatedAt: new Date(),
-    };
-    
-    try {
-      let res;
-      if (reminderSettingsId) {
-        // 已有记录，更新
-        res = await cloudDB.update('reminder_settings', reminderSettingsId, reminderSettings);
-      } else {
-        // 新增记录，先检查是否已有该用户的设置
-        const existingRes = await cloudDB.getMy('reminder_settings');
-        if (existingRes.success && existingRes.data && existingRes.data.length > 0) {
-          // 已有设置，更新
-          const existingId = existingRes.data[0]._id;
-          res = await cloudDB.update('reminder_settings', existingId, reminderSettings);
-        } else {
-          // 新增记录
-          res = await cloudDB.addMy('reminder_settings', reminderSettings);
-        }
-        if (res.success && res.id) {
-          this.setData({ reminderSettingsId: res.id });
-        }
-      }
-      
-      wx.hideLoading();
-      
-      if (res.success) {
-        // 设置订阅消息提醒
-        if (reminderEnabled) {
-          this.requestRemindSubscription(frequencyLabel, subjectLabels, reminderTimeLabel);
-        }
-        
-        this.hideReminderModal();
-        wx.showToast({ 
-          title: reminderEnabled ? '提醒设置已保存' : '提醒已关闭', 
-          icon: 'success' 
-        });
-      } else {
-        wx.showToast({ title: '保存失败', icon: 'none' });
-      }
-    } catch (e) {
-      wx.hideLoading();
-      console.error('保存提醒设置失败', e);
-      wx.showToast({ title: '保存失败', icon: 'none' });
-    }
-  },
-
-  /**
-   * 请求订阅消息
-   */
-  async requestRemindSubscription(frequency, subjects, time) {
-    // 实际的订阅消息功能需要在小程序后台配置模板消息
-    // 模板ID需要在微信公众平台配置
-    const templateId = 'YOUR_TEMPLATE_ID'; // TODO: 替换为实际的订阅消息模板ID
-    
-    try {
-      // 请求用户授权订阅消息
-      const res = await new Promise((resolve, reject) => {
-        wx.requestSubscribeMessage({
-          tmplIds: [templateId],
-          success: (res) => {
-            console.log('[订阅消息] 请求成功', res);
-            resolve(res);
-          },
-          fail: (err) => {
-            console.error('[订阅消息] 请求失败', err);
-            reject(err);
-          }
-        });
-      });
-      
-      if (res[templateId] === 'accept') {
-        wx.showToast({
-          title: `已开启${frequency} ${time}提醒`,
-          icon: 'success',
-          duration: 2000
-        });
-      } else if (res[templateId] === 'reject') {
-        wx.showToast({
-          title: '您已拒绝订阅消息',
-          icon: 'none',
-          duration: 2000
-        });
-      } else {
-        wx.showToast({
-          title: `已设置${frequency} ${time}提醒`,
-          icon: 'none',
-          duration: 2000
-        });
-      }
-    } catch (e) {
-      console.error('[订阅消息] 请求异常', e);
-      wx.showToast({
-        title: `已设置${frequency} ${time}提醒${subjects.join('、')}`,
-        icon: 'none',
-        duration: 2000
-      });
-    }
-  },
-
-  /**
-   * 提醒时间选择变化
-   */
-  onReminderTimeChange(e) {
-    const time = e.detail.value;
-    this.setData({
-      reminderTime: time,
-      reminderTimeLabel: time,
-    });
-  },
 });

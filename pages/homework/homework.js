@@ -3,28 +3,44 @@ const cloudDB = require('../../utils/cloudDB');
 const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
 
+// 听说读写四个模块的基础展示信息（图标在 loadIcons 中异步补全）
+const SUBJECT_MODULES_BASE = [
+  { id: 'listening', label: '听力', bgColor: 'rgba(18, 183, 168, 0.12)' },
+  { id: 'speaking', label: '口语', bgColor: 'rgba(23, 33, 43, 0.08)' },
+  { id: 'reading', label: '阅读', bgColor: 'rgba(18, 183, 168, 0.20)' },
+  { id: 'writing', label: '写作', bgColor: 'rgba(122, 135, 148, 0.14)' },
+];
+
+// 科目中文名/英文 key 统一映射到模块 id
+const SUBJECT_TO_ID = {
+  '听力': 'listening',
+  '口语': 'speaking',
+  '阅读': 'reading',
+  '写作': 'writing',
+  listening: 'listening',
+  speaking: 'speaking',
+  reading: 'reading',
+  writing: 'writing',
+};
+
 Page({
   data: {
-    // 未完成作业列表
-    pendingHomework: [],
-    // 已完成作业列表
-    completedHomework: [],
-    // 折叠状态
-    pendingExpanded: false,
-    completedExpanded: false,
+    // 全部作业缓存（用于按模块过滤、统计）
+    allHomework: [],
+
+    // 听说读写模块宫格
+    subjectModules: [],
+    // 当前展开查看的模块 id（空字符串表示展示模块宫格）
+    activeSubject: '',
+    activeSubjectLabel: '',
+    activeSubjectItems: [],
+
     // 科目图标
     iconListening: '',
     iconSpeaking: '',
     iconReading: '',
     iconWriting: '',
     iconBook: '',
-    // 科目颜色映射
-    subjectColors: {
-      '听力': '#A7FBF5',
-      '阅读': '#FFD4B8',
-      '写作': '#FFE8F0',
-      '口语': '#E8D4F8',
-    },
     // 是否为管理员
     isAdmin: false,
     // 学生名称映射
@@ -67,9 +83,18 @@ Page({
       if (res.result && res.result.success) {
         const studentNameMap = {};
         (res.result.data || []).forEach(user => {
-          studentNameMap[user._id] = user.nickName || '未命名用户';
+          // 作业记录通过 _openid 关联用户（私有集合按 _openid 隔离），
+          // 之前误用 _id 做映射键，导致教师端永远查不到学员姓名，这里改为按 _openid 映射
+          if (user._openid) {
+            studentNameMap[user._openid] = user.nickName || '未命名用户';
+          }
         });
-        this.setData({ studentNameMap });
+        this.setData({ studentNameMap }, () => {
+          // 学生姓名加载完成后，刷新当前模块明细中的姓名展示
+          if (this.data.activeSubject) {
+            this.buildActiveSubjectItems(this.data.activeSubject);
+          }
+        });
       }
     } catch (e) {
       console.error('加载学生名称映射失败', e);
@@ -77,7 +102,7 @@ Page({
   },
 
   /**
-   * 加载云存储图标
+   * 加载云存储图标，并补全听说读写模块宫格的图标
    */
   async loadIcons() {
     try {
@@ -88,20 +113,45 @@ Page({
         CLOUD_IMAGES.iconPen,
       ];
       const urlMap = await cloudStorage.getTempUrls(fileIDs);
+
+      const iconListening = urlMap[CLOUD_IMAGES.iconHeadphones] || '';
+      const iconSpeaking = urlMap[CLOUD_IMAGES.iconMic] || '';
+      const iconReading = urlMap[CLOUD_IMAGES.iconBook] || '';
+      const iconWriting = urlMap[CLOUD_IMAGES.iconPen] || '';
+
+      const moduleIconMap = {
+        listening: iconListening,
+        speaking: iconSpeaking,
+        reading: iconReading,
+        writing: iconWriting,
+      };
+      const subjectModules = SUBJECT_MODULES_BASE.map(m => ({
+        ...m,
+        icon: moduleIconMap[m.id] || '',
+        total: 0,
+        completed: 0,
+      }));
+
       this.setData({
-        iconListening: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
-        iconSpeaking: urlMap[CLOUD_IMAGES.iconMic] || '',
-        iconReading: urlMap[CLOUD_IMAGES.iconBook] || '',
-        iconWriting: urlMap[CLOUD_IMAGES.iconPen] || '',
-        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconListening,
+        iconSpeaking,
+        iconReading,
+        iconWriting,
+        iconBook: iconReading,
+        subjectModules,
       });
+
+      // 图标就绪后，若已有作业数据则重新统计一次（保证宫格图标展示正确）
+      if (this.data.allHomework.length > 0) {
+        this.refreshSubjectModules(this.data.allHomework);
+      }
     } catch (e) {
       console.error('[作业页] 加载图标失败', e);
     }
   },
 
   /**
-   * 加载所有作业并分类
+   * 加载所有作业
    * @description 管理员加载所有作业，普通用户只加载自己的作业
    */
   async loadAllHomework() {
@@ -122,32 +172,13 @@ Page({
         }
       }
 
-      // 过滤未完成作业
-      const pendingList = allHomework.filter(hw => {
-        if (hw.status) {
-          return ['pending', 'assigned', 'in_progress'].includes(hw.status);
-        }
-        if (hw.submitted !== undefined) {
-          return !hw.submitted;
-        }
-        return true;
-      });
+      this.setData({ allHomework });
+      this.refreshSubjectModules(allHomework);
 
-      // 过滤已完成作业
-      const completedList = allHomework.filter(hw => {
-        if (hw.status === 'completed' || hw.submitted === true) {
-          return true;
-        }
-        return false;
-      });
-
-      const pendingHomework = pendingList.map(hw => this.formatHomeworkData(hw));
-      const completedHomework = completedList.map(hw => this.formatHomeworkData(hw));
-
-      this.setData({
-        pendingHomework,
-        completedHomework
-      });
+      // 若当前正在查看某个模块的明细，同步刷新
+      if (this.data.activeSubject) {
+        this.buildActiveSubjectItems(this.data.activeSubject);
+      }
     } catch (e) {
       console.error('加载作业失败', e);
     }
@@ -187,61 +218,117 @@ Page({
   },
 
   /**
-   * 切换待完成列表折叠状态
+   * 根据全部作业数据，统计听说读写四个模块各自的总数/已完成数
    */
-  togglePendingList() {
-    this.setData({
-      pendingExpanded: !this.data.pendingExpanded
+  refreshSubjectModules(allHomework) {
+    if (!this.data.subjectModules.length) return;
+
+    const stats = {
+      listening: { total: 0, completed: 0 },
+      speaking: { total: 0, completed: 0 },
+      reading: { total: 0, completed: 0 },
+      writing: { total: 0, completed: 0 },
+    };
+
+    allHomework.forEach(hw => {
+      const moduleId = this.resolveModuleId(hw);
+      if (!stats[moduleId]) return;
+      stats[moduleId].total += 1;
+      if (this.isHomeworkCompleted(hw)) {
+        stats[moduleId].completed += 1;
+      }
     });
+
+    const subjectModules = this.data.subjectModules.map(m => ({
+      ...m,
+      total: stats[m.id] ? stats[m.id].total : 0,
+      completed: stats[m.id] ? stats[m.id].completed : 0,
+      progress: stats[m.id] && stats[m.id].total > 0
+        ? Math.round((stats[m.id].completed / stats[m.id].total) * 100)
+        : 0,
+    }));
+
+    this.setData({ subjectModules });
   },
 
   /**
-   * 切换已完成列表折叠状态
+   * 将一条作业记录归类到 听/说/读/写 中的某一个模块
    */
-  toggleCompletedList() {
-    this.setData({
-      completedExpanded: !this.data.completedExpanded
-    });
-  },
-
-  /**
-   * 格式化作业数据（统一新旧格式）
-   */
-  formatHomeworkData(hw) {
-    const deadline = hw.deadline ? new Date(hw.deadline) : null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const daysLeft = deadline ? Math.ceil((deadline - today) / (1000 * 60 * 60 * 24)) : null;
-
-    // 兼容新旧字段，默认为'阅读'
+  resolveModuleId(hw) {
     const subject = hw.subject || this.mapTypeToSubject(hw.type) || '阅读';
-    const description = hw.description || hw.content || '';
-    const status = hw.status || (hw.submitted ? 'completed' : 'pending');
+    return SUBJECT_TO_ID[subject] || SUBJECT_TO_ID[this.getSubjectLabel(subject)] || 'reading';
+  },
 
-    // 管理员模式下显示学生名称
+  /**
+   * 判断一条作业记录是否已完成打卡
+   */
+  isHomeworkCompleted(hw) {
+    return hw.status === 'completed' || hw.submitted === true;
+  },
+
+  /**
+   * 点击听说读写模块，进入对应模块的作业明细列表
+   */
+  onTapSubjectModule(e) {
+    const { id, label } = e.currentTarget.dataset;
+    this.setData({
+      activeSubject: id,
+      activeSubjectLabel: label,
+    });
+    this.buildActiveSubjectItems(id);
+  },
+
+  /**
+   * 从模块明细返回模块宫格
+   */
+  onBackToModules() {
+    this.setData({
+      activeSubject: '',
+      activeSubjectLabel: '',
+      activeSubjectItems: [],
+    });
+  },
+
+  /**
+   * 构建某个模块下的作业明细列表（左侧作业内容，右侧时长/完成度/打卡状态）
+   */
+  buildActiveSubjectItems(moduleId) {
+    const items = this.data.allHomework
+      .filter(hw => this.resolveModuleId(hw) === moduleId)
+      .map(hw => this.formatSubjectHomeworkItem(hw));
+
+    this.setData({ activeSubjectItems: items });
+  },
+
+  /**
+   * 格式化单条作业为"模块明细条目"展示数据
+   * 左列：作业内容；右列：时长、完成度、已完成 ✅ 打卡选项
+   */
+  formatSubjectHomeworkItem(hw) {
+    const isCompleted = this.isHomeworkCompleted(hw);
+    const content = hw.description || hw.content || hw.title || '暂无作业内容描述';
+
     let studentName = '';
     if (this.data.isAdmin && hw._openid) {
       studentName = this.data.studentNameMap[hw._openid] || '';
     }
 
+    const deadline = hw.deadline ? new Date(hw.deadline) : null;
+    const deadlineFormatted = deadline ? `${deadline.getMonth() + 1}月${deadline.getDate()}日截止` : '';
+
+    const completion = hw.completion != null && hw.completion !== ''
+      ? Math.min(100, Math.max(0, parseInt(hw.completion) || 0))
+      : (isCompleted ? 100 : 0);
+
     return {
       id: hw._id,
-      title: hw.title || '未命名作业',
-      subject: subject,
-      subjectLabel: this.getSubjectLabel(subject),
-      subjectColor: this.getSubjectColor(subject),
-      subjectIcon: this.getSubjectIcon(subject),
-      deadline: hw.deadline,
-      deadlineFormatted: deadline ? `${deadline.getMonth() + 1}月${deadline.getDate()}日` : '无截止日期',
-      daysLeft: daysLeft,
-      isUrgent: daysLeft !== null && daysLeft <= 3 && daysLeft >= 0,
-      isOverdue: daysLeft !== null && daysLeft < 0,
-      description: description,
-      status: status,
+      content,
       courseName: hw.courseName || '',
-      score: hw.score,
-      totalScore: hw.totalScore,
-      studentName: studentName,
+      studentName,
+      deadlineFormatted,
+      duration: hw.estimatedTime || hw.timeSpent || 0,
+      completion,
+      isCompleted,
     };
   },
 
@@ -276,33 +363,7 @@ Page({
   },
 
   /**
-   * 获取科目对应的颜色
-   */
-  getSubjectColor(subject) {
-    const colorMap = {
-      '听力': '#A7FBF5',
-      '阅读': '#FFD4B8',
-      '写作': '#FFE8F0',
-      '口语': '#E8D4F8',
-    };
-    return colorMap[subject] || '#D4E8FF';
-  },
-
-  /**
-   * 获取科目对应的图标
-   */
-  getSubjectIcon(subject) {
-    const iconMap = {
-      '听力': this.data.iconListening,
-      '阅读': this.data.iconReading,
-      '写作': this.data.iconWriting,
-      '口语': this.data.iconSpeaking,
-    };
-    return iconMap[subject] || this.data.iconBook;
-  },
-
-  /**
-   * 点击作业卡片
+   * 点击模块明细中的某条作业，跳转到作业详情页
    */
   onHomeworkTap(e) {
     const { id } = e.currentTarget.dataset;
@@ -312,65 +373,39 @@ Page({
   },
 
   /**
-   * 创建示例作业（用于测试）
+   * 点击"已完成 ✅"打卡选项，切换该作业的完成状态
+   * @description 仅学员本人可对自己的作业打卡，管理员查看他人作业时不展示该入口
    */
-  async createSampleHomework() {
+  async onToggleHomeworkComplete(e) {
+    if (this.data.isAdmin) return;
+
+    const { id, completed } = e.currentTarget.dataset;
+    const nextCompleted = !completed;
+
+    wx.showLoading({ title: '更新中...' });
+
     try {
-      const db = wx.cloud.database();
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const nextWeek = new Date(now);
-      nextWeek.setDate(nextWeek.getDate() + 7);
+      const res = await cloudDB.update('homework', id, {
+        status: nextCompleted ? 'completed' : 'pending',
+        submitted: nextCompleted,
+        completion: nextCompleted ? 100 : 0,
+      });
 
-      const sampleHomeworks = [
-        {
-          title: '雅思听力练习 - Section 3',
-          subject: '听力',
-          description: '完成剑桥雅思15 Test 2 的听力 Section 3，注意抓取关键词',
-          deadline: tomorrow.toISOString(),
-          status: 'pending',
-        },
-        {
-          title: '写作 Task 2 议论文',
-          subject: '写作',
-          description: '题目：Some people think that the best way to reduce crime is to give longer prison sentences. To what extent do you agree or disagree?',
-          deadline: nextWeek.toISOString(),
-          status: 'pending',
-        },
-        {
-          title: '口语 Part 2 准备',
-          subject: '口语',
-          description: '准备一个 Describe a memorable journey 的话题，练习2分钟陈述',
-          deadline: tomorrow.toISOString(),
-          status: 'assigned',
-        }
-      ];
+      wx.hideLoading();
 
-      for (const hw of sampleHomeworks) {
-        await cloudDB.addMy('homework', hw);
+      if (res.success) {
+        wx.showToast({
+          title: nextCompleted ? '已完成打卡 ✅' : '已取消完成标记',
+          icon: 'none',
+        });
+        await this.loadAllHomework();
+      } else {
+        wx.showToast({ title: '更新失败，请重试', icon: 'none' });
       }
-
-      wx.showToast({ title: '示例作业已创建', icon: 'success' });
-      this.loadPendingHomework();
-    } catch (e) {
-      console.error('创建示例作业失败', e);
-      wx.showToast({ title: '创建失败', icon: 'none' });
+    } catch (err) {
+      wx.hideLoading();
+      console.error('[作业打卡] 更新状态失败', err);
+      wx.showToast({ title: '更新失败，请重试', icon: 'none' });
     }
-  },
-
-  /**
-   * 长按标题创建示例数据
-   */
-  onTitleLongPress() {
-    wx.showModal({
-      title: '创建测试数据',
-      content: '是否创建示例作业数据用于测试？',
-      success: (res) => {
-        if (res.confirm) {
-          this.createSampleHomework();
-        }
-      }
-    });
   },
 });

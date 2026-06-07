@@ -13,6 +13,11 @@ Page({
     iconReading: '',
     iconWriting: '',
     iconBook: '',
+    iconCalendar: '',
+    iconChart: '',
+    iconDocument: '',
+    iconCheck: '',
+    iconFire: '',
   },
 
   async onLoad(options) {
@@ -36,6 +41,11 @@ Page({
         CLOUD_IMAGES.iconMic,
         CLOUD_IMAGES.iconBook,
         CLOUD_IMAGES.iconPen,
+        CLOUD_IMAGES.iconCalendar,
+        CLOUD_IMAGES.iconChart,
+        CLOUD_IMAGES.iconDocument,
+        CLOUD_IMAGES.iconCheck,
+        CLOUD_IMAGES.iconFire,
       ];
       const urlMap = await cloudStorage.getTempUrls(fileIDs);
       this.setData({
@@ -44,6 +54,11 @@ Page({
         iconReading: urlMap[CLOUD_IMAGES.iconBook] || '',
         iconWriting: urlMap[CLOUD_IMAGES.iconPen] || '',
         iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
+        iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
+        iconDocument: urlMap[CLOUD_IMAGES.iconDocument] || '',
+        iconCheck: urlMap[CLOUD_IMAGES.iconCheck] || '',
+        iconFire: urlMap[CLOUD_IMAGES.iconFire] || '',
       });
     } catch (e) {
       console.error('[作业详情] 加载图标失败', e);

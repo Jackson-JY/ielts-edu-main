@@ -1,5 +1,7 @@
 // pages/learning-report/learning-report.js
 const cloudDB = require('../../utils/cloudDB');
+const cloudStorage = require('../../utils/cloudStorage');
+const { CLOUD_IMAGES } = require('../../config/images');
 const { formatDate } = require('../../utils/dateUtil');
 
 Page({
@@ -14,10 +16,60 @@ Page({
     trendData: [],
     examScores: [],
     examScoresReverse: [],
+    // 听说读写四项打卡次数统计
+    subjectCheckinStats: [
+      { id: 'listening', label: '听力', icon: '', count: 0 },
+      { id: 'speaking', label: '口语', icon: '', count: 0 },
+      { id: 'reading', label: '阅读', icon: '', count: 0 },
+      { id: 'writing', label: '写作', icon: '', count: 0 },
+    ],
+    iconHeadphones: '',
+    iconBook: '',
+    iconPen: '',
+    iconMic: '',
+    iconChart: '',
+    iconCalendar: '',
+    iconCheck: '',
+    iconTarget: '',
+    iconDocument: '',
+    iconFire: '',
   },
 
-  onLoad() {
+  async onLoad() {
+    await this.loadIcons();
     this.loadLearningData();
+  },
+
+  async loadIcons() {
+    try {
+      const fileIDs = [
+        CLOUD_IMAGES.iconHeadphones,
+        CLOUD_IMAGES.iconBook,
+        CLOUD_IMAGES.iconPen,
+        CLOUD_IMAGES.iconMic,
+        CLOUD_IMAGES.iconChart,
+        CLOUD_IMAGES.iconCalendar,
+        CLOUD_IMAGES.iconCheck,
+        CLOUD_IMAGES.iconTarget,
+        CLOUD_IMAGES.iconDocument,
+        CLOUD_IMAGES.iconFire,
+      ];
+      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      this.setData({
+        iconHeadphones: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
+        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
+        iconPen: urlMap[CLOUD_IMAGES.iconPen] || '',
+        iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
+        iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
+        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
+        iconCheck: urlMap[CLOUD_IMAGES.iconCheck] || '',
+        iconTarget: urlMap[CLOUD_IMAGES.iconTarget] || '',
+        iconDocument: urlMap[CLOUD_IMAGES.iconDocument] || '',
+        iconFire: urlMap[CLOUD_IMAGES.iconFire] || '',
+      });
+    } catch (e) {
+      console.error('[学习报告] 加载图标失败', e);
+    }
   },
 
   onReady() {
@@ -135,7 +187,7 @@ Page({
             ctx.fillStyle = '#4A4A4A';
             ctx.font = '28px sans-serif';
             ctx.textAlign = 'left';
-            ctx.fillText('🏆 最新成绩', 70, currentY);
+            ctx.fillText('最新成绩', 70, currentY);
             
             currentY += 80;
             ctx.fillStyle = '#FFC107';
@@ -151,10 +203,10 @@ Page({
             // 绘制四科分数
             currentY += 80;
             const subjects = [
-              { name: '听力', score: latestScore.listening, color: '#4CAF50', icon: '🎧' },
-              { name: '阅读', score: latestScore.reading, color: '#2196F3', icon: '📖' },
-              { name: '写作', score: latestScore.writing, color: '#FF9800', icon: '✍️' },
-              { name: '口语', score: latestScore.speaking, color: '#E91E63', icon: '🗣️' }
+              { name: '听力', score: latestScore.listening, color: '#4CAF50' },
+              { name: '阅读', score: latestScore.reading, color: '#2196F3' },
+              { name: '写作', score: latestScore.writing, color: '#FF9800' },
+              { name: '口语', score: latestScore.speaking, color: '#E91E63' }
             ];
             
             const startX = 80;
@@ -162,15 +214,11 @@ Page({
             subjects.forEach((sub, index) => {
               const x = startX + gap * index;
               
-              // 图标
-              ctx.font = '40px sans-serif';
-              ctx.textAlign = 'center';
-              ctx.fillText(sub.icon, x + 30, currentY);
-              
               // 科目名
               ctx.fillStyle = '#9A97AA';
               ctx.font = '22px sans-serif';
-              ctx.fillText(sub.name, x + 30, currentY + 40);
+              ctx.textAlign = 'center';
+              ctx.fillText(sub.name, x + 30, currentY + 20);
               
               // 分数
               ctx.fillStyle = sub.color;
@@ -185,14 +233,14 @@ Page({
           ctx.fillStyle = '#4A4A4A';
           ctx.font = '28px sans-serif';
           ctx.textAlign = 'left';
-          ctx.fillText('📊 学习数据', 70, currentY);
+          ctx.fillText('学习数据', 70, currentY);
           
           currentY += 80;
           const stats = [
-            { label: '学习时长', value: (studyData.totalHours || 0) + 'h', icon: '⏱️' },
-            { label: '打卡天数', value: (studyData.totalDays || 0) + '天', icon: '📅' },
-            { label: '掌握词汇', value: (studyData.vocabLearned || 0) + '个', icon: '📚' },
-            { label: '完成课程', value: (studyData.completedCourses || 0) + '节', icon: '✅' }
+            { label: '学习时长', value: (studyData.totalHours || 0) + 'h' },
+            { label: '打卡天数', value: (studyData.totalDays || 0) + '天' },
+            { label: '掌握词汇', value: (studyData.vocabLearned || 0) + '个' },
+            { label: '完成课程', value: (studyData.completedCourses || 0) + '节' }
           ];
           
           // 两行显示
@@ -209,21 +257,16 @@ Page({
               this.roundRect(ctx, x, y - 50, 300, 120, 20);
               ctx.fill();
               
-              // 图标
-              ctx.font = '40px sans-serif';
-              ctx.fillStyle = '#4A4A4A';
-              ctx.textAlign = 'left';
-              ctx.fillText(stat.icon, x + 20, y + 5);
-              
               // 数值
               ctx.fillStyle = '#6C5CE7';
               ctx.font = 'bold 40px sans-serif';
-              ctx.fillText(stat.value, x + 80, y + 10);
+              ctx.textAlign = 'left';
+              ctx.fillText(stat.value, x + 30, y + 10);
               
               // 标签
               ctx.fillStyle = '#9A97AA';
               ctx.font = '22px sans-serif';
-              ctx.fillText(stat.label, x + 80, y + 45);
+              ctx.fillText(stat.label, x + 30, y + 45);
             });
           });
           
@@ -234,7 +277,7 @@ Page({
             ctx.fillStyle = '#4A4A4A';
             ctx.font = '28px sans-serif';
             ctx.textAlign = 'left';
-            ctx.fillText('📈 成绩趋势', 70, currentY);
+            ctx.fillText('成绩趋势', 70, currentY);
             
             // 绘制趋势图
             currentY += 40;
@@ -253,10 +296,9 @@ Page({
           this.roundRect(ctx, 100, currentY + 20, 100, 100, 10);
           ctx.fill();
           
-          ctx.fillStyle = '#9A97AA';
-          ctx.font = '60px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('📱', 150, currentY + 85);
+          ctx.strokeStyle = '#9A97AA';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(124, currentY + 44, 52, 52);
           
           // 扫码提示
           ctx.fillStyle = '#4A4A4A';
@@ -460,6 +502,9 @@ Page({
       // 生成7天趋势数据
       const trendData = this.generateTrendData(checkinRes.data || []);
 
+      // 统计听说读写各项打卡次数
+      const subjectCheckinStats = this.calcSubjectCheckinStats(checkinRes.data || []);
+
       // 处理考试成绩数据
       let examScores = [];
       let examScoresReverse = [];
@@ -500,11 +545,24 @@ Page({
         }
       }
 
+      // 绑定对应科目图标（图标已在 loadIcons 中提前加载）
+      const iconMap = {
+        listening: this.data.iconHeadphones,
+        speaking: this.data.iconMic,
+        reading: this.data.iconBook,
+        writing: this.data.iconPen,
+      };
+      const subjectCheckinStatsWithIcon = subjectCheckinStats.map(item => ({
+        ...item,
+        icon: iconMap[item.id] || '',
+      }));
+
       this.setData({
         studyData,
         trendData,
         examScores,
         examScoresReverse,
+        subjectCheckinStats: subjectCheckinStatsWithIcon,
         currentDateRange: this.getCurrentRange(),
       }, () => {
         // 数据加载完成后绘制科目趋势图
@@ -514,6 +572,32 @@ Page({
       console.error('加载学习报告数据失败', e);
       wx.showToast({ title: '加载失败', icon: 'none' });
     }
+  },
+
+  /**
+   * 统计听说读写四项各自的打卡次数
+   * @param {Array} checkins - checkins 集合记录，每条含 types: ['listening', 'speaking', ...]
+   * @returns {Array} [{ id, label, icon, count }]
+   */
+  calcSubjectCheckinStats(checkins) {
+    const counters = { listening: 0, speaking: 0, reading: 0, writing: 0 };
+
+    (checkins || []).forEach(item => {
+      (item.types || []).forEach(type => {
+        if (Object.prototype.hasOwnProperty.call(counters, type)) {
+          counters[type] += 1;
+        }
+      });
+    });
+
+    const labels = { listening: '听力', speaking: '口语', reading: '阅读', writing: '写作' };
+
+    return Object.keys(counters).map(id => ({
+      id,
+      label: labels[id],
+      icon: '',
+      count: counters[id],
+    }));
   },
 
   generateTrendData(checkins) {
@@ -823,7 +907,6 @@ Page({
     return {
       title: title,
       path: '/pages/learning-report/learning-report',
-      imageUrl: '/images/share-report.png'
     };
   },
 

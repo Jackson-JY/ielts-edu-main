@@ -404,7 +404,6 @@ Page({
         const latestHomework = res.data[0];
         homework[courseId] = {
           ...homework[courseId],
-          title: latestHomework.title || '',
           description: latestHomework.description || latestHomework.content || '',
           content: latestHomework.content || '',
           subject: latestHomework.subject || course?.subject || '阅读',
@@ -443,15 +442,6 @@ Page({
     return d.getFullYear() + '-' +
       String(d.getMonth() + 1).padStart(2, '0') + '-' +
       String(d.getDate()).padStart(2, '0');
-  },
-
-  onHomeworkTitleInput(e) {
-    const id = e.currentTarget.dataset.id;
-    const value = e.detail.value;
-    const homework = this.data.homework;
-    if (!homework[id]) homework[id] = {};
-    homework[id].title = value;
-    this.setData({ homework });
   },
 
   onHomeworkContentInput(e) {
@@ -544,27 +534,28 @@ Page({
     const id = e.currentTarget.dataset.id;
     const homework = this.data.homework[id];
 
-    if (!homework || !homework.title) {
-      wx.showToast({ title: '请填写作业标题', icon: 'none' });
+    if (!homework || !(homework.description || homework.content)) {
+      wx.showToast({ title: '请填写作业描述', icon: 'none' });
       return;
     }
 
     try {
       const course = this.data.courses.find(c => c._id === id);
-      
+      const subjectLabel = homework.subject || this.getSubjectFromCourseType(course?.type);
+
       // 构建作业数据，适配统一表结构
       const homeworkData = {
         // 关联信息
         courseId: id,
         courseName: course ? course.title : '',
-        
-        // 基础信息
-        title: homework.title,
+
+        // 基础信息（已取消手动填写标题，按科目自动生成展示用标题，兼容旧数据结构）
+        title: `${subjectLabel}作业`,
         description: homework.description || homework.content || '',
         content: homework.content || '',
         
         // 科目（优先使用选择的，否则根据课程类型）
-        subject: homework.subject || this.getSubjectFromCourseType(course?.type),
+        subject: subjectLabel,
         
         // 截止时间
         deadline: homework.deadline ? new Date(homework.deadline) : null,

@@ -44,6 +44,9 @@ Page({
     iconBook: '',
     iconPen: '',
     iconMic: '',
+    iconCalendar: '',
+    iconUser: '',
+    iconRefresh: '',
     maxDate: '',
     // 学生列表
     studentList: [],
@@ -82,6 +85,9 @@ Page({
         CLOUD_IMAGES.iconMic,
         CLOUD_IMAGES.iconBook,
         CLOUD_IMAGES.iconPen,
+        CLOUD_IMAGES.iconCalendar,
+        CLOUD_IMAGES.iconUser,
+        CLOUD_IMAGES.iconRefresh,
       ];
       const urlMap = await cloudStorage.getTempUrls(fileIDs);
       this.setData({
@@ -89,6 +95,9 @@ Page({
         iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
         iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
         iconPen: urlMap[CLOUD_IMAGES.iconPen] || '',
+        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
+        iconUser: urlMap[CLOUD_IMAGES.iconUser] || '',
+        iconRefresh: urlMap[CLOUD_IMAGES.iconRefresh] || '',
       });
     } catch (e) {
       console.error('加载图标失败', e);

@@ -26,7 +26,7 @@ module.exports = {
 
   <!-- 无权限提示 -->
   <view class="empty-state" wx:elif="{{!isAdmin}}">
-    <text class="empty-icon">🔒</text>
+    <image class="empty-icon-img" src="{{iconUser}}" mode="aspectFit"/>
     <text class="empty-text">您没有管理员权限</text>
   </view>
 
@@ -143,14 +143,29 @@ module.exports = {
           </view>
           
           <view class="schedule-info">
-            <text class="info-item">📅 {{item.date}} {{item.startTime}}-{{item.endTime}}</text>
-            <text class="info-item" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
-            <text class="info-item" wx:if="{{item.teacher}}">👨‍🏫 {{item.teacher}}</text>
-            <text class="info-item" wx:if="{{item.location}}">📍 {{item.location}}</text>
+            <view class="info-item">
+              <image class="info-icon" src="{{iconCalendar}}" mode="aspectFit"/>
+              <text>{{item.date}} {{item.startTime}}-{{item.endTime}}</text>
+            </view>
+            <view class="info-item" wx:if="{{item.studentName}}">
+              <image class="info-icon" src="{{iconUser}}" mode="aspectFit"/>
+              <text>{{item.studentName}}</text>
+            </view>
+            <view class="info-item" wx:if="{{item.teacher}}">
+              <image class="info-icon" src="{{iconMic}}" mode="aspectFit"/>
+              <text>{{item.teacher}}</text>
+            </view>
+            <view class="info-item" wx:if="{{item.location}}">
+              <image class="info-icon" src="{{iconBook}}" mode="aspectFit"/>
+              <text>{{item.location}}</text>
+            </view>
           </view>
           
           <view class="schedule-info" wx:if="{{item.scheduleMode === '循环'}}">
-            <text class="repeat-tag">🔄 循环课程</text>
+            <view class="repeat-tag">
+              <image class="info-icon" src="{{iconRefresh}}" mode="aspectFit"/>
+              <text>循环课程</text>
+            </view>
           </view>
           
           <text class="schedule-desc" wx:if="{{item.description}}">{{item.description}}</text>
@@ -165,7 +180,7 @@ module.exports = {
 
       <!-- 空状态 -->
       <view class="empty-state" wx:if="{{!loading && filteredScheduleList.length === 0}}">
-        <text class="empty-icon">📅</text>
+        <image class="empty-icon-img" src="{{iconCalendar}}" mode="aspectFit"/>
         <text class="empty-text">暂无课程安排</text>
         <text class="empty-sub">点击右上角添加课程</text>
       </view>

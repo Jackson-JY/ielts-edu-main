@@ -6,6 +6,16 @@ cloud.init({
 
 const db = cloud.database();
 
+async function verifyAdmin() {
+  const wxContext = cloud.getWXContext();
+  const openid = wxContext.OPENID;
+
+  if (!openid) return false;
+
+  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
+  return !!(res.data && res.data[0] && res.data[0].isAdmin === true);
+}
+
 // 需要创建的集合列表
 const collections = [
   'courses',
@@ -18,11 +28,24 @@ const collections = [
   'exam_scores',
   'assessment_results',
   'speaking_answers', // 口语测评答题记录
-  'reminder_settings', // 打卡提醒设置
-  'reminder_logs', // 打卡提醒发送日志
 ];
 
 exports.main = async (event, context) => {
+  const isAdmin = await verifyAdmin();
+  if (!isAdmin) {
+    return {
+      success: false,
+      error: '无权初始化数据库，仅管理员可操作',
+      data: [],
+      summary: {
+        total: collections.length,
+        created: 0,
+        exists: 0,
+        errors: 0,
+      },
+    };
+  }
+
   const results = [];
 
   for (const collName of collections) {

@@ -30,6 +30,19 @@ page {
   letter-spacing: -0.5rpx;
 }
 
+.title-row,
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.title-icon {
+  width: 44rpx;
+  height: 44rpx;
+  flex-shrink: 0;
+}
+
 .subtitle {
   font-size: 26rpx;
   color: #9A97AA;
@@ -75,7 +88,9 @@ page {
 }
 
 .share-icon {
-  font-size: 28rpx;
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
 }
 
 .share-text {
@@ -108,7 +123,11 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 44rpx;
+}
+
+.stat-icon-img {
+  width: 52rpx;
+  height: 52rpx;
 }
 
 .stat-content {
@@ -166,6 +185,41 @@ page {
   margin-bottom: 28rpx;
 }
 
+/* 听说读写打卡统计 */
+.subject-checkin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+}
+
+.subject-checkin-item {
+  background: linear-gradient(180deg, #F8FBFF 0%, #F0F6FF 100%);
+  border-radius: 24rpx;
+  padding: 28rpx 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.subject-checkin-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-bottom: 4rpx;
+}
+
+.subject-checkin-count {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #12B7A8;
+}
+
+.subject-checkin-label {
+  font-size: 22rpx;
+  color: #9A97AA;
+}
+
 .header-left {
   flex: 1;
 }
@@ -176,6 +230,12 @@ page {
   color: #4A4A4A;
   display: block;
   margin-bottom: 8rpx;
+}
+
+.card-title-icon {
+  width: 34rpx;
+  height: 34rpx;
+  flex-shrink: 0;
 }
 
 .card-subtitle {
@@ -255,7 +315,9 @@ page {
 }
 
 .subject-icon {
-  font-size: 32rpx;
+  width: 34rpx;
+  height: 34rpx;
+  flex-shrink: 0;
 }
 
 .subject-name {
@@ -288,7 +350,9 @@ page {
 }
 
 .total-score-icon {
-  font-size: 36rpx;
+  width: 38rpx;
+  height: 38rpx;
+  flex-shrink: 0;
 }
 
 .total-score-title {
@@ -416,6 +480,19 @@ page {
   text-align: left;
   padding-left: 16rpx;
   font-weight: 500;
+}
+
+.subject-cell-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  box-sizing: border-box;
+}
+
+.table-subject-icon {
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
 }
 
 .date-col {

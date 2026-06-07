@@ -11,10 +11,28 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
+async function verifyAdmin() {
+  const wxContext = cloud.getWXContext();
+  const openid = wxContext.OPENID;
+
+  if (!openid) return false;
+
+  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
+  return !!(res.data && res.data[0] && res.data[0].isAdmin === true);
+}
+
 exports.main = async (event, context) => {
   const { dryRun = true } = event;
   
   try {
+    const isAdmin = await verifyAdmin();
+    if (!isAdmin) {
+      return {
+        success: false,
+        error: '无权迁移作业数据，仅管理员可操作'
+      };
+    }
+
     // 获取所有 homework 记录
     const { data: homeworkList } = await db.collection('homework').get();
     

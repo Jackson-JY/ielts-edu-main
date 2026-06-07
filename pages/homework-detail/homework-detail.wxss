@@ -124,6 +124,14 @@
 .info-label {
   font-size: 28rpx;
   color: #9A97AA;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.info-icon {
+  width: 30rpx;
+  height: 30rpx;
+  flex-shrink: 0;
 }
 .info-value {
   font-size: 28rpx;
@@ -185,6 +193,20 @@
   color: #4A4A4A;
   margin-bottom: 20rpx;
 }
+.content-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 20rpx;
+}
+.content-title-row .content-title {
+  margin-bottom: 0;
+}
+.content-title-icon {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+}
 .content-text {
   display: block;
   font-size: 28rpx;
@@ -211,8 +233,10 @@
   transform: scale(0.98);
 }
 .attachment-icon {
-  font-size: 32rpx;
+  width: 32rpx;
+  height: 32rpx;
   margin-right: 16rpx;
+  flex-shrink: 0;
 }
 .attachment-name {
   flex: 1;

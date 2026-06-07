@@ -19,21 +19,27 @@
     <view class="section-title">课程亮点</view>
     <view class="highlight-list">
       <view class="highlight-item">
-        <view class="highlight-icon">🎯</view>
+        <view class="highlight-icon">
+          <image class="highlight-icon-img" src="{{iconTarget}}" mode="aspectFit"/>
+        </view>
         <view class="highlight-content">
           <view class="highlight-title">水平评估</view>
           <view class="highlight-desc">专业老师评估你的当前水平，找出薄弱环节</view>
         </view>
       </view>
       <view class="highlight-item">
-        <view class="highlight-icon">📚</view>
+        <view class="highlight-icon">
+          <image class="highlight-icon-img" src="{{iconBook}}" mode="aspectFit"/>
+        </view>
         <view class="highlight-content">
           <view class="highlight-title">试听体验</view>
           <view class="highlight-desc">体验真实课堂，感受教学风格</view>
         </view>
       </view>
       <view class="highlight-item">
-        <view class="highlight-icon">📋</view>
+        <view class="highlight-icon">
+          <image class="highlight-icon-img" src="{{iconDocument}}" mode="aspectFit"/>
+        </view>
         <view class="highlight-content">
           <view class="highlight-title">学习方案</view>
           <view class="highlight-desc">根据评估结果，定制个性化学习计划</view>

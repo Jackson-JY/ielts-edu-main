@@ -2,9 +2,9 @@
 <view class="page">
   <!-- 顶部问候 -->
   <view class="header">
-    <image class="user-avatar" src="{{userAvatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+    <image class="user-avatar" src="{{userAvatar || defaultAvatarUrl || iconUser}}" mode="aspectFill" />
     <view class="header-text">
-      <text class="greeting">你好，{{userName}} 👋</text>
+      <text class="greeting">你好，{{userName}}</text>
       <text class="date-text">{{currentDate}}</text>
     </view>
   </view>
@@ -12,19 +12,20 @@
   <!-- 今日任务卡片 -->
   <view class="section-card task-card">
     <view class="card-header">
-      <text class="card-title">今日任务</text>
-      <view class="card-icon">
-        <image class="icon" src="{{iconBook}}" mode="aspectFit"/>
+      <view>
+        <text class="eyebrow">TODAY</text>
+        <text class="card-title">今日学习任务</text>
       </view>
+      <image class="card-icon" src="{{iconBook}}" mode="aspectFit"/>
     </view>
     <view class="task-info">
       <view class="task-item">
-        <text class="task-label">今日课程：</text>
-        <text class="task-value">{{todayCourses}} 节</text>
+        <text class="task-value">{{todayCourses}}</text>
+        <text class="task-label">今日课程</text>
       </view>
       <view class="task-item">
-        <text class="task-label">已提交作业：</text>
-        <text class="task-value">{{submittedHomework}} / {{totalHomework}}</text>
+        <text class="task-value">{{submittedHomework}}/{{totalHomework}}</text>
+        <text class="task-label">作业进度</text>
       </view>
     </view>
     <view class="task-button" bindtap="goToCourses">
@@ -67,13 +68,79 @@
     </view>
   </view>
 
+  <!-- 听说读写打卡 -->
+  <view class="section-card checkin-section">
+    <view class="card-header">
+      <view>
+        <text class="eyebrow">DAILY CHECK-IN</text>
+        <text class="card-title">今天打卡了吗？</text>
+      </view>
+      <text class="checkin-section-sub">点一下，记录你的进步</text>
+    </view>
+    <view class="checkin-module-grid">
+      <view class="checkin-module-item {{item.checkedToday ? 'checked' : ''}}"
+            wx:for="{{checkinModules}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            data-label="{{item.label}}"
+            bindtap="onTapCheckinModule">
+        <view class="checkin-module-icon-wrap" style="background-color: {{item.bgColor}};">
+          <image class="checkin-module-icon" src="{{item.icon}}" mode="aspectFit"/>
+          <view class="checkin-module-badge" wx:if="{{item.checkedToday}}">✓</view>
+        </view>
+        <text class="checkin-module-label">{{item.label}}</text>
+        <text class="checkin-module-status">{{item.checkedToday ? '已打卡' : '去打卡'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 打卡激励动效弹窗 -->
+  <view class="celebration-overlay" wx:if="{{showCelebration}}">
+    <view class="celebration-mask" bindtap="hideCelebration"></view>
+    <view class="celebration-card">
+      <!-- 庆祝光效/贴纸 -->
+      <view class="celebration-burst">
+        <view class="burst-dot dot-1"></view>
+        <view class="burst-dot dot-2"></view>
+        <view class="burst-dot dot-3"></view>
+        <view class="burst-dot dot-4"></view>
+        <view class="burst-dot dot-5"></view>
+        <view class="burst-dot dot-6"></view>
+        <view class="celebration-icon-wrap">
+          <image class="celebration-icon" src="{{celebrationIcon}}" mode="aspectFit"/>
+          <view class="celebration-check">✓</view>
+        </view>
+      </view>
+
+      <text class="celebration-title">{{celebrationLabel}}打卡成功！</text>
+      <text class="celebration-message">{{celebrationMessage}}</text>
+
+      <view class="celebration-actions">
+        <button class="celebration-btn share-friend" open-type="share" bindtap="onTapShareToFriend">
+          <text>转发给好友</text>
+        </button>
+        <view class="celebration-btn share-timeline" bindtap="onTapShareToTimeline">
+          <text>分享到朋友圈</text>
+        </view>
+      </view>
+
+      <view class="celebration-close" bindtap="hideCelebration">
+        <text>知道了</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 预约试听课程 -->
   <view class="section-card trial-card">
-    <text class="card-title">预约试听课程</text>
-    <text class="card-sub">体验专业雅思教学</text>
-    <view class="trial-price">
-      <text class="price">¥400</text>
-      <text class="price-note">支持优惠码</text>
+    <view class="trial-content">
+      <view>
+        <text class="card-title">预约试听课程</text>
+        <text class="card-sub">体验专业雅思教学</text>
+      </view>
+      <view class="trial-price">
+        <text class="price">¥400</text>
+        <text class="price-note">支持优惠码</text>
+      </view>
     </view>
     <view class="trial-button" bindtap="goToTrialBooking">
       <text>立即预约</text>

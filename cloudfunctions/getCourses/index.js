@@ -6,6 +6,16 @@ cloud.init({
 
 const db = cloud.database();
 
+async function verifyAdmin() {
+  const wxContext = cloud.getWXContext();
+  const openid = wxContext.OPENID;
+
+  if (!openid) return false;
+
+  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
+  return !!(res.data && res.data[0] && res.data[0].isAdmin === true);
+}
+
 /**
  * 获取课程列表（支持日期范围和分页）
  * @param {Object} event - 传入参数
@@ -19,6 +29,16 @@ exports.main = async (event, context) => {
   const { startDate, endDate, skip = 0, limit = 100 } = event;
 
   try {
+    const isAdmin = await verifyAdmin();
+    if (!isAdmin) {
+      return {
+        success: false,
+        error: '无权获取课程列表，仅管理员可操作',
+        data: [],
+        total: 0,
+      };
+    }
+
     // 构建查询条件
     const whereCondition = {
       date: db.command.gte(startDate).and(db.command.lte(endDate))

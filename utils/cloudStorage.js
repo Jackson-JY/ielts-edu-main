@@ -1,3 +1,58 @@
+const TEMP_URL_CACHE_KEY = 'cloudTempUrlCache';
+const TEMP_URL_TTL = 50 * 60 * 1000;
+let memoryCache = null;
+
+const canUseStorage = () => typeof wx !== 'undefined' && wx.getStorageSync && wx.setStorageSync;
+
+const loadCache = () => {
+  if (memoryCache) return memoryCache;
+
+  try {
+    memoryCache = canUseStorage() ? (wx.getStorageSync(TEMP_URL_CACHE_KEY) || {}) : {};
+  } catch (e) {
+    memoryCache = {};
+  }
+
+  return memoryCache;
+};
+
+const saveCache = (cache) => {
+  memoryCache = cache;
+
+  try {
+    if (canUseStorage()) {
+      wx.setStorageSync(TEMP_URL_CACHE_KEY, cache);
+    }
+  } catch (e) {
+    // 缓存失败不影响图片加载
+  }
+};
+
+const getCachedUrl = (fileID) => {
+  const cached = loadCache()[fileID];
+  if (!cached || !cached.url || !cached.expiresAt) return '';
+  if (cached.expiresAt <= Date.now()) return '';
+  return cached.url;
+};
+
+const cacheUrl = (fileID, url) => {
+  if (!fileID || !url) return;
+
+  const cache = loadCache();
+  cache[fileID] = {
+    url,
+    expiresAt: Date.now() + TEMP_URL_TTL,
+  };
+  saveCache(cache);
+};
+
+const resolveUrl = (urlMap, id) => {
+  if (Object.prototype.hasOwnProperty.call(urlMap, id)) {
+    return urlMap[id];
+  }
+  return id;
+};
+
 /**
  * 云存储工具函数
  * @param {string} fileID - 云存储文件 ID (cloud://...)
@@ -7,13 +62,18 @@ const getTempUrl = async (fileID) => {
   if (!fileID || !fileID.startsWith('cloud://')) {
     return fileID;
   }
+
+  const cachedUrl = getCachedUrl(fileID);
+  if (cachedUrl) return cachedUrl;
   
   try {
     const res = await wx.cloud.getTempFileURL({
       fileList: [fileID],
     });
     if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
-      return res.fileList[0].tempFileURL;
+      const tempUrl = res.fileList[0].tempFileURL;
+      cacheUrl(fileID, tempUrl);
+      return tempUrl;
     }
     return fileID;
   } catch (e) {
@@ -31,6 +91,8 @@ const getTempUrls = async (fileIDs) => {
   if (!fileIDs || fileIDs.length === 0) {
     return {};
   }
+
+  const urlMap = {};
   
   const cloudFileIDs = fileIDs.filter(id => id && id.startsWith('cloud://'));
   if (cloudFileIDs.length === 0) {
@@ -39,19 +101,33 @@ const getTempUrls = async (fileIDs) => {
       return acc;
     }, {});
   }
+
+  const uniqueCloudFileIDs = [...new Set(cloudFileIDs)];
+  const missingFileIDs = uniqueCloudFileIDs.filter(fileID => {
+    const cachedUrl = getCachedUrl(fileID);
+    if (cachedUrl) {
+      urlMap[fileID] = cachedUrl;
+      return false;
+    }
+    return true;
+  });
+
+  if (missingFileIDs.length === 0) {
+    return fileIDs.reduce((acc, id) => {
+      acc[id] = resolveUrl(urlMap, id);
+      return acc;
+    }, {});
+  }
   
   try {
     const res = await wx.cloud.getTempFileURL({
-      fileList: cloudFileIDs,
+      fileList: missingFileIDs,
     });
-    
-    console.log('[getTempUrls] getTempFileURL response:', res);
-    
-    const urlMap = {};
+
     res.fileList.forEach(item => {
-      console.log('[getTempUrls] fileItem:', item.fileID, '->', item.tempFileURL, 'status:', item.status, 'errMsg:', item.errMsg);
       if (item.tempFileURL) {
         urlMap[item.fileID] = item.tempFileURL;
+        cacheUrl(item.fileID, item.tempFileURL);
       } else {
         // 获取失败，使用空字符串避免渲染错误
         urlMap[item.fileID] = '';
@@ -59,7 +135,10 @@ const getTempUrls = async (fileIDs) => {
       }
     });
     
-    return urlMap;
+    return fileIDs.reduce((acc, id) => {
+      acc[id] = resolveUrl(urlMap, id);
+      return acc;
+    }, {});
   } catch (e) {
     console.error('[getTempUrls] 获取临时链接失败', e);
     return fileIDs.reduce((acc, id) => {
