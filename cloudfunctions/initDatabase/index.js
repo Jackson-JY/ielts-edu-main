@@ -27,7 +27,8 @@ const collections = [
   'time_slots',
   'exam_scores',
   'assessment_results',
-  'speaking_answers', // 口语测评答题记录
+  'speaking_answers',    // 口语测评答题记录
+  'pomodoro_sessions',   // 番茄时钟专注会话记录
 ];
 
 exports.main = async (event, context) => {

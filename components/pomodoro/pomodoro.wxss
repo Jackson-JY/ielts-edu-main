@@ -1,0 +1,469 @@
+/* components/pomodoro/pomodoro.wxss */
+
+/* ====================== 遮罩 ====================== */
+.pomodoro-mask {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(23, 33, 43, 0.45);
+  z-index: 900;
+}
+
+/* ====================== 抽屉主体 ====================== */
+.pomodoro-drawer {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 901;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 0 36rpx 60rpx;
+  box-shadow: 0 -12rpx 48rpx rgba(23, 33, 43, 0.16);
+  animation: drawer-slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes drawer-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0);    }
+}
+
+/* ─── 顶部把手 ─── */
+.drawer-handle-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 16rpx 0 4rpx;
+}
+
+.drawer-handle {
+  width: 80rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: #E4E9EF;
+}
+
+/* ─── 标题栏 ─── */
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0 8rpx;
+}
+
+.drawer-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #17212B;
+}
+
+.close-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #F2F5F8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-icon {
+  font-size: 32rpx;
+  color: #7A8794;
+  line-height: 1;
+}
+
+/* ====================== 圆环计时区 ====================== */
+.timer-section {
+  display: flex;
+  justify-content: center;
+  padding: 32rpx 0 24rpx;
+}
+
+.ring-wrap {
+  position: relative;
+  width: 300rpx;
+  height: 300rpx;
+}
+
+/* 外圆：conic-gradient 画填充弧 */
+.ring-track {
+  width: 300rpx;
+  height: 300rpx;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-fill {
+  position: absolute;
+  left: 0; top: 0;
+  width: 300rpx;
+  height: 300rpx;
+  border-radius: 50%;
+}
+
+/* 内圆白色遮罩 → 空心环视觉 */
+.ring-inner {
+  position: relative;
+  z-index: 2;
+  width: 236rpx;
+  height: 236rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  box-shadow: 0 4rpx 20rpx rgba(23, 33, 43, 0.06);
+}
+
+.timer-digits {
+  font-size: 60rpx;
+  font-weight: 800;
+  color: #17212B;
+  letter-spacing: 2rpx;
+  line-height: 1;
+}
+
+.timer-phase {
+  font-size: 24rpx;
+  color: #7A8794;
+  font-weight: 500;
+}
+
+.round-badges {
+  display: flex;
+  gap: 4rpx;
+  margin-top: 4rpx;
+}
+
+.round-tomato {
+  font-size: 24rpx;
+}
+
+/* ====================== 操作按钮行 ====================== */
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.ctrl-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.ctrl-btn:active {
+  transform: scale(0.94);
+}
+
+/* 主按钮（圆形大按钮） */
+.ctrl-primary {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  background: #12B7A8;
+  box-shadow: 0 12rpx 32rpx rgba(18, 183, 168, 0.30);
+}
+
+.ctrl-primary.ctrl-running {
+  background: #17212B;
+  box-shadow: 0 12rpx 32rpx rgba(23, 33, 43, 0.20);
+}
+
+.ctrl-primary.ctrl-rest {
+  background: #6FB7FF;
+  box-shadow: 0 12rpx 32rpx rgba(111, 183, 255, 0.30);
+}
+
+/* 次级按钮（小圆） */
+.ctrl-secondary {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: #F2F5F8;
+}
+
+.ctrl-disabled {
+  opacity: 0.5;
+}
+
+.ctrl-placeholder {
+  visibility: hidden;
+}
+
+.ctrl-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.ctrl-icon-lg {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.ctrl-icon-emoji {
+  font-size: 40rpx;
+  line-height: 1;
+}
+
+.ctrl-label {
+  font-size: 22rpx;
+  color: #64717F;
+  font-weight: 600;
+}
+
+.ctrl-label-primary {
+  font-size: 22rpx;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* ====================== 时长配置 ====================== */
+.config-row {
+  display: flex;
+  gap: 32rpx;
+  margin-bottom: 24rpx;
+  padding: 20rpx 24rpx;
+  background: #F6F8FB;
+  border-radius: 20rpx;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.config-label {
+  font-size: 22rpx;
+  color: #7A8794;
+  font-weight: 600;
+}
+
+.config-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12rpx;
+}
+
+.config-chip {
+  height: 52rpx;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  border: 1rpx solid rgba(23, 33, 43, 0.08);
+  color: #64717F;
+  font-size: 22rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  white-space: nowrap;  /* 禁止文字换行 */
+  flex-shrink: 0;       /* 不被 flex 容器压缩宽度 */
+}
+
+.config-chip.selected {
+  background: #12B7A8;
+  border-color: transparent;
+  color: #FFFFFF;
+}
+
+/* ====================== 关联作业 ====================== */
+.homework-link-row {
+  margin-bottom: 20rpx;
+}
+
+.link-label {
+  display: block;
+  font-size: 24rpx;
+  color: #7A8794;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  padding: 18rpx 20rpx;
+  background: rgba(18, 183, 168, 0.08);
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(18, 183, 168, 0.20);
+}
+
+.link-card-inner {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.link-subject-tag {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #12B7A8;
+  background: rgba(18, 183, 168, 0.14);
+  border-radius: 999rpx;
+  padding: 4rpx 14rpx;
+}
+
+.link-content {
+  font-size: 24rpx;
+  color: #17212B;
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.link-clear {
+  flex-shrink: 0;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: rgba(23, 33, 43, 0.08);
+  color: #7A8794;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.link-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 20rpx;
+  background: #F6F8FB;
+  border-radius: 16rpx;
+  border: 1rpx dashed rgba(23, 33, 43, 0.12);
+}
+
+.link-empty-text {
+  font-size: 24rpx;
+  color: #9AA5B1;
+}
+
+.link-arrow {
+  font-size: 32rpx;
+  color: #C4CDD6;
+}
+
+/* ─── 作业选择下拉 ─── */
+.homework-picker {
+  max-height: 300rpx;
+  overflow-y: auto;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  border: 1rpx solid rgba(23, 33, 43, 0.08);
+  box-shadow: 0 8rpx 24rpx rgba(23, 33, 43, 0.08);
+  margin-bottom: 16rpx;
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid rgba(23, 33, 43, 0.05);
+}
+
+.picker-item:last-child {
+  border-bottom: none;
+}
+
+.picker-item:active {
+  background: #F6F8FB;
+}
+
+.picker-subject {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #12B7A8;
+  background: rgba(18, 183, 168, 0.10);
+  border-radius: 999rpx;
+  padding: 4rpx 12rpx;
+}
+
+.picker-content {
+  font-size: 24rpx;
+  color: #17212B;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.picker-free .picker-content {
+  color: #7A8794;
+}
+
+/* ====================== 统计区（今日 + 累计）====================== */
+.stats-block {
+  background: #F6F8FB;
+  border-radius: 20rpx;
+  margin-top: 8rpx;
+  overflow: hidden;
+}
+
+/* 今日行 / 累计行共用 */
+.stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx 32rpx;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5rpx;
+}
+
+/* 今日数字：品牌绿色 */
+.stat-value {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #12B7A8;
+  line-height: 1;
+}
+
+/* 累计数字：低对比度灰，区分今日 */
+.stat-value-total {
+  color: #9AA5B1;
+  font-size: 28rpx;
+}
+
+.stat-label {
+  font-size: 20rpx;
+  color: #7A8794;
+}
+
+/* 今日/累计两行之间的横向分隔线 */
+.stats-h-divider {
+  height: 1rpx;
+  background: rgba(23, 33, 43, 0.06);
+  margin: 0 24rpx;
+}
+
+/* 今日/累计同行内两列之间的竖向分隔线 */
+.stat-divider {
+  width: 1rpx;
+  height: 44rpx;
+  background: rgba(23, 33, 43, 0.08);
+  margin: 0 16rpx;
+}

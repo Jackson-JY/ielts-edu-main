@@ -1162,3 +1162,55 @@
   border-radius: 8rpx;
   font-weight: 500;
 }
+
+/* ====================== 番茄时钟入口卡片 ====================== */
+.pomodoro-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  margin: 0 0 24rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(23, 33, 43, 0.06);
+  box-shadow: 0 8rpx 24rpx rgba(23, 33, 43, 0.04);
+  box-sizing: border-box;
+}
+
+.pomodoro-entry-card:active {
+  background: #F8FAFC;
+  transform: scale(0.99);
+}
+
+.pomodoro-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.pomodoro-entry-icon {
+  font-size: 48rpx;
+  line-height: 1;
+}
+
+.pomodoro-entry-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.pomodoro-entry-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #17212B;
+}
+
+.pomodoro-entry-sub {
+  font-size: 23rpx;
+  color: #7A8794;
+}
+
+.pomodoro-entry-right {
+  font-size: 36rpx;
+  color: #C4CDD6;
+}

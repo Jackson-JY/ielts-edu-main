@@ -42,6 +42,21 @@ module.exports = {
     </view>
   </view>
 
+  <!-- 番茄时钟入口卡片 -->
+  <view class="pomodoro-entry-card" bindtap="onTapOpenPomodoro">
+    <view class="pomodoro-entry-left">
+      <text class="pomodoro-entry-icon">🍅</text>
+      <view class="pomodoro-entry-info">
+        <text class="pomodoro-entry-title">番茄时钟</text>
+        <text class="pomodoro-entry-sub" wx:if="{{todayPomodoros > 0}}">今日 {{todayPomodoros}} 个 · 专注 {{todayFocusMinutes}} 分钟</text>
+        <text class="pomodoro-entry-sub" wx:else>点击开始专注</text>
+      </view>
+    </view>
+    <view class="pomodoro-entry-right">
+      <text class="pomodoro-entry-arrow">›</text>
+    </view>
+  </view>
+
   <!-- 打卡日历（热力图） -->
   <view class="section-card">
     <view class="section-header">
@@ -404,3 +419,11 @@ module.exports = {
   </view>
 
 </view>
+
+<!-- 番茄时钟组件（固定浮层，在 page 外部挂载以避免被 scroll-view 裁切） -->
+<pomodoro
+  visible="{{showPomodoro}}"
+  homeworkOptions="{{pomodoroHomeworkOptions}}"
+  bind:close="onPomodoroClose"
+  bind:sessionSaved="onPomodoroSessionSaved"
+/>

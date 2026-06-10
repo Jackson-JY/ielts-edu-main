@@ -80,6 +80,13 @@ Page({
     // 打卡时长（分钟）
     checkinDuration: '',
     canSubmitCheckin: false,
+
+    // ─── 番茄时钟 ──────────────────────────────────────────────
+    showPomodoro: false,
+    todayPomodoros: 0,
+    todayFocusMinutes: 0,
+    // 传给组件的作业选项（从未完成作业列表拉取）
+    pomodoroHomeworkOptions: [],
   },
 
   onLoad() {
@@ -89,6 +96,7 @@ Page({
     this.updateMonthLabel();
     this.initCalendar();
     this.loadCheckinStats();
+    this.loadPomodoroStats();
   },
 
   onReady() {
@@ -287,7 +295,7 @@ Page({
         const ctx = canvas.getContext('2d');
         const width = res[0].width;
         const height = res[0].height;
-        const dpr = wx.getSystemInfoSync().pixelRatio;
+        const dpr = wx.getWindowInfo().pixelRatio;
         
         canvas.width = width * dpr;
         canvas.height = height * dpr;
@@ -790,6 +798,67 @@ Page({
       wx.showToast({ title: '打卡失败', icon: 'none' });
     } finally {
       wx.hideLoading();
+    }
+  },
+
+  // ─── 番茄时钟 ────────────────────────────────────────────────
+
+  /**
+   * 打开番茄时钟弹窗（我的页面入口：自由学习，不预置关联作业）
+   * 同时拉取用户未完成作业列表，供组件内选择关联
+   */
+  async onTapOpenPomodoro() {
+    // 拉取未完成作业列表供番茄组件内选择
+    try {
+      const allRes = await cloudDB.getMy('homework', (q) =>
+        q.orderBy('_createTime', 'desc')
+      );
+      const pendingOptions = (allRes.success ? allRes.data : [])
+        .filter(hw => hw.status !== 'completed' && hw.submitted !== true)
+        .slice(0, 20)
+        .map(hw => ({
+          id: hw._id,
+          content: hw.description || hw.content || hw.title || '未命名作业',
+          subject: hw.subject || '',
+        }));
+      this.setData({ pomodoroHomeworkOptions: pendingOptions });
+    } catch (e) {
+      // 拉取失败不影响打开弹窗
+    }
+
+    this.setData({ showPomodoro: true });
+  },
+
+  /** 关闭番茄弹窗 */
+  onPomodoroClose() {
+    this.setData({ showPomodoro: false });
+  },
+
+  /** 番茄完成写库后刷新统计 */
+  onPomodoroSessionSaved() {
+    this.loadPomodoroStats();
+  },
+
+  /**
+   * 加载今日番茄统计（入口卡片展示）
+   */
+  async loadPomodoroStats() {
+    try {
+      const today = formatDate(new Date());
+      // 改用云函数：服务端按当前用户 OPENID 过滤 + 聚合，避免越权与客户端 20 条上限
+      const res = await wx.cloud.callFunction({
+        name: 'getPomodoroStats',
+        data: { date: today },
+      });
+      const r = (res && res.result) || {};
+      if (r.success) {
+        this.setData({
+          todayPomodoros: r.todayPomodoros || 0,
+          todayFocusMinutes: r.todayFocusMinutes || 0,
+        });
+      }
+    } catch (e) {
+      console.error('[我的页] 加载番茄统计失败', e);
     }
   },
 

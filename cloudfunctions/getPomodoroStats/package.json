@@ -1,0 +1,9 @@
+{
+  "name": "getPomodoroStats",
+  "version": "1.0.0",
+  "description": "获取番茄时钟今日及历史累计统计（服务端按当前用户过滤）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

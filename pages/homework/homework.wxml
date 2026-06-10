@@ -55,12 +55,13 @@
           </view>
         </view>
 
-        <!-- 右栏：时长 / 完成度 / 打卡选项 -->
+        <!-- 右栏：时长 / 完成度 / 打卡选项 / 番茄按钮 -->
         <view class="detail-col detail-col-right">
           <view class="detail-duration">
-            <text class="detail-duration-value">{{item.duration}}</text>
+            <text class="detail-duration-value {{item.timeSpent > 0 ? 'spent' : ''}}">{{item.duration}}</text>
             <text class="detail-duration-unit">分钟</text>
           </view>
+          <text class="detail-duration-label">{{item.durationLabel}}</text>
           <view class="detail-progress-wrap">
             <view class="detail-progress-track">
               <view class="detail-progress-fill" style="width: {{item.completion}}%;"></view>
@@ -68,16 +69,25 @@
             <text class="detail-progress-text">完成度 {{item.completion}}%</text>
           </view>
 
-          <!-- 学员本人：可点击打卡/取消打卡 -->
-          <view class="detail-checkin {{item.isCompleted ? 'checked' : ''}}"
-                wx:if="{{!isAdmin}}"
-                data-id="{{item.id}}"
-                data-completed="{{item.isCompleted}}"
-                catchtap="onToggleHomeworkComplete">
-            <text wx:if="{{item.isCompleted}}">已完成 ✅</text>
-            <text wx:else>标记完成</text>
+          <!-- 打卡按钮行：完成标记 + 番茄按钮 -->
+          <view class="detail-actions-row" wx:if="{{!isAdmin}}">
+            <view class="detail-checkin {{item.isCompleted ? 'checked' : ''}}"
+                  data-id="{{item.id}}"
+                  data-completed="{{item.isCompleted}}"
+                  catchtap="onToggleHomeworkComplete">
+              <text wx:if="{{item.isCompleted}}">✅</text>
+              <text wx:else>完成</text>
+            </view>
+            <!-- 🍅 番茄时钟按钮 -->
+            <view class="pomodoro-btn"
+                  data-id="{{item.id}}"
+                  data-content="{{item.content}}"
+                  data-subject="{{activeSubjectLabel}}"
+                  catchtap="onTapStartPomodoro">
+              <text>🍅</text>
+            </view>
           </view>
-          <!-- 管理员视角：仅展示状态，不可代为打卡 -->
+          <!-- 管理员视角：仅展示状态 -->
           <view class="detail-status-tag {{item.isCompleted ? 'completed' : ''}}" wx:else>
             <text>{{item.isCompleted ? '已完成 ✅' : '进行中'}}</text>
           </view>
@@ -91,3 +101,14 @@
   </view>
 
 </view>
+
+<!-- 番茄时钟组件（全局弹出，不在滚动容器内） -->
+<pomodoro
+  visible="{{showPomodoro}}"
+  linkedHomeworkId="{{pomodoroHomeworkId}}"
+  linkedContent="{{pomodoroHomeworkContent}}"
+  linkedSubject="{{pomodoroHomeworkSubject}}"
+  homeworkOptions="{{pomodoroHomeworkOptions}}"
+  bind:close="onPomodoroClose"
+  bind:sessionSaved="onPomodoroSessionSaved"
+/>

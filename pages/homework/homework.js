@@ -45,6 +45,14 @@ Page({
     isAdmin: false,
     // 学生名称映射
     studentNameMap: {},
+
+    // ─── 番茄时钟 ────────────────────────────────────────────────
+    showPomodoro: false,
+    pomodoroHomeworkId: '',
+    pomodoroHomeworkContent: '',
+    pomodoroHomeworkSubject: '',
+    // 传递给组件的作业选项列表（当前模块下所有未完成的作业）
+    pomodoroHomeworkOptions: [],
   },
 
   async onLoad() {
@@ -320,13 +328,22 @@ Page({
       ? Math.min(100, Math.max(0, parseInt(hw.completion) || 0))
       : (isCompleted ? 100 : 0);
 
+    // estimatedTime：老师布置时的预估时长
+    // timeSpent：学生通过番茄时钟累积的实际专注分钟数（由 _saveSession 用 inc 原子写入）
+    const estimatedTime = hw.estimatedTime || 0;
+    const timeSpent = hw.timeSpent || 0;
+
     return {
       id: hw._id,
       content,
       courseName: hw.courseName || '',
       studentName,
       deadlineFormatted,
-      duration: hw.estimatedTime || hw.timeSpent || 0,
+      estimatedTime,              // 预估时长（分钟）
+      timeSpent,                  // 已专注时长（番茄累计，分钟）
+      // 右栏主时长显示：有已专注记录时优先展示实际值，否则展示预估值
+      duration: timeSpent > 0 ? timeSpent : estimatedTime,
+      durationLabel: timeSpent > 0 ? '已专注' : '预估',
       completion,
       isCompleted,
     };
@@ -407,5 +424,41 @@ Page({
       console.error('[作业打卡] 更新状态失败', err);
       wx.showToast({ title: '更新失败，请重试', icon: 'none' });
     }
+  },
+
+  // ─── 番茄时钟 ────────────────────────────────────────────────
+
+  /**
+   * 点击某条作业的 🍅 按钮，打开番茄时钟并关联该作业
+   */
+  onTapStartPomodoro(e) {
+    const { id, content, subject } = e.currentTarget.dataset;
+
+    // 构建当前模块下所有未完成作业的选项列表，供组件内切换关联
+    const pomodoroHomeworkOptions = this.data.activeSubjectItems.map(item => ({
+      id: item.id,
+      content: item.content,
+      subject: this.data.activeSubjectLabel,
+    }));
+
+    this.setData({
+      showPomodoro: true,
+      pomodoroHomeworkId: id || '',
+      pomodoroHomeworkContent: content || '',
+      pomodoroHomeworkSubject: subject || this.data.activeSubjectLabel,
+      pomodoroHomeworkOptions,
+    });
+  },
+
+  /** 关闭番茄弹窗 */
+  onPomodoroClose() {
+    this.setData({ showPomodoro: false });
+  },
+
+  /**
+   * 番茄完成并写库后，刷新作业列表统计
+   */
+  onPomodoroSessionSaved() {
+    this.loadAllHomework();
   },
 });

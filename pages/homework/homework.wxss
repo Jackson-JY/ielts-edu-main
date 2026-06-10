@@ -236,9 +236,21 @@
   line-height: 1;
 }
 
+/* 已有实际专注时长时，数字显示为品牌绿色 */
+.detail-duration-value.spent {
+  color: #12B7A8;
+}
+
 .detail-duration-unit {
   font-size: 20rpx;
   color: #7A8794;
+}
+
+/* "已专注" / "预估" 小标签 */
+.detail-duration-label {
+  font-size: 18rpx;
+  color: #9AA5B1;
+  margin-top: -6rpx;
 }
 
 .detail-progress-wrap {
@@ -269,20 +281,47 @@
   color: #9AA5B1;
 }
 
+/* ─── 打卡 + 番茄按钮行 ─── */
+.detail-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  width: 100%;
+}
+
 .detail-checkin {
-  min-width: 132rpx;
+  flex: 1;
   height: 56rpx;
-  padding: 0 18rpx;
+  padding: 0 12rpx;
   border-radius: 999rpx;
   background: #F6F8FB;
   border: 1rpx solid rgba(23, 33, 43, 0.1);
   color: #64717F;
-  font-size: 22rpx;
+  font-size: 21rpx;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+}
+
+/* 🍅 番茄时钟按钮 */
+.pomodoro-btn {
+  flex-shrink: 0;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(255, 99, 71, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  box-sizing: border-box;
+}
+
+.pomodoro-btn:active {
+  transform: scale(0.90);
+  background: rgba(255, 99, 71, 0.18);
 }
 
 .detail-checkin:active {

@@ -1,0 +1,180 @@
+<!-- components/pomodoro/pomodoro.wxml -->
+<view wx:if="{{visible}}">
+  <!-- 遮罩层 -->
+  <view class="pomodoro-mask" bindtap="onTapMask"></view>
+
+  <!-- 抽屉主体 -->
+  <view class="pomodoro-drawer">
+    <!-- 顶部把手 + 标题栏 -->
+    <view class="drawer-handle-wrap">
+      <view class="drawer-handle"></view>
+    </view>
+    <view class="drawer-header">
+      <text class="drawer-title">🍅 番茄时钟</text>
+      <view class="close-btn" bindtap="onTapClose">
+        <text class="close-icon">×</text>
+      </view>
+    </view>
+
+    <!-- 圆环计时区 -->
+    <view class="timer-section">
+      <view class="ring-wrap">
+        <!-- conic-gradient 进度环 -->
+        <view class="ring-track">
+          <view class="ring-fill"
+                style="background: conic-gradient({{phase === 'rest' ? '#6FB7FF' : '#12B7A8'}} 0% {{progress}}%, #F2F5F8 {{progress}}% 100%);">
+          </view>
+          <!-- 内圆遮罩，形成空心环效果 -->
+          <view class="ring-inner">
+            <text class="timer-digits">{{timeLabel}}</text>
+            <text class="timer-phase">{{phaseLabel}}</text>
+            <view class="round-badges" wx:if="{{completedRounds > 0}}">
+              <block wx:for="{{completedRounds}}" wx:key="index">
+                <text class="round-tomato">🍅</text>
+              </block>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮行 -->
+    <view class="ctrl-row">
+      <!-- 重置（非 idle 时展示） -->
+      <view class="ctrl-btn ctrl-secondary" wx:if="{{status !== 'idle'}}" bindtap="onTapReset">
+        <image class="ctrl-icon" src="{{iconRefresh}}" mode="aspectFit"/>
+        <text class="ctrl-label">重置</text>
+      </view>
+      <!-- idle：展示时长配置占位（不显示重置） -->
+      <view class="ctrl-btn ctrl-secondary ctrl-disabled" wx:else>
+        <text class="ctrl-label">{{ workMinutes }}min</text>
+      </view>
+
+      <!-- 主按钮 -->
+      <!-- idle / paused → 开始/继续 -->
+      <view class="ctrl-btn ctrl-primary" wx:if="{{status === 'idle' || status === 'paused'}}" bindtap="onTapStart">
+        <image class="ctrl-icon-lg" src="{{iconPlay}}" mode="aspectFit"/>
+        <text class="ctrl-label-primary">{{status === 'paused' ? '继续' : '开始'}}</text>
+      </view>
+      <!-- working / resting → 暂停 -->
+      <view class="ctrl-btn ctrl-primary ctrl-running" wx:elif="{{status === 'working' || status === 'resting'}}" bindtap="onTapPause">
+        <image class="ctrl-icon-lg" src="{{iconPause}}" mode="aspectFit"/>
+        <text class="ctrl-label-primary">暂停</text>
+      </view>
+      <!-- work_done → 开始休息 -->
+      <view class="ctrl-btn ctrl-primary ctrl-rest" wx:elif="{{status === 'work_done'}}" bindtap="onTapStartRest">
+        <text class="ctrl-icon-emoji">☕</text>
+        <text class="ctrl-label-primary">开始休息</text>
+      </view>
+      <!-- rest_done → 开始下一轮 -->
+      <view class="ctrl-btn ctrl-primary" wx:elif="{{status === 'rest_done'}}" bindtap="onTapStart">
+        <text class="ctrl-icon-emoji">🔄</text>
+        <text class="ctrl-label-primary">下一轮</text>
+      </view>
+
+      <!-- 跳过休息（work_done / rest_done 时） -->
+      <view class="ctrl-btn ctrl-secondary" wx:if="{{status === 'work_done' || status === 'rest_done'}}" bindtap="onTapSkipRest">
+        <text class="ctrl-label">跳过</text>
+      </view>
+      <!-- 其他状态占位 -->
+      <view class="ctrl-btn ctrl-secondary ctrl-placeholder" wx:else>
+        <text class="ctrl-label">-</text>
+      </view>
+    </view>
+
+    <!-- 时长配置（仅 idle 状态可调） -->
+    <view class="config-row" wx:if="{{status === 'idle'}}">
+      <view class="config-group">
+        <text class="config-label">专注</text>
+        <view class="config-chips">
+          <view class="config-chip {{index === selectedWorkIdx ? 'selected' : ''}}"
+                wx:for="{{workOptions}}"
+                wx:key="value"
+                data-value="{{item.value}}"
+                data-index="{{index}}"
+                bindtap="onTapWorkOption">
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="config-group">
+        <text class="config-label">休息</text>
+        <view class="config-chips">
+          <view class="config-chip {{index === selectedRestIdx ? 'selected' : ''}}"
+                wx:for="{{restOptions}}"
+                wx:key="value"
+                data-value="{{item.value}}"
+                data-index="{{index}}"
+                bindtap="onTapRestOption">
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 关联作业区 -->
+    <view class="homework-link-row">
+      <text class="link-label">🔗 关联作业</text>
+      <!-- 已关联 -->
+      <view class="link-card" wx:if="{{homeworkContent}}" bindtap="onTapToggleHomeworkPicker">
+        <view class="link-card-inner">
+          <text class="link-subject-tag" wx:if="{{subject}}">{{subject}}</text>
+          <text class="link-content">{{homeworkContent}}</text>
+        </view>
+        <view class="link-clear" catchtap="onTapClearHomework">×</view>
+      </view>
+      <!-- 未关联 -->
+      <view class="link-empty" wx:else bindtap="onTapToggleHomeworkPicker">
+        <text class="link-empty-text">点击选择作业（可跳过）</text>
+        <text class="link-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 作业选择下拉列表 -->
+    <view class="homework-picker" wx:if="{{showHomeworkPicker && homeworkOptions.length > 0}}">
+      <view class="picker-item"
+            wx:for="{{homeworkOptions}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            data-content="{{item.content}}"
+            data-subject="{{item.subject}}"
+            bindtap="onTapSelectHomework">
+        <text class="picker-subject" wx:if="{{item.subject}}">{{item.subject}}</text>
+        <text class="picker-content">{{item.content}}</text>
+      </view>
+      <view class="picker-item picker-free" data-id="" data-content="" data-subject="" bindtap="onTapSelectHomework">
+        <text class="picker-content">自由学习（不关联作业）</text>
+      </view>
+    </view>
+
+    <!-- 统计区：今日 + 累计 -->
+    <view class="stats-block">
+      <!-- 今日一行 -->
+      <view class="stats-row">
+        <view class="stat-item">
+          <text class="stat-value">{{todayPomodoros}}</text>
+          <text class="stat-label">今日番茄</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value">{{todayFocusMinutes}}</text>
+          <text class="stat-label">今日专注分钟</text>
+        </view>
+      </view>
+      <!-- 分隔线 -->
+      <view class="stats-h-divider"></view>
+      <!-- 累计一行 -->
+      <view class="stats-row">
+        <view class="stat-item">
+          <text class="stat-value stat-value-total">{{totalPomodoros}}</text>
+          <text class="stat-label">累计番茄</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value stat-value-total">{{totalFocusMinutes}}</text>
+          <text class="stat-label">累计专注分钟</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
