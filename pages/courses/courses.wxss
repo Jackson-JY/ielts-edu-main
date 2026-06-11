@@ -338,23 +338,6 @@
 .empty-text {
   font-size: 28rpx;
   color: #64717F;
-  margin-bottom: 16rpx;
-}
-
-.empty-sub {
-  font-size: 24rpx;
-  color: #7A8794;
-  margin-bottom: 48rpx;
-}
-
-.empty-button {
-  padding: 24rpx 64rpx;
-  background: #12B7A8;
-  border-radius: 18rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #FFFFFF;
-  box-shadow: 0 10rpx 24rpx rgba(18, 183, 168, 0.22);
 }
 
 /* 周视图 */

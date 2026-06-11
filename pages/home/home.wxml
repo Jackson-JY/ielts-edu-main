@@ -9,6 +9,14 @@
     </view>
   </view>
 
+  <!-- 每日鼓励寄语 -->
+  <view class="daily-quote-banner" wx:if="{{dailyQuote}}">
+    <view class="daily-quote-shine"></view>
+    <text class="daily-quote-mark">“</text>
+    <text class="daily-quote-text">{{dailyQuote}}</text>
+    <text class="daily-quote-spark">✨</text>
+  </view>
+
   <!-- 今日任务卡片 -->
   <view class="section-card task-card">
     <view class="card-header">
@@ -37,20 +45,6 @@
   <!-- 能力概览 -->
   <view class="ability-section">
     <view class="ability-grid">
-      <view class="ability-item">
-        <view class="ability-icon">
-          <image class="icon" src="{{iconTarget}}" mode="aspectFit"/>
-        </view>
-        <text class="ability-value">{{targetScore}}</text>
-        <text class="ability-label">目标分数</text>
-      </view>
-      <view class="ability-item">
-        <view class="ability-icon">
-          <image class="icon" src="{{iconChart}}" mode="aspectFit"/>
-        </view>
-        <text class="ability-value">{{currentScore}}</text>
-        <text class="ability-label">当前分数</text>
-      </view>
       <view class="ability-item">
         <view class="ability-icon">
           <image class="icon" src="{{iconCalendar}}" mode="aspectFit"/>
@@ -94,6 +88,40 @@
     </view>
   </view>
 
+  <!-- 打卡内容输入弹窗 -->
+  <view class="checkin-input-overlay" wx:if="{{showCheckinInput}}">
+    <view class="checkin-input-mask" bindtap="closeCheckinInput"></view>
+    <view class="checkin-input-card">
+      <view class="checkin-input-header">
+        <view class="checkin-input-icon-wrap">
+          <image class="checkin-input-icon" src="{{checkinInputIcon}}" mode="aspectFit"/>
+        </view>
+        <view class="checkin-input-titles">
+          <text class="checkin-input-title">{{checkinInputLabel}}打卡</text>
+          <text class="checkin-input-sub">记录今天的学习内容（可不填）</text>
+        </view>
+      </view>
+
+      <textarea class="checkin-input-textarea"
+                placeholder="今天学了什么？有什么收获～"
+                placeholder-class="checkin-input-placeholder"
+                value="{{checkinInputContent}}"
+                bindinput="onCheckinInputContent"
+                maxlength="200"
+                auto-height
+                show-confirm-bar="{{false}}" />
+
+      <view class="checkin-input-actions">
+        <view class="checkin-input-btn cancel" bindtap="closeCheckinInput">
+          <text>取消</text>
+        </view>
+        <view class="checkin-input-btn confirm {{checkinSubmitting ? 'disabled' : ''}}" bindtap="onConfirmCheckin">
+          <text>{{checkinSubmitting ? '打卡中...' : '完成打卡'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 打卡激励动效弹窗 -->
   <view class="celebration-overlay" wx:if="{{showCelebration}}">
     <view class="celebration-mask" bindtap="hideCelebration"></view>
@@ -130,21 +158,5 @@
     </view>
   </view>
 
-  <!-- 预约试听课程 -->
-  <view class="section-card trial-card">
-    <view class="trial-content">
-      <view>
-        <text class="card-title">预约试听课程</text>
-        <text class="card-sub">体验专业雅思教学</text>
-      </view>
-      <view class="trial-price">
-        <text class="price">¥400</text>
-        <text class="price-note">支持优惠码</text>
-      </view>
-    </view>
-    <view class="trial-button" bindtap="goToTrialBooking">
-      <text>立即预约</text>
-    </view>
-  </view>
 
 </view>

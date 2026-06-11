@@ -22,9 +22,6 @@ const collections = [
   'homework',
   'checkins',
   'users',
-  'trial_bookings',
-  'coupons',
-  'time_slots',
   'exam_scores',
   'assessment_results',
   'speaking_answers',    // 口语测评答题记录

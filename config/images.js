@@ -12,8 +12,6 @@ const CLOUD_IMAGES = {
   logo: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/logo.jpg',
   // 默认头像
   defaultAvatar: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/default-avatar.png',
-  // 课程封面
-  trialCourse: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/trial-course.png',
   // 图标资源
   iconBook: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/icon-book.png',
   iconCalendar: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/icon-calendar.png',

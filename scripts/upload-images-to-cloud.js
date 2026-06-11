@@ -15,7 +15,6 @@
  * - icon-settings.png (341K)
  * - icon-target.png (362K)
  * - icon-user.png (314K)
- * - trial-course.png (896K)
  */
 
 const fs = wx.getFileSystemManager();
@@ -29,7 +28,6 @@ const IMAGES_TO_UPLOAD = [
   { local: 'images/icon-settings.png', cloud: 'images/icon-settings.png' },
   { local: 'images/icon-target.png', cloud: 'images/icon-target.png' },
   { local: 'images/icon-user.png', cloud: 'images/icon-user.png' },
-  { local: 'images/trial-course.png', cloud: 'images/trial-course.png' },
 ];
 
 async function uploadImages() {

@@ -132,10 +132,6 @@
       <!-- 无课程时的提示 -->
       <view class="empty-state" wx:else>
         <text class="empty-text">暂无课程安排</text>
-        <text class="empty-sub">预约试听课程开始学习 · ¥400</text>
-        <view class="empty-button" bindtap="goToTrialBooking">
-          <text>立即预约</text>
-        </view>
       </view>
     </scroll-view>
   </view>

@@ -592,10 +592,6 @@ Page({
     }
   },
 
-  goToTrialBooking() {
-    wx.navigateTo({ url: '/pages/trial-booking/trial-booking' });
-  },
-
   onShareAppMessage() {
     return {
       title: '雅思课程安排',

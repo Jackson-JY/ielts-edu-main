@@ -42,6 +42,84 @@
   color: #7A8794;
 }
 
+/* 每日鼓励寄语横幅 */
+.daily-quote-banner {
+  position: relative;
+  margin: 4rpx 0 24rpx;
+  padding: 26rpx 30rpx 26rpx 28rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(120deg, rgba(18, 183, 168, 0.16), rgba(111, 183, 255, 0.12) 55%, rgba(180, 156, 255, 0.12));
+  border: 1rpx solid rgba(18, 183, 168, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  overflow: hidden;
+  /* 入场：上滑 + 轻微回弹 */
+  animation: quote-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 周期性掠过的高光 */
+.daily-quote-shine {
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-18deg);
+  animation: quote-shine 3.6s ease-in-out infinite;
+}
+
+/* 左侧装饰引号：轻微呼吸摆动 */
+.daily-quote-mark {
+  flex-shrink: 0;
+  font-size: 72rpx;
+  line-height: 0.8;
+  font-weight: 800;
+  color: rgba(18, 183, 168, 0.36);
+  margin-top: 14rpx;
+  transform-origin: center bottom;
+  animation: quote-mark-wiggle 2.8s ease-in-out infinite;
+}
+
+.daily-quote-text {
+  flex: 1;
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #0E8C81;
+  line-height: 1.5;
+  letter-spacing: 0.5rpx;
+}
+
+/* 右侧闪光：放大 + 旋转的活泼小动效 */
+.daily-quote-spark {
+  flex-shrink: 0;
+  font-size: 30rpx;
+  animation: quote-spark 2.2s ease-in-out infinite;
+}
+
+@keyframes quote-in {
+  0% { opacity: 0; transform: translateY(16rpx) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes quote-shine {
+  0% { left: -40%; }
+  60% { left: 120%; }
+  100% { left: 120%; }
+}
+
+@keyframes quote-mark-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-6deg); }
+  75% { transform: rotate(6deg); }
+}
+
+@keyframes quote-spark {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50% { transform: scale(1.25) rotate(18deg); opacity: 1; }
+}
+
 .task-card {
   padding: 36rpx;
   background: #12212F;
@@ -114,8 +192,7 @@
   color: rgba(255, 255, 255, 0.62);
 }
 
-.task-button,
-.trial-button {
+.task-button {
   min-height: 88rpx;
   border-radius: 18rpx;
   background: #12B7A8;
@@ -130,7 +207,6 @@
 }
 
 .task-button:active,
-.trial-button:active,
 .ability-item:active {
   transform: translateY(2rpx);
 }
@@ -186,45 +262,6 @@
 .ability-label {
   margin-top: 6rpx;
   font-size: 23rpx;
-  color: #7A8794;
-}
-
-.trial-card {
-  padding: 32rpx;
-}
-
-.trial-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20rpx;
-  margin-bottom: 28rpx;
-}
-
-.card-sub {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 24rpx;
-  color: #7A8794;
-}
-
-.trial-price {
-  flex-shrink: 0;
-  text-align: right;
-}
-
-.price {
-  display: block;
-  font-size: 42rpx;
-  font-weight: 800;
-  color: #17212B;
-  line-height: 1.1;
-}
-
-.price-note {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
   color: #7A8794;
 }
 
@@ -309,6 +346,135 @@
 }
 
 /* ====================== 打卡激励动效弹窗 ====================== */
+/* ====================== 打卡内容输入弹窗 ====================== */
+.checkin-input-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkin-input-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(23, 33, 43, 0.5);
+}
+
+.checkin-input-card {
+  position: relative;
+  width: 600rpx;
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 40rpx;
+  box-shadow: 0 30rpx 80rpx rgba(23, 33, 47, 0.28);
+  animation: celebration-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+}
+
+.checkin-input-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.checkin-input-icon-wrap {
+  flex-shrink: 0;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: rgba(18, 183, 168, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkin-input-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.checkin-input-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.checkin-input-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #17212B;
+}
+
+.checkin-input-sub {
+  font-size: 24rpx;
+  color: #9AA5B1;
+}
+
+.checkin-input-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  max-height: 360rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background: #F6F8FB;
+  border: 1rpx solid rgba(23, 33, 43, 0.06);
+  font-size: 28rpx;
+  color: #17212B;
+  line-height: 1.6;
+  box-sizing: border-box;
+  margin-bottom: 32rpx;
+}
+
+.checkin-input-placeholder {
+  color: #B5BEC8;
+}
+
+.checkin-input-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.checkin-input-btn {
+  flex: 1;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.checkin-input-btn:active {
+  transform: scale(0.97);
+}
+
+.checkin-input-btn.cancel {
+  background: #F6F8FB;
+  color: #64717F;
+  border: 1rpx solid rgba(23, 33, 43, 0.08);
+}
+
+.checkin-input-btn.confirm {
+  background: #12B7A8;
+  color: #FFFFFF;
+  box-shadow: 0 10rpx 24rpx rgba(18, 183, 168, 0.22);
+}
+
+.checkin-input-btn.confirm.disabled {
+  opacity: 0.6;
+}
+
 .celebration-overlay {
   position: fixed;
   left: 0;
