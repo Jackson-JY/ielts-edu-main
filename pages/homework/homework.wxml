@@ -47,7 +47,7 @@
             bindtap="onHomeworkTap">
         <!-- 左栏：作业内容 -->
         <view class="detail-col detail-col-left">
-          <text class="detail-student" wx:if="{{isAdmin && item.studentName}}">{{item.studentName}}</text>
+          <text class="detail-student" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
           <text class="detail-content">{{item.content}}</text>
           <view class="detail-tags" wx:if="{{item.courseName || item.deadlineFormatted}}">
             <text class="detail-tag" wx:if="{{item.courseName}}">{{item.courseName}}</text>

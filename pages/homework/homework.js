@@ -43,8 +43,10 @@ Page({
     iconBook: '',
     // 是否为管理员
     isAdmin: false,
-    // 学生名称映射
+    // 学生名称映射（管理员：_openid -> 昵称）
     studentNameMap: {},
+    // 当前登录用户昵称（学生本人视角展示自己的昵称）
+    currentUserName: '',
 
     // ─── 番茄时钟 ────────────────────────────────────────────────
     showPomodoro: false,
@@ -71,7 +73,8 @@ Page({
     const app = getApp();
     const userInfo = app.globalData.userInfo;
     const isAdmin = userInfo && userInfo.isAdmin === true;
-    this.setData({ isAdmin }, () => {
+    const currentUserName = (userInfo && userInfo.nickName) || '';
+    this.setData({ isAdmin, currentUserName }, () => {
       this.loadAllHomework();
       if (isAdmin) {
         this.loadStudentNames();
@@ -316,9 +319,12 @@ Page({
     const isCompleted = this.isHomeworkCompleted(hw);
     const content = hw.description || hw.content || hw.title || '暂无作业内容描述';
 
+    // 学生昵称：管理员看对应学员昵称，学生本人看自己的昵称
     let studentName = '';
-    if (this.data.isAdmin && hw._openid) {
-      studentName = this.data.studentNameMap[hw._openid] || '';
+    if (this.data.isAdmin) {
+      studentName = (hw._openid && this.data.studentNameMap[hw._openid]) || '';
+    } else {
+      studentName = this.data.currentUserName || '';
     }
 
     const deadline = hw.deadline ? new Date(hw.deadline) : null;
