@@ -308,6 +308,90 @@
   color: #A6B0BB;
 }
 
+/* ========== 多条作业项录入（左=内容，右=预估完成时间）========== */
+.hw-items-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+  padding: 0 4rpx;
+}
+
+.hw-col-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 23rpx;
+  color: #64717F;
+}
+
+.hw-col-time {
+  width: 180rpx;
+  flex-shrink: 0;
+  font-size: 23rpx;
+  color: #64717F;
+  text-align: center;
+}
+
+.hw-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+}
+
+.hw-item-content {
+  flex: 1;
+  min-width: 0;
+  height: 84rpx;
+  padding: 0 24rpx;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  font-size: 27rpx;
+  color: #17212B;
+  box-sizing: border-box;
+}
+
+.hw-item-time {
+  width: 180rpx;
+  flex-shrink: 0;
+  height: 84rpx;
+  padding: 0 16rpx;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  font-size: 27rpx;
+  color: #17212B;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.hw-item-del {
+  flex-shrink: 0;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: rgba(23, 33, 43, 0.06);
+  color: #7A8794;
+  font-size: 30rpx;
+  line-height: 40rpx;
+  text-align: center;
+}
+
+.hw-add-row {
+  margin: 4rpx 0 24rpx;
+  padding: 18rpx 0;
+  border-radius: 16rpx;
+  border: 1rpx dashed rgba(18, 183, 168, 0.45);
+  color: #12B7A8;
+  font-size: 26rpx;
+  font-weight: 600;
+  text-align: center;
+  background: rgba(18, 183, 168, 0.05);
+}
+
+.hw-add-row:active {
+  background: rgba(18, 183, 168, 0.12);
+}
+
 .save-button {
   width: 100%;
   padding: 24rpx 0;
@@ -516,4 +600,55 @@
   padding: 6rpx;
   box-shadow: none;
   flex-shrink: 0;
+}
+
+/* ========== 自定义成功提示 ========== */
+.success-toast-overlay {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-toast-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+  padding: 48rpx 56rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 24rpx 64rpx rgba(23, 33, 47, 0.22);
+  animation: success-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.success-toast-check {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #12B7A8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 24rpx rgba(18, 183, 168, 0.32);
+}
+
+.success-toast-check-icon {
+  color: #FFFFFF;
+  font-size: 52rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.success-toast-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #17212B;
+}
+
+@keyframes success-pop {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }

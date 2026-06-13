@@ -410,6 +410,97 @@
   color: #7A8794;
 }
 
+/* ─── 分组标题 ─── */
+.picker-group-label {
+  padding: 14rpx 24rpx 6rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #9AA5B1;
+  letter-spacing: 1rpx;
+}
+
+.picker-subject-task {
+  color: #6FB7FF;
+  background: rgba(111, 183, 255, 0.12);
+}
+
+/* ─── 新建任务 ─── */
+.picker-new-task {
+  border-bottom: none;
+}
+
+.picker-new-task-text {
+  color: #12B7A8;
+  font-weight: 700;
+}
+
+.new-task-form {
+  padding: 16rpx 24rpx 20rpx;
+  border-bottom: 1rpx solid rgba(23, 33, 43, 0.05);
+}
+
+.new-task-input {
+  width: 100%;
+  min-height: 72rpx;
+  padding: 16rpx;
+  border-radius: 14rpx;
+  background: #F6F8FB;
+  font-size: 26rpx;
+  color: #17212B;
+  box-sizing: border-box;
+  margin-bottom: 12rpx;
+}
+
+.new-task-ph {
+  color: #B5BEC8;
+}
+
+.new-task-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.new-task-time {
+  flex: 1;
+  min-width: 0;
+  height: 68rpx;
+  padding: 0 18rpx;
+  border-radius: 14rpx;
+  background: #F6F8FB;
+  font-size: 25rpx;
+  color: #17212B;
+  box-sizing: border-box;
+}
+
+.new-task-cancel {
+  flex-shrink: 0;
+  padding: 0 24rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  border-radius: 14rpx;
+  background: #F2F5F8;
+  color: #64717F;
+  font-size: 25rpx;
+  font-weight: 600;
+}
+
+.new-task-confirm {
+  flex-shrink: 0;
+  padding: 0 24rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  border-radius: 14rpx;
+  background: #12B7A8;
+  color: #FFFFFF;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.new-task-confirm.disabled {
+  opacity: 0.6;
+}
+
 /* ====================== 统计区（今日 + 累计）====================== */
 .stats-block {
   background: #F6F8FB;

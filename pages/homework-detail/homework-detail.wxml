@@ -12,139 +12,67 @@
 
   <!-- 作业详情 -->
   <block wx:if="{{!loading && homework}}">
-    <!-- 状态标签 -->
-    <view class="status-badge {{homework.isOverdue ? 'status-overdue' : (homework.isUrgent ? 'status-urgent' : 'status-normal')}}">
-      <text>{{homework.isOverdue ? '已逾期' : (homework.isUrgent ? '即将截止' : (homework.isCompleted ? '已完成' : '进行中'))}}</text>
-    </view>
-
-    <!-- 标题区域 -->
-    <view class="title-section">
-      <view class="subject-tag" style="background-color: {{homework.subjectColor}}">
-        <text class="subject-label">{{homework.subjectLabel}}</text>
-      </view>
-      <text class="homework-title">{{homework.title}}</text>
-    </view>
-
-    <!-- 信息卡片 -->
-    <view class="info-card">
-      <view class="info-item" wx:if="{{homework.courseName}}">
-        <view class="info-label">
-          <image class="info-icon" src="{{iconBook}}" mode="aspectFit"/>
-          <text>所属课程</text>
+    <!-- 头部：科目 + 状态 + 标题 -->
+    <view class="hw-hero">
+      <view class="hw-hero-top">
+        <view class="subject-tag" style="background-color: {{homework.subjectColor}}">
+          <text class="subject-label">{{homework.subjectLabel}}</text>
         </view>
-        <text class="info-value">{{homework.courseName}}</text>
-      </view>
-
-      <view class="info-item">
-        <view class="info-label">
-          <image class="info-icon" src="{{iconCalendar}}" mode="aspectFit"/>
-          <text>截止日期</text>
-        </view>
-        <text class="info-value {{homework.isOverdue ? 'text-overdue' : (homework.isUrgent ? 'text-urgent' : '')}}">
-          {{homework.deadlineFormatted}}
-        </text>
-      </view>
-      
-      <view class="info-item" wx:if="{{homework.daysLeft !== null}}">
-        <view class="info-label">
-          <image class="info-icon" src="{{iconFire}}" mode="aspectFit"/>
-          <text>剩余时间</text>
-        </view>
-        <text class="info-value {{homework.isOverdue ? 'text-overdue' : (homework.isUrgent ? 'text-urgent' : '')}}">
-          {{homework.isOverdue ? '已逾期 ' + Math.abs(homework.daysLeft) + ' 天' : (homework.daysLeft === 0 ? '今天截止' : '还剩 ' + homework.daysLeft + ' 天')}}
-        </text>
-      </view>
-
-      <view class="info-item" wx:if="{{homework.createTimeFormatted}}">
-        <view class="info-label">
-          <image class="info-icon" src="{{iconDocument}}" mode="aspectFit"/>
-          <text>布置时间</text>
-        </view>
-        <text class="info-value">{{homework.createTimeFormatted}}</text>
-      </view>
-
-      <!-- 完成度输入 -->
-      <view class="info-item input-item">
-        <view class="info-label">
-          <image class="info-icon" src="{{iconChart}}" mode="aspectFit"/>
-          <text>完成度</text>
-        </view>
-        <view class="input-wrapper">
-          <input 
-            class="info-input" 
-            type="number" 
-            placeholder="0" 
-            value="{{homework.completion}}"
-            bindinput="onCompletionInput"
-            max="100"
-            min="0"
-          />
-          <text class="input-suffix">%</text>
+        <view class="status-pill {{homework.isCompleted ? 'done' : 'doing'}}">
+          <text>{{homework.isCompleted ? '已完成' : '进行中'}}</text>
         </view>
       </view>
-
-      <!-- 累计时长输入 -->
-      <view class="info-item input-item">
-        <view class="info-label">
-          <image class="info-icon" src="{{iconCalendar}}" mode="aspectFit"/>
-          <text>累计时长</text>
-        </view>
-        <view class="input-wrapper">
-          <input 
-            class="info-input" 
-            type="number" 
-            placeholder="0" 
-            value="{{homework.timeSpent}}"
-            bindinput="onTimeSpentInput"
-            min="0"
-          />
-          <text class="input-suffix">分钟</text>
-        </view>
-      </view>
-
-      <view class="info-item" wx:if="{{homework.score !== undefined && homework.score !== null}}">
-        <view class="info-label">
-          <image class="info-icon" src="{{iconCheck}}" mode="aspectFit"/>
-          <text>得分</text>
-        </view>
-        <text class="info-value">{{homework.score}}/{{homework.totalScore || 100}}</text>
+      <text class="hw-title">{{homework.title}}</text>
+      <view class="hw-meta" wx:if="{{homework.courseName || homework.createTimeFormatted}}">
+        <text class="hw-meta-item" wx:if="{{homework.courseName}}">{{homework.courseName}}</text>
+        <text class="hw-meta-dot" wx:if="{{homework.courseName && homework.createTimeFormatted}}">·</text>
+        <text class="hw-meta-item" wx:if="{{homework.createTimeFormatted}}">{{homework.createTimeFormatted}} 布置</text>
       </view>
     </view>
 
     <!-- 作业内容 -->
-    <view class="content-card" wx:if="{{homework.description}}">
-      <text class="content-title">作业内容</text>
-      <text class="content-text">{{homework.description}}</text>
+    <view class="section-card" wx:if="{{homework.description}}">
+      <text class="card-label">作业内容</text>
+      <text class="card-body">{{homework.description}}</text>
     </view>
 
-    <!-- 老师评语 -->
-    <view class="content-card feedback-card" wx:if="{{homework.feedback}}">
-      <view class="content-title-row">
-        <image class="content-title-icon" src="{{iconDocument}}" mode="aspectFit"/>
-        <text class="content-title">老师评语</text>
+    <!-- 完成进度 -->
+    <view class="section-card">
+      <text class="card-label">完成进度</text>
+      <view class="progress-row">
+        <view class="progress-track">
+          <view class="progress-fill" style="width: {{homework.completion}}%;"></view>
+        </view>
+        <text class="progress-pct">{{homework.completion}}%</text>
       </view>
-      <text class="content-text">{{homework.feedback}}</text>
-    </view>
 
-    <!-- 附件列表 -->
-    <view class="content-card" wx:if="{{homework.attachments && homework.attachments.length > 0}}">
-      <view class="content-title-row">
-        <image class="content-title-icon" src="{{iconDocument}}" mode="aspectFit"/>
-        <text class="content-title">附件资料</text>
-      </view>
-      <view class="attachment-list">
-        <view class="attachment-item" wx:for="{{homework.attachments}}" wx:key="index" bindtap="previewAttachment" data-url="{{item.url}}">
-          <image class="attachment-icon" src="{{iconDocument}}" mode="aspectFit"/>
-          <text class="attachment-name">{{item.name}}</text>
-          <text class="attachment-arrow">›</text>
+      <view class="stat-grid">
+        <view class="stat-cell">
+          <text class="stat-label">完成度</text>
+          <view class="stat-input-wrap">
+            <input class="stat-input" type="number" placeholder="0" value="{{homework.completion}}" bindinput="onCompletionInput" max="100" min="0"/>
+            <text class="stat-suffix">%</text>
+          </view>
+        </view>
+        <view class="stat-cell">
+          <text class="stat-label">累计时长</text>
+          <view class="stat-input-wrap">
+            <input class="stat-input" type="number" placeholder="0" value="{{homework.timeSpent}}" bindinput="onTimeSpentInput" min="0"/>
+            <text class="stat-suffix">分钟</text>
+          </view>
         </view>
       </view>
+
+      <view class="estimate-row" wx:if="{{homework.estimatedTime > 0}}">
+        <text class="estimate-label">预估完成时间</text>
+        <text class="estimate-value">{{homework.estimatedTime}} 分钟</text>
+      </view>
     </view>
 
-    <!-- 完成按钮 -->
+    <!-- 更新按钮 -->
     <view class="action-section">
       <button class="complete-btn" bindtap="updateHomeworkStatus">
-        <text>更新作业状态</text>
+        <text>保存更新</text>
       </button>
     </view>
   </block>

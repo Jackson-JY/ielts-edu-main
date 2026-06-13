@@ -34,6 +34,11 @@ Component({
       type: Array,
       value: [],
     },
+    // 父页面可传入该用户的全部任务列表，供弹窗内选择关联
+    taskOptions: {
+      type: Array,
+      value: [],
+    },
   },
 
   data: {
@@ -47,11 +52,16 @@ Component({
     timeLabel: '25:00',   // 倒计时格式化文字
     phaseLabel: '准备开始',
 
-    // ─── 关联作业 ──────────────────────────────────────────────
+    // ─── 关联作业 / 任务 ───────────────────────────────────────
     homeworkId: '',
     homeworkContent: '',
     subject: '',
     showHomeworkPicker: false,
+    // 新建任务内联表单
+    showNewTaskForm: false,
+    newTaskContent: '',
+    newTaskTime: '',
+    newTaskSubmitting: false,
 
     // ─── 配置档位 ──────────────────────────────────────────────
     workMinutes: 25,
@@ -317,12 +327,96 @@ Component({
         homeworkContent: content,
         subject,
         showHomeworkPicker: false,
+        showNewTaskForm: false,
+      });
+    },
+
+    /** 选择一个任务进行关联（任务也存于 homework 表，机制与作业相同） */
+    onTapSelectTask(e) {
+      const { id, content } = e.currentTarget.dataset;
+      getApp().pomodoroSetHomework(id, content, '任务');
+      this.setData({
+        homeworkId: id,
+        homeworkContent: content,
+        subject: '任务',
+        showHomeworkPicker: false,
+        showNewTaskForm: false,
       });
     },
 
     onTapClearHomework() {
       getApp().pomodoroSetHomework('', '', '');
       this.setData({ homeworkId: '', homeworkContent: '', subject: '' });
+    },
+
+    // ─── 新建任务并关联 ──────────────────────────────────────────
+
+    /** 展开/收起"新建任务"内联表单 */
+    onTapToggleNewTask() {
+      this.setData({
+        showNewTaskForm: !this.data.showNewTaskForm,
+        newTaskContent: '',
+        newTaskTime: '',
+      });
+    },
+
+    onNewTaskContentInput(e) {
+      this.setData({ newTaskContent: e.detail.value });
+    },
+
+    onNewTaskTimeInput(e) {
+      this.setData({ newTaskTime: e.detail.value });
+    },
+
+    /** 创建任务（写入 homework 表 recordType='task'）并立即关联 */
+    async onTapCreateAndLinkTask() {
+      if (this.data.newTaskSubmitting) return;
+      const content = (this.data.newTaskContent || '').trim();
+      if (!content) {
+        wx.showToast({ title: '请输入任务信息', icon: 'none' });
+        return;
+      }
+
+      this.setData({ newTaskSubmitting: true });
+      try {
+        const res = await cloudDB.addMy('homework', {
+          recordType: 'task',
+          title: '任务',
+          description: content,
+          content,
+          estimatedTime: parseInt(this.data.newTaskTime) || 0,
+          timeSpent: 0,
+          completion: 0,
+          status: 'pending',
+          submitted: false,
+          assignedAt: new Date(),
+        });
+
+        if (res.success && res.id) {
+          // 立即关联新任务
+          getApp().pomodoroSetHomework(res.id, content, '任务');
+          this.setData({
+            homeworkId: res.id,
+            homeworkContent: content,
+            subject: '任务',
+            showNewTaskForm: false,
+            showHomeworkPicker: false,
+            newTaskSubmitting: false,
+            newTaskContent: '',
+            newTaskTime: '',
+          });
+          // 通知父页面刷新任务列表
+          this.triggerEvent('taskCreated', { id: res.id, content });
+          wx.showToast({ title: '已创建并关联', icon: 'none' });
+        } else {
+          this.setData({ newTaskSubmitting: false });
+          wx.showToast({ title: '创建失败，请重试', icon: 'none' });
+        }
+      } catch (err) {
+        this.setData({ newTaskSubmitting: false });
+        console.error('[番茄] 新建任务失败', err);
+        wx.showToast({ title: '创建失败，请重试', icon: 'none' });
+      }
     },
 
     // ─── 时长配置 ────────────────────────────────────────────────

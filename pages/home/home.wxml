@@ -49,15 +49,19 @@
         <view class="ability-icon">
           <image class="icon" src="{{iconCalendar}}" mode="aspectFit"/>
         </view>
-        <text class="ability-value">{{studyDays}}</text>
-        <text class="ability-label">学习天数</text>
+        <view class="ability-text">
+          <text class="ability-value">{{studyDays}}</text>
+          <text class="ability-label">学习天数</text>
+        </view>
       </view>
       <view class="ability-item">
         <view class="ability-icon">
           <image class="icon" src="{{iconFire}}" mode="aspectFit"/>
         </view>
-        <text class="ability-value">{{streakDays}}</text>
-        <text class="ability-label">连续打卡</text>
+        <view class="ability-text">
+          <text class="ability-value">{{streakDays}}</text>
+          <text class="ability-label">连续打卡</text>
+        </view>
       </view>
     </view>
   </view>

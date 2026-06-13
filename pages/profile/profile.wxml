@@ -424,6 +424,8 @@ module.exports = {
 <pomodoro
   visible="{{showPomodoro}}"
   homeworkOptions="{{pomodoroHomeworkOptions}}"
+  taskOptions="{{pomodoroTaskOptions}}"
   bind:close="onPomodoroClose"
   bind:sessionSaved="onPomodoroSessionSaved"
+  bind:taskCreated="onPomodoroTaskCreated"
 />

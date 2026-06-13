@@ -11,8 +11,17 @@
 
 ## homework
 
+作业与「我的任务」同表存储，用 `recordType` 区分：
+
+- `recordType` 缺省 / `'homework'`：老师布置的作业（听说读写四模块）。
+- `recordType: 'task'`：用户在作业页自建的任务，或番茄时钟内新建的任务。含 `description`(任务信息)、`estimatedTime`(预估分钟)、`status`、`completion`、`timeSpent`。
+
+**推荐索引：**
+
 - `_openid` 升序、`_updateTime` 降序
-  - 用途：普通学生作业页读取自己的作业列表。
+  - 用途：普通学生作业页读取自己的作业/任务列表。
+- `_openid` 升序、`recordType` 升序、`_updateTime` 降序
+  - 用途：作业页按 `recordType='task'` 单独读取任务列表。
 - `courseId` 升序、`assignedAt` 降序
   - 用途：课程页展开课程时读取关联作业。
 - `_updateTime` 降序

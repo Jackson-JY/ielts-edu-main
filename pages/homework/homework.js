@@ -48,6 +48,14 @@ Page({
     // 当前登录用户昵称（学生本人视角展示自己的昵称）
     currentUserName: '',
 
+    // ─── 我的任务（保存在 homework 表，recordType='task' 区分）──────
+    tasks: [],
+    // 添加任务弹窗
+    showTaskInput: false,
+    taskInputContent: '',
+    taskInputTime: '',
+    taskSubmitting: false,
+
     // ─── 番茄时钟 ────────────────────────────────────────────────
     showPomodoro: false,
     pomodoroHomeworkId: '',
@@ -55,6 +63,8 @@ Page({
     pomodoroHomeworkSubject: '',
     // 传递给组件的作业选项列表（当前模块下所有未完成的作业）
     pomodoroHomeworkOptions: [],
+    // 传递给组件的任务选项列表（当前用户全部未完成任务）
+    pomodoroTaskOptions: [],
   },
 
   async onLoad() {
@@ -167,11 +177,11 @@ Page({
    */
   async loadAllHomework() {
     try {
-      let allHomework = [];
+      let allRecords = [];
 
       if (this.data.isAdmin) {
         // 管理员：使用云函数获取所有作业
-        allHomework = await this.loadAllHomeworkAdmin();
+        allRecords = await this.loadAllHomeworkAdmin();
       } else {
         // 普通用户：使用原有方式查询自己的作业
         const res = await cloudDB.getMy('homework', (q) =>
@@ -179,9 +189,12 @@ Page({
         );
 
         if (res.success) {
-          allHomework = res.data;
+          allRecords = res.data;
         }
       }
+
+      // 作业与任务同表存储，用 recordType 区分；作业列表/统计只取非任务记录
+      const allHomework = allRecords.filter(r => r.recordType !== 'task');
 
       this.setData({ allHomework });
       this.refreshSubjectModules(allHomework);
@@ -190,9 +203,44 @@ Page({
       if (this.data.activeSubject) {
         this.buildActiveSubjectItems(this.data.activeSubject);
       }
+
+      // 任务始终按当前用户加载（管理员云函数不含个人任务，故单独查询）
+      this.loadTasks();
     } catch (e) {
       console.error('加载作业失败', e);
     }
+  },
+
+  /**
+   * 加载当前用户的任务（recordType='task'）
+   */
+  async loadTasks() {
+    try {
+      const res = await cloudDB.getMy('homework', (q) =>
+        q.where({ recordType: 'task' }).orderBy('_updateTime', 'desc')
+      );
+      const tasks = res.success ? res.data.map(t => this.formatTaskItem(t)) : [];
+      this.setData({ tasks });
+    } catch (e) {
+      console.error('加载任务失败', e);
+    }
+  },
+
+  /**
+   * 格式化任务展示数据
+   */
+  formatTaskItem(t) {
+    const estimatedTime = t.estimatedTime || 0;
+    const timeSpent = t.timeSpent || 0;
+    return {
+      id: t._id,
+      content: t.description || t.content || '未命名任务',
+      estimatedTime,
+      timeSpent,
+      duration: timeSpent > 0 ? timeSpent : estimatedTime,
+      durationLabel: timeSpent > 0 ? '已专注' : '预估',
+      isCompleted: t.status === 'completed',
+    };
   },
 
   /**
@@ -327,9 +375,6 @@ Page({
       studentName = this.data.currentUserName || '';
     }
 
-    const deadline = hw.deadline ? new Date(hw.deadline) : null;
-    const deadlineFormatted = deadline ? `${deadline.getMonth() + 1}月${deadline.getDate()}日截止` : '';
-
     const completion = hw.completion != null && hw.completion !== ''
       ? Math.min(100, Math.max(0, parseInt(hw.completion) || 0))
       : (isCompleted ? 100 : 0);
@@ -344,7 +389,6 @@ Page({
       content,
       courseName: hw.courseName || '',
       studentName,
-      deadlineFormatted,
       estimatedTime,              // 预估时长（分钟）
       timeSpent,                  // 已专注时长（番茄累计，分钟）
       // 右栏主时长显示：有已专注记录时优先展示实际值，否则展示预估值
@@ -453,7 +497,15 @@ Page({
       pomodoroHomeworkContent: content || '',
       pomodoroHomeworkSubject: subject || this.data.activeSubjectLabel,
       pomodoroHomeworkOptions,
+      pomodoroTaskOptions: this.buildPomodoroTaskOptions(),
     });
+  },
+
+  /** 构建未完成任务的番茄可选列表 */
+  buildPomodoroTaskOptions() {
+    return this.data.tasks
+      .filter(t => !t.isCompleted)
+      .map(t => ({ id: t.id, content: t.content }));
   },
 
   /** 关闭番茄弹窗 */
@@ -466,5 +518,131 @@ Page({
    */
   onPomodoroSessionSaved() {
     this.loadAllHomework();
+  },
+
+  /** 番茄组件内新建了任务，刷新任务列表 */
+  onPomodoroTaskCreated() {
+    this.loadTasks();
+  },
+
+  // ─── 任务管理 ────────────────────────────────────────────────
+
+  /** 打开"添加任务"弹窗 */
+  onTapAddTask() {
+    this.setData({ showTaskInput: true, taskInputContent: '', taskInputTime: '' });
+  },
+
+  onTaskInputContent(e) {
+    this.setData({ taskInputContent: e.detail.value });
+  },
+
+  onTaskInputTime(e) {
+    this.setData({ taskInputTime: e.detail.value });
+  },
+
+  closeTaskInput() {
+    if (this.data.taskSubmitting) return;
+    this.setData({ showTaskInput: false });
+  },
+
+  /** 确认添加任务（保存到 homework 表，recordType='task'） */
+  async onConfirmAddTask() {
+    if (this.data.taskSubmitting) return;
+
+    const content = (this.data.taskInputContent || '').trim();
+    if (!content) {
+      wx.showToast({ title: '请输入任务信息', icon: 'none' });
+      return;
+    }
+
+    this.setData({ taskSubmitting: true });
+    try {
+      const res = await cloudDB.addMy('homework', {
+        recordType: 'task',
+        title: '任务',
+        description: content,
+        content,
+        estimatedTime: parseInt(this.data.taskInputTime) || 0,
+        timeSpent: 0,
+        completion: 0,
+        status: 'pending',
+        submitted: false,
+        assignedAt: new Date(),
+      });
+
+      if (res.success) {
+        this.setData({ showTaskInput: false, taskSubmitting: false });
+        await this.loadTasks();
+      } else {
+        this.setData({ taskSubmitting: false });
+        wx.showToast({ title: '添加失败，请重试', icon: 'none' });
+      }
+    } catch (err) {
+      this.setData({ taskSubmitting: false });
+      console.error('[任务] 添加失败', err);
+      wx.showToast({ title: '添加失败，请重试', icon: 'none' });
+    }
+  },
+
+  /** 勾选/取消勾选任务完成 */
+  async onToggleTaskComplete(e) {
+    const { id, completed } = e.currentTarget.dataset;
+    const nextCompleted = !completed;
+
+    // 乐观更新本地状态
+    const tasks = this.data.tasks.map(t =>
+      t.id === id ? { ...t, isCompleted: nextCompleted } : t
+    );
+    this.setData({ tasks });
+
+    try {
+      const res = await cloudDB.update('homework', id, {
+        status: nextCompleted ? 'completed' : 'pending',
+        submitted: nextCompleted,
+        completion: nextCompleted ? 100 : 0,
+      });
+      if (!res.success) throw new Error('update failed');
+    } catch (err) {
+      console.error('[任务] 更新状态失败', err);
+      // 回滚
+      const rollback = this.data.tasks.map(t =>
+        t.id === id ? { ...t, isCompleted: completed } : t
+      );
+      this.setData({ tasks: rollback });
+      wx.showToast({ title: '更新失败，请重试', icon: 'none' });
+    }
+  },
+
+  /** 删除任务 */
+  onTapDeleteTask(e) {
+    const { id } = e.currentTarget.dataset;
+    wx.showModal({
+      title: '删除任务',
+      content: '确定删除这条任务吗？',
+      confirmText: '删除',
+      confirmColor: '#E25C5C',
+      success: async (m) => {
+        if (!m.confirm) return;
+        const res = await cloudDB.remove('homework', id);
+        if (res.success) {
+          this.loadTasks();
+        } else {
+          wx.showToast({ title: '删除失败', icon: 'none' });
+        }
+      },
+    });
+  },
+
+  /** 点击任务的 🍅 按钮，打开番茄并关联该任务 */
+  onTapStartTaskPomodoro(e) {
+    const { id, content } = e.currentTarget.dataset;
+    this.setData({
+      showPomodoro: true,
+      pomodoroHomeworkId: id || '',
+      pomodoroHomeworkContent: content || '',
+      pomodoroHomeworkSubject: '任务',
+      pomodoroHomeworkOptions: [],
+      pomodoroTaskOptions: this.buildPomodoroTaskOptions(),
+    });
   },
 });

@@ -28,6 +28,53 @@
     </view>
   </view>
 
+  <!-- 我的任务区域（宫格视图下方） -->
+  <view class="task-section" wx:if="{{!activeSubject}}">
+    <view class="task-section-header">
+      <view class="task-section-titles">
+        <text class="task-section-title">我的任务</text>
+        <text class="task-section-sub">自己安排的小目标，完成就打勾 ✓</text>
+      </view>
+      <view class="task-add-btn" bindtap="onTapAddTask">
+        <text>＋ 添加</text>
+      </view>
+    </view>
+
+    <view class="task-list" wx:if="{{tasks.length > 0}}">
+      <view class="task-item {{item.isCompleted ? 'task-item-done' : ''}}"
+            wx:for="{{tasks}}"
+            wx:key="id">
+        <!-- 勾选 -->
+        <view class="task-check {{item.isCompleted ? 'checked' : ''}}"
+              data-id="{{item.id}}"
+              data-completed="{{item.isCompleted}}"
+              catchtap="onToggleTaskComplete">
+          <text wx:if="{{item.isCompleted}}">✓</text>
+        </view>
+        <!-- 内容 -->
+        <view class="task-body">
+          <text class="task-content">{{item.content}}</text>
+          <view class="task-meta">
+            <text class="task-duration {{item.timeSpent > 0 ? 'spent' : ''}}">{{item.duration}} 分钟</text>
+            <text class="task-duration-label">{{item.durationLabel}}</text>
+          </view>
+        </view>
+        <!-- 番茄 + 删除 -->
+        <view class="task-actions">
+          <view class="task-pomodoro-btn"
+                data-id="{{item.id}}"
+                data-content="{{item.content}}"
+                catchtap="onTapStartTaskPomodoro">🍅</view>
+          <view class="task-del-btn" data-id="{{item.id}}" catchtap="onTapDeleteTask">×</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="task-empty" wx:else>
+      <text class="task-empty-text">还没有任务，点「＋ 添加」创建一个吧～</text>
+    </view>
+  </view>
+
   <!-- 模块作业明细列表 -->
   <view class="subject-detail" wx:if="{{activeSubject}}">
     <view class="detail-header">
@@ -49,9 +96,8 @@
         <view class="detail-col detail-col-left">
           <text class="detail-student" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
           <text class="detail-content">{{item.content}}</text>
-          <view class="detail-tags" wx:if="{{item.courseName || item.deadlineFormatted}}">
-            <text class="detail-tag" wx:if="{{item.courseName}}">{{item.courseName}}</text>
-            <text class="detail-tag" wx:if="{{item.deadlineFormatted}}">{{item.deadlineFormatted}}</text>
+          <view class="detail-tags" wx:if="{{item.courseName}}">
+            <text class="detail-tag">{{item.courseName}}</text>
           </view>
         </view>
 
@@ -100,6 +146,35 @@
     </view>
   </view>
 
+  <!-- 添加任务弹窗 -->
+  <view class="task-modal-overlay" wx:if="{{showTaskInput}}">
+    <view class="task-modal-mask" bindtap="closeTaskInput"></view>
+    <view class="task-modal-card">
+      <text class="task-modal-title">添加任务</text>
+      <text class="task-modal-label">任务信息</text>
+      <textarea class="task-modal-textarea"
+                placeholder="要做点什么呢？"
+                placeholder-class="task-modal-ph"
+                value="{{taskInputContent}}"
+                bindinput="onTaskInputContent"
+                maxlength="200"
+                auto-height
+                show-confirm-bar="{{false}}" />
+      <text class="task-modal-label">预估完成时间</text>
+      <view class="task-modal-time">
+        <input class="task-modal-time-input" type="number" placeholder="如 30"
+               value="{{taskInputTime}}" bindinput="onTaskInputTime" />
+        <text class="task-modal-time-unit">分钟</text>
+      </view>
+      <view class="task-modal-actions">
+        <view class="task-modal-btn cancel" bindtap="closeTaskInput">取消</view>
+        <view class="task-modal-btn confirm {{taskSubmitting ? 'disabled' : ''}}" bindtap="onConfirmAddTask">
+          {{taskSubmitting ? '添加中...' : '添加任务'}}
+        </view>
+      </view>
+    </view>
+  </view>
+
 </view>
 
 <!-- 番茄时钟组件（全局弹出，不在滚动容器内） -->
@@ -109,6 +184,8 @@
   linkedContent="{{pomodoroHomeworkContent}}"
   linkedSubject="{{pomodoroHomeworkSubject}}"
   homeworkOptions="{{pomodoroHomeworkOptions}}"
+  taskOptions="{{pomodoroTaskOptions}}"
   bind:close="onPomodoroClose"
   bind:sessionSaved="onPomodoroSessionSaved"
+  bind:taskCreated="onPomodoroTaskCreated"
 />

@@ -31,6 +31,18 @@ Page({
     studentNameMap: {},
     // 当前登录用户昵称（学生本人视角展示自己的昵称）
     currentUserName: '',
+    // 自定义成功提示（替代原生 toast，风格统一）
+    showSuccessToast: false,
+    successToastText: '',
+  },
+
+  /** 展示自定义成功提示，自动消失 */
+  popSuccessToast(text) {
+    this.setData({ successToastText: text, showSuccessToast: true });
+    clearTimeout(this._successToastTimer);
+    this._successToastTimer = setTimeout(() => {
+      this.setData({ showSuccessToast: false });
+    }, 1600);
   },
 
   onLoad() {
@@ -402,120 +414,52 @@ Page({
   },
 
   /**
-   * 加载课程对应的作业数据
+   * 展开课程时初始化作业录入表单
+   * 新交互：一个课程可一次添加多条作业项，每条 = { 作业内容, 预估完成时间(分钟) }
+   * 科目沿用课程科目，不再单独填写截止时间/描述
    */
-  async loadHomeworkForCourse(courseId) {
-    try {
-      const course = this.data.courses.find(c => c._id === courseId);
-      
-      // 查询该课程的作业记录
-      const res = await cloudDB.get('homework', (q) =>
-        q.where({ courseId: courseId }).orderBy('assignedAt', 'desc')
-      );
-      
-      const homework = { ...this.data.homework };
-      
-      if (res.success && res.data.length > 0) {
-        // 使用最新一条作业记录回显
-        const latestHomework = res.data[0];
-        homework[courseId] = {
-          ...homework[courseId],
-          description: latestHomework.description || latestHomework.content || '',
-          content: latestHomework.content || '',
-          subject: latestHomework.subject || course?.subject || '阅读',
-          subjectLabel: this.getSubjectLabel(latestHomework.subject || course?.subject),
-          deadline: latestHomework.deadline ? this.formatDateForDisplay(latestHomework.deadline) : '',
-          estimatedTime: latestHomework.estimatedTime || '',
-        };
-      } else {
-        // 没有作业记录，初始化空表单
-        homework[courseId] = {
-          ...homework[courseId],
-          subject: course?.subject || '阅读',
-          subjectLabel: this.getSubjectLabel(course?.subject),
-        };
-      }
-      
-      this.setData({
-        expandedCourse: courseId,
-        homework,
-      });
-    } catch (e) {
-      console.error('加载作业数据失败', e);
-      this.setData({ expandedCourse: courseId });
+  loadHomeworkForCourse(courseId) {
+    const course = this.data.courses.find(c => c._id === courseId);
+    const homework = { ...this.data.homework };
+
+    // 保留已在编辑中的表单；首次展开则初始化一条空作业项
+    if (!homework[courseId] || !homework[courseId].items || homework[courseId].items.length === 0) {
+      homework[courseId] = {
+        subject: course?.subject || '阅读',
+        subjectLabel: this.getSubjectLabel(course?.subject),
+        items: [{ content: '', estimatedTime: '' }],
+      };
     }
+
+    this.setData({ expandedCourse: courseId, homework });
   },
 
-  /**
-   * 格式化日期显示（从 Date 或字符串转为 YYYY-MM-DD）
-   */
-  formatDateForDisplay(date) {
-    if (!date) return '';
-    if (typeof date === 'string') {
-      return date.substring(0, 10);
-    }
-    const d = new Date(date);
-    return d.getFullYear() + '-' +
-      String(d.getMonth() + 1).padStart(2, '0') + '-' +
-      String(d.getDate()).padStart(2, '0');
+  /** 作业项 - 内容输入 */
+  onHomeworkItemContentInput(e) {
+    const { id, index } = e.currentTarget.dataset;
+    this.setData({ [`homework.${id}.items[${Number(index)}].content`]: e.detail.value });
   },
 
-  onHomeworkContentInput(e) {
-    const id = e.currentTarget.dataset.id;
-    const value = e.detail.value;
-    const homework = this.data.homework;
-    if (!homework[id]) homework[id] = {};
-    homework[id].content = value;
-    this.setData({ homework });
+  /** 作业项 - 预估完成时间输入（分钟） */
+  onHomeworkItemTimeInput(e) {
+    const { id, index } = e.currentTarget.dataset;
+    this.setData({ [`homework.${id}.items[${Number(index)}].estimatedTime`]: e.detail.value });
   },
 
-  /**
-   * 作业截止时间选择
-   */
-  onHomeworkDeadlineChange(e) {
-    const id = e.currentTarget.dataset.id;
-    const value = e.detail.value;
-    const homework = this.data.homework;
-    if (!homework[id]) homework[id] = {};
-    homework[id].deadline = value;
-    this.setData({ homework });
+  /** 继续添加一条空作业项 */
+  addHomeworkItem(e) {
+    const { id } = e.currentTarget.dataset;
+    const items = (this.data.homework[id].items || []).concat([{ content: '', estimatedTime: '' }]);
+    this.setData({ [`homework.${id}.items`]: items });
   },
 
-  /**
-   * 作业科目选择
-   */
-  onHomeworkSubjectChange(e) {
-    const id = e.currentTarget.dataset.id;
-    const value = e.detail.value;
-    const homework = this.data.homework;
-    if (!homework[id]) homework[id] = {};
-    const subjects = ['听力', '阅读', '写作', '口语'];
-    homework[id].subject = subjects[value];
-    this.setData({ homework });
-  },
-
-  /**
-   * 作业描述输入
-   */
-  onHomeworkDescriptionInput(e) {
-    const id = e.currentTarget.dataset.id;
-    const value = e.detail.value;
-    const homework = this.data.homework;
-    if (!homework[id]) homework[id] = {};
-    homework[id].description = value;
-    this.setData({ homework });
-  },
-
-  /**
-   * 预估作业完成耗时输入
-   */
-  onHomeworkEstimatedTimeInput(e) {
-    const id = e.currentTarget.dataset.id;
-    const value = e.detail.value;
-    const homework = this.data.homework;
-    if (!homework[id]) homework[id] = {};
-    homework[id].estimatedTime = value;
-    this.setData({ homework });
+  /** 删除某条作业项 */
+  removeHomeworkItem(e) {
+    const { id, index } = e.currentTarget.dataset;
+    const idx = Number(index);
+    const items = (this.data.homework[id].items || []).filter((_, i) => i !== idx);
+    // 至少保留一条
+    this.setData({ [`homework.${id}.items`]: items.length ? items : [{ content: '', estimatedTime: '' }] });
   },
 
   /**
@@ -536,69 +480,54 @@ Page({
   },
 
   /**
-   * 获取课程类型对应的科目
-   */
-  getSubjectFromCourseType(courseType) {
-    return this.getSubjectLabel(courseType);
-  },
-
-  /**
    * 保存作业到云数据库
    * 适配统一的 homework 表结构
    */
   async saveHomework(e) {
     const id = e.currentTarget.dataset.id;
-    const homework = this.data.homework[id];
+    const formData = this.data.homework[id];
 
-    if (!homework || !(homework.description || homework.content)) {
-      wx.showToast({ title: '请填写作业描述', icon: 'none' });
+    // 过滤出有内容的作业项（空行忽略）
+    const validItems = (formData && formData.items || []).filter(it => (it.content || '').trim());
+    if (validItems.length === 0) {
+      wx.showToast({ title: '请至少填写一条作业内容', icon: 'none' });
       return;
     }
 
     try {
       const course = this.data.courses.find(c => c._id === id);
-      const subjectLabel = homework.subject || this.getSubjectFromCourseType(course?.type);
+      const subjectLabel = formData.subjectLabel || this.getSubjectLabel(course?.subject);
 
-      // 构建作业数据，适配统一表结构
-      const homeworkData = {
-        // 关联信息
-        courseId: id,
-        courseName: course ? course.title : '',
+      // 多条作业项并行写入，每条一条 homework 记录
+      const ops = validItems.map((it) => {
+        const content = it.content.trim();
+        return cloudDB.addMy('homework', {
+          courseId: id,
+          courseName: course ? course.title : '',
+          // 标题按科目自动生成（兼容旧结构），作业内容即描述
+          title: `${subjectLabel}作业`,
+          description: content,
+          content,
+          subject: subjectLabel,
+          // 预估完成时间（分钟）
+          estimatedTime: parseInt(it.estimatedTime) || 0,
+          status: 'pending',
+          submitted: false,
+          assignedAt: new Date(),
+          date: this.data.selectedDate,
+        });
+      });
 
-        // 基础信息（已取消手动填写标题，按科目自动生成展示用标题，兼容旧数据结构）
-        title: `${subjectLabel}作业`,
-        description: homework.description || homework.content || '',
-        content: homework.content || '',
-        
-        // 科目（优先使用选择的，否则根据课程类型）
-        subject: subjectLabel,
-        
-        // 截止时间
-        deadline: homework.deadline ? new Date(homework.deadline) : null,
-        
-        // 预估作业完成耗时（分钟）
-        estimatedTime: parseInt(homework.estimatedTime) || 0,
-        
-        // 状态
-        status: 'pending',
-        submitted: false,
-        
-        // 布置时间
-        assignedAt: new Date(),
-        date: this.data.selectedDate,
-      };
+      const results = await Promise.all(ops);
+      const okCount = results.filter(r => r && r.success).length;
 
-      const res = await cloudDB.addMy('homework', homeworkData);
-
-      if (res.success) {
-        wx.showToast({ title: '作业已保存', icon: 'success' });
-        // 清空当前课程的作业表单
+      if (okCount === validItems.length) {
         const newHomework = { ...this.data.homework };
         delete newHomework[id];
-        this.setData({ 
-          expandedCourse: null,
-          homework: newHomework
-        });
+        this.setData({ expandedCourse: null, homework: newHomework });
+        this.popSuccessToast(`已布置 ${okCount} 条作业`);
+      } else if (okCount > 0) {
+        wx.showToast({ title: `${okCount}/${validItems.length} 条保存成功`, icon: 'none' });
       } else {
         wx.showToast({ title: '保存失败', icon: 'none' });
       }

@@ -89,11 +89,6 @@ Page({
   },
 
   formatHomeworkDetail(hw) {
-    const deadline = hw.deadline ? new Date(hw.deadline) : null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const daysLeft = deadline ? Math.ceil((deadline - today) / (1000 * 60 * 60 * 24)) : null;
-
     const subject = hw.subject || this.mapTypeToSubject(hw.type) || '阅读';
     const description = hw.description || hw.content || '';
     const status = hw.status || (hw.submitted ? 'completed' : 'pending');
@@ -101,12 +96,13 @@ Page({
     let createTimeFormatted = '';
     if (hw._createTime) {
       const createDate = new Date(hw._createTime);
-      createTimeFormatted = createDate.getFullYear() + '-' +
-        String(createDate.getMonth() + 1).padStart(2, '0') + '-' +
-        String(createDate.getDate()).padStart(2, '0');
+      createTimeFormatted = createDate.getFullYear() + '年' +
+        (createDate.getMonth() + 1) + '月' + createDate.getDate() + '日';
     } else if (hw.date) {
       createTimeFormatted = hw.date;
     }
+
+    const completion = Math.min(100, Math.max(0, parseInt(hw.completion) || 0));
 
     return {
       id: hw._id,
@@ -116,21 +112,13 @@ Page({
       subjectColor: this.getSubjectColor(subject),
       subjectIcon: this.getSubjectIcon(subject),
       description: description,
-      deadline: hw.deadline,
-      deadlineFormatted: deadline ? (deadline.getFullYear() + '年' + (deadline.getMonth() + 1) + '月' + deadline.getDate() + '日') : '无截止日期',
-      daysLeft: daysLeft,
-      isUrgent: daysLeft !== null && daysLeft <= 3 && daysLeft >= 0,
-      isOverdue: daysLeft !== null && daysLeft < 0,
       status: status,
       isCompleted: status === 'completed' || hw.submitted === true,
       courseName: hw.courseName || '',
       courseId: hw.courseId || '',
-      completion: hw.completion || 0,
+      completion: completion,
       timeSpent: hw.timeSpent || 0,
-      score: hw.score,
-      totalScore: hw.totalScore,
-      feedback: hw.feedback || '',
-      attachments: hw.attachments || [],
+      estimatedTime: hw.estimatedTime || 0,
       createTimeFormatted: createTimeFormatted,
     };
   },
@@ -224,9 +212,10 @@ Page({
     }
   },
 
-  // 完成度输入
+  // 完成度输入（钳制在 0~100）
   onCompletionInput(e) {
-    const value = e.detail.value;
+    let value = parseInt(e.detail.value) || 0;
+    value = Math.min(100, Math.max(0, value));
     this.setData({
       'homework.completion': value
     });
@@ -242,25 +231,5 @@ Page({
 
   goBack() {
     wx.navigateBack();
-  },
-
-  previewAttachment(e) {
-    const { url } = e.currentTarget.dataset;
-    if (url) {
-      wx.showModal({
-        title: '打开附件',
-        content: '是否在外部浏览器打开附件？',
-        success: (res) => {
-          if (res.confirm) {
-            wx.setClipboardData({
-              data: url,
-              success: () => {
-                wx.showToast({ title: '链接已复制', icon: 'success' });
-              }
-            });
-          }
-        }
-      });
-    }
   },
 });

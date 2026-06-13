@@ -112,9 +112,9 @@
       </view>
     </view>
 
-    <!-- 关联作业区 -->
+    <!-- 关联作业 / 任务区 -->
     <view class="homework-link-row">
-      <text class="link-label">🔗 关联作业</text>
+      <text class="link-label">🔗 关联作业 / 任务</text>
       <!-- 已关联 -->
       <view class="link-card" wx:if="{{homeworkContent}}" bindtap="onTapToggleHomeworkPicker">
         <view class="link-card-inner">
@@ -125,13 +125,15 @@
       </view>
       <!-- 未关联 -->
       <view class="link-empty" wx:else bindtap="onTapToggleHomeworkPicker">
-        <text class="link-empty-text">点击选择作业（可跳过）</text>
+        <text class="link-empty-text">点击选择作业或任务（可跳过）</text>
         <text class="link-arrow">›</text>
       </view>
     </view>
 
-    <!-- 作业选择下拉列表 -->
-    <view class="homework-picker" wx:if="{{showHomeworkPicker && homeworkOptions.length > 0}}">
+    <!-- 作业 / 任务选择下拉列表 -->
+    <view class="homework-picker" wx:if="{{showHomeworkPicker}}">
+      <!-- 作业分组 -->
+      <view class="picker-group-label" wx:if="{{homeworkOptions.length > 0}}">作业</view>
       <view class="picker-item"
             wx:for="{{homeworkOptions}}"
             wx:key="id"
@@ -142,8 +144,45 @@
         <text class="picker-subject" wx:if="{{item.subject}}">{{item.subject}}</text>
         <text class="picker-content">{{item.content}}</text>
       </view>
+
+      <!-- 任务分组 -->
+      <view class="picker-group-label" wx:if="{{taskOptions.length > 0}}">任务</view>
+      <view class="picker-item"
+            wx:for="{{taskOptions}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            data-content="{{item.content}}"
+            bindtap="onTapSelectTask">
+        <text class="picker-subject picker-subject-task">任务</text>
+        <text class="picker-content">{{item.content}}</text>
+      </view>
+
+      <!-- 新建任务并关联 -->
+      <view class="picker-item picker-new-task" wx:if="{{!showNewTaskForm}}" bindtap="onTapToggleNewTask">
+        <text class="picker-content picker-new-task-text">＋ 新建任务并关联</text>
+      </view>
+      <view class="new-task-form" wx:if="{{showNewTaskForm}}">
+        <textarea class="new-task-input"
+                  placeholder="任务信息"
+                  placeholder-class="new-task-ph"
+                  value="{{newTaskContent}}"
+                  bindinput="onNewTaskContentInput"
+                  maxlength="200"
+                  auto-height
+                  show-confirm-bar="{{false}}" />
+        <view class="new-task-row">
+          <input class="new-task-time" type="number" placeholder="预估分钟"
+                 value="{{newTaskTime}}" bindinput="onNewTaskTimeInput" />
+          <view class="new-task-cancel" catchtap="onTapToggleNewTask">取消</view>
+          <view class="new-task-confirm {{newTaskSubmitting ? 'disabled' : ''}}" catchtap="onTapCreateAndLinkTask">
+            {{newTaskSubmitting ? '...' : '创建并关联'}}
+          </view>
+        </view>
+      </view>
+
+      <!-- 自由学习 -->
       <view class="picker-item picker-free" data-id="" data-content="" data-subject="" bindtap="onTapSelectHomework">
-        <text class="picker-content">自由学习（不关联作业）</text>
+        <text class="picker-content">自由学习（不关联）</text>
       </view>
     </view>
 

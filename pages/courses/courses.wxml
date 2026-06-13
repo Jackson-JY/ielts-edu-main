@@ -72,52 +72,24 @@
             <!-- 展开的作业区域 -->
             <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
               <view class="homework-form">
-                <!-- 科目选择 -->
-                <view class="form-group">
-                  <text class="form-label">作业科目</text>
-                  <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
-                    <view class="form-picker">
-                      <text>{{homework[item._id].subjectLabel || homework[item._id].subject || item.subject || '阅读'}}</text>
-                      <text class="picker-arrow">›</text>
-                    </view>
-                  </picker>
+                <!-- 多条作业项：左=作业内容，右=预估完成时间(分钟) -->
+                <view class="hw-items-header">
+                  <text class="hw-col-content">作业内容</text>
+                  <text class="hw-col-time">预估完成(分钟)</text>
+                </view>
+                <view class="hw-item-row" wx:for="{{homework[item._id].items}}" wx:for-item="hw" wx:for-index="hwIndex" wx:key="hwIndex">
+                  <input class="hw-item-content" placeholder="请输入作业内容"
+                         value="{{hw.content}}" bindinput="onHomeworkItemContentInput"
+                         data-id="{{item._id}}" data-index="{{hwIndex}}" />
+                  <input class="hw-item-time" type="number" placeholder="分钟"
+                         value="{{hw.estimatedTime}}" bindinput="onHomeworkItemTimeInput"
+                         data-id="{{item._id}}" data-index="{{hwIndex}}" />
+                  <view class="hw-item-del" wx:if="{{homework[item._id].items.length > 1}}"
+                        catchtap="removeHomeworkItem" data-id="{{item._id}}" data-index="{{hwIndex}}">×</view>
                 </view>
 
-                <!-- 截止时间 -->
-                <view class="form-group">
-                  <text class="form-label">截止时间</text>
-                  <picker mode="date" bindchange="onHomeworkDeadlineChange" data-id="{{item._id}}">
-                    <view class="form-picker">
-                      <text>{{homework[item._id].deadline || '请选择截止日期'}}</text>
-                      <text class="picker-arrow">›</text>
-                    </view>
-                  </picker>
-                </view>
-
-                <!-- 预估作业完成耗时 -->
-                <view class="form-group">
-                  <text class="form-label">预估完成耗时（分钟）</text>
-                  <input 
-                    class="form-input" 
-                    type="number"
-                    placeholder="请输入预估完成时间" 
-                    value="{{homework[item._id].estimatedTime || ''}}"
-                    bindinput="onHomeworkEstimatedTimeInput"
-                    data-id="{{item._id}}"
-                  />
-                </view>
-
-                <!-- 作业描述 -->
-                <view class="form-group">
-                  <text class="form-label">作业描述</text>
-                  <textarea 
-                    class="form-textarea" 
-                    placeholder="请输入作业详细描述（最多500字）" 
-                    maxlength="500"
-                    value="{{homework[item._id].description || ''}}"
-                    bindinput="onHomeworkDescriptionInput"
-                    data-id="{{item._id}}"
-                  />
+                <view class="hw-add-row" bindtap="addHomeworkItem" data-id="{{item._id}}">
+                  <text>＋ 继续添加作业项</text>
                 </view>
 
                 <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
@@ -183,65 +155,24 @@
           <!-- 展开的作业区域 -->
           <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
             <view class="homework-form">
-              <!-- 科目选择 -->
-              <view class="form-group">
-                <text class="form-label">作业科目</text>
-                <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
-                  <view class="form-picker">
-                    <text>{{homework[item._id].subjectLabel || homework[item._id].subject || item.subject || '阅读'}}</text>
-                    <text class="picker-arrow">›</text>
-                  </view>
-                </picker>
+              <!-- 多条作业项：左=作业内容，右=预估完成时间(分钟) -->
+              <view class="hw-items-header">
+                <text class="hw-col-content">作业内容</text>
+                <text class="hw-col-time">预估完成(分钟)</text>
+              </view>
+              <view class="hw-item-row" wx:for="{{homework[item._id].items}}" wx:for-item="hw" wx:for-index="hwIndex" wx:key="hwIndex">
+                <input class="hw-item-content" placeholder="请输入作业内容"
+                       value="{{hw.content}}" bindinput="onHomeworkItemContentInput"
+                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
+                <input class="hw-item-time" type="number" placeholder="分钟"
+                       value="{{hw.estimatedTime}}" bindinput="onHomeworkItemTimeInput"
+                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
+                <view class="hw-item-del" wx:if="{{homework[item._id].items.length > 1}}"
+                      catchtap="removeHomeworkItem" data-id="{{item._id}}" data-index="{{hwIndex}}">×</view>
               </view>
 
-              <!-- 截止时间 -->
-              <view class="form-group">
-                <text class="form-label">截止时间</text>
-                <picker mode="date" bindchange="onHomeworkDeadlineChange" data-id="{{item._id}}">
-                  <view class="form-picker">
-                    <text>{{homework[item._id].deadline || '请选择截止日期'}}</text>
-                    <text class="picker-arrow">›</text>
-                  </view>
-                </picker>
-              </view>
-
-              <!-- 预估作业完成耗时 -->
-              <view class="form-group">
-                <text class="form-label">预估完成耗时（分钟）</text>
-                <input 
-                  class="form-input" 
-                  type="number"
-                  placeholder="请输入预估完成时间" 
-                  value="{{homework[item._id].estimatedTime || ''}}"
-                  bindinput="onHomeworkEstimatedTimeInput"
-                  data-id="{{item._id}}"
-                />
-              </view>
-
-              <!-- 作业描述 -->
-              <view class="form-group">
-                <text class="form-label">作业描述</text>
-                <textarea 
-                  class="form-textarea" 
-                  placeholder="请输入作业详细描述（最多500字）" 
-                  maxlength="500"
-                  value="{{homework[item._id].description || ''}}"
-                  bindinput="onHomeworkDescriptionInput"
-                  data-id="{{item._id}}"
-                />
-              </view>
-
-              <!-- 作业内容/备注 -->
-              <view class="form-group">
-                <text class="form-label">作业内容/备注</text>
-                <textarea 
-                  class="form-textarea" 
-                  placeholder="请输入作业内容或备注（最多500字）" 
-                  maxlength="500"
-                  value="{{homework[item._id].content || ''}}"
-                  bindinput="onHomeworkContentInput"
-                  data-id="{{item._id}}"
-                />
+              <view class="hw-add-row" bindtap="addHomeworkItem" data-id="{{item._id}}">
+                <text>＋ 继续添加作业项</text>
               </view>
 
               <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
@@ -303,52 +234,24 @@
           <!-- 展开的作业区域 -->
           <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
             <view class="homework-form">
-              <!-- 科目选择 -->
-              <view class="form-group">
-                <text class="form-label">作业科目</text>
-                <picker mode="selector" range="{{['听力', '阅读', '写作', '口语']}}" bindchange="onHomeworkSubjectChange" data-id="{{item._id}}">
-                  <view class="form-picker">
-                    <text>{{homework[item._id].subjectLabel || homework[item._id].subject || item.subject || '阅读'}}</text>
-                    <text class="picker-arrow">›</text>
-                  </view>
-                </picker>
+              <!-- 多条作业项：左=作业内容，右=预估完成时间(分钟) -->
+              <view class="hw-items-header">
+                <text class="hw-col-content">作业内容</text>
+                <text class="hw-col-time">预估完成(分钟)</text>
+              </view>
+              <view class="hw-item-row" wx:for="{{homework[item._id].items}}" wx:for-item="hw" wx:for-index="hwIndex" wx:key="hwIndex">
+                <input class="hw-item-content" placeholder="请输入作业内容"
+                       value="{{hw.content}}" bindinput="onHomeworkItemContentInput"
+                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
+                <input class="hw-item-time" type="number" placeholder="分钟"
+                       value="{{hw.estimatedTime}}" bindinput="onHomeworkItemTimeInput"
+                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
+                <view class="hw-item-del" wx:if="{{homework[item._id].items.length > 1}}"
+                      catchtap="removeHomeworkItem" data-id="{{item._id}}" data-index="{{hwIndex}}">×</view>
               </view>
 
-              <!-- 截止时间 -->
-              <view class="form-group">
-                <text class="form-label">截止时间</text>
-                <picker mode="date" bindchange="onHomeworkDeadlineChange" data-id="{{item._id}}">
-                  <view class="form-picker">
-                    <text>{{homework[item._id].deadline || '请选择截止日期'}}</text>
-                    <text class="picker-arrow">›</text>
-                  </view>
-                </picker>
-              </view>
-
-              <!-- 预估作业完成耗时 -->
-              <view class="form-group">
-                <text class="form-label">预估完成耗时（分钟）</text>
-                <input 
-                  class="form-input" 
-                  type="number"
-                  placeholder="请输入预估完成时间" 
-                  value="{{homework[item._id].estimatedTime || ''}}"
-                  bindinput="onHomeworkEstimatedTimeInput"
-                  data-id="{{item._id}}"
-                />
-              </view>
-
-              <!-- 作业描述 -->
-              <view class="form-group">
-                <text class="form-label">作业描述</text>
-                <textarea 
-                  class="form-textarea" 
-                  placeholder="请输入作业详细描述（最多500字）" 
-                  maxlength="500"
-                  value="{{homework[item._id].description || ''}}"
-                  bindinput="onHomeworkDescriptionInput"
-                  data-id="{{item._id}}"
-                />
+              <view class="hw-add-row" bindtap="addHomeworkItem" data-id="{{item._id}}">
+                <text>＋ 继续添加作业项</text>
               </view>
 
               <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
@@ -358,6 +261,16 @@
           </view>
         </view>
       </block>
+    </view>
+  </view>
+
+  <!-- 自定义成功提示（风格统一） -->
+  <view class="success-toast-overlay" wx:if="{{showSuccessToast}}">
+    <view class="success-toast-card">
+      <view class="success-toast-check">
+        <text class="success-toast-check-icon">✓</text>
+      </view>
+      <text class="success-toast-text">{{successToastText}}</text>
     </view>
   </view>
 </view>

@@ -87,6 +87,8 @@ Page({
     todayFocusMinutes: 0,
     // 传给组件的作业选项（从未完成作业列表拉取）
     pomodoroHomeworkOptions: [],
+    // 传给组件的任务选项
+    pomodoroTaskOptions: [],
   },
 
   onLoad() {
@@ -808,20 +810,32 @@ Page({
    * 同时拉取用户未完成作业列表，供组件内选择关联
    */
   async onTapOpenPomodoro() {
-    // 拉取未完成作业列表供番茄组件内选择
+    // 拉取未完成的作业 + 任务，分别供番茄组件内选择关联
     try {
       const allRes = await cloudDB.getMy('homework', (q) =>
         q.orderBy('_createTime', 'desc')
       );
-      const pendingOptions = (allRes.success ? allRes.data : [])
-        .filter(hw => hw.status !== 'completed' && hw.submitted !== true)
+      const pending = (allRes.success ? allRes.data : [])
+        .filter(hw => hw.status !== 'completed' && hw.submitted !== true);
+
+      const pomodoroHomeworkOptions = pending
+        .filter(hw => hw.recordType !== 'task')
         .slice(0, 20)
         .map(hw => ({
           id: hw._id,
           content: hw.description || hw.content || hw.title || '未命名作业',
           subject: hw.subject || '',
         }));
-      this.setData({ pomodoroHomeworkOptions: pendingOptions });
+
+      const pomodoroTaskOptions = pending
+        .filter(hw => hw.recordType === 'task')
+        .slice(0, 20)
+        .map(t => ({
+          id: t._id,
+          content: t.description || t.content || '未命名任务',
+        }));
+
+      this.setData({ pomodoroHomeworkOptions, pomodoroTaskOptions });
     } catch (e) {
       // 拉取失败不影响打开弹窗
     }
@@ -838,6 +852,9 @@ Page({
   onPomodoroSessionSaved() {
     this.loadPomodoroStats();
   },
+
+  /** 番茄组件内新建任务后（我的页无任务列表，留空实现以避免事件告警） */
+  onPomodoroTaskCreated() {},
 
   /**
    * 加载今日番茄统计（入口卡片展示）
