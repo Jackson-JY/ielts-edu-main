@@ -48,19 +48,32 @@ Page({
     this.setData({ isLoading: true });
 
     try {
-      // 1. 调用云函数获取 openid
-      const cloudRes = await wx.cloud.callFunction({ name: 'getOpenId' });
+      // 1. 调用云函数获取 openid（并服务端判定黑名单 + 记录本次登录尝试）
+      const cloudRes = await wx.cloud.callFunction({ name: 'getOpenId', data: { countAttempt: true } });
       const openId = cloudRes.result && cloudRes.result.openid;
 
       if (!openId) throw new Error('未获取到 openid');
+
+      // 黑名单用户拒绝登录
+      if (cloudRes.result && cloudRes.result.blocked) {
+        this.setData({ isLoading: false });
+        wx.showModal({
+          title: '无法登录',
+          content: '该账号已被禁用，如有疑问请联系客服。',
+          showCancel: false,
+          confirmText: '知道了',
+        });
+        return;
+      }
 
       // 2. 查询 users 集合
       const db = wx.cloud.database();
       const userRes = await db.collection('users').get();
 
       if (userRes.data && userRes.data.length > 0) {
-        // 老用户 → 直接完成登录
+        // 老用户 → 记录登录次数后完成登录
         const user = userRes.data[0];
+        this._recordLogin(db, user._id);
         this._completeLogin(
           {
             nickName: user.nickName || '微信用户',
@@ -167,6 +180,11 @@ Page({
           speakingScore: 0,
           readingScore: 0,
           writingScore: 0,
+          // 登录统计：新用户首次注册即第 1 次登录
+          loginCount: 1,
+          loginAttempts: 1,
+          lastLoginAt: new Date(),
+          lastAttemptAt: new Date(),
           _createTime: new Date(),
         },
       });
@@ -188,45 +206,27 @@ Page({
     }
   },
 
-  /**
-   * 使用默认信息注册
-   */
-  async _registerWithDefaultInfo(openId) {
-    this.setData({ isLoading: true });
-    try {
-      const db = wx.cloud.database();
-      const addRes = await db.collection('users').add({
-        data: {
-          nickName: '微信用户',
-          avatarUrl: '',
-          studyDays: 0,
-          vocabulary: 0,
-          listeningScore: 0,
-          speakingScore: 0,
-          readingScore: 0,
-          writingScore: 0,
-          _createTime: new Date(),
-        },
-      });
-
-      this._completeLogin(
-        {
-          nickName: '微信用户',
-          avatarUrl: '',
-          openId,
-          userId: addRes._id,
-        },
-        true,
-      );
-    } catch (e) {
-      wx.showToast({ title: '注册失败，请重试', icon: 'none' });
-      this.setData({ isLoading: false });
-    }
-  },
-
   // ======================================================
   // 内部方法
   // ======================================================
+
+  /**
+   * 记录一次登录：loginCount 原子自增，更新 lastLoginAt
+   * 失败不影响登录主流程，仅记录日志
+   * @param {Object} db - 云数据库实例
+   * @param {string} userId - 用户文档 _id
+   */
+  _recordLogin(db, userId) {
+    if (!userId) return;
+    db.collection('users').doc(userId).update({
+      data: {
+        loginCount: db.command.inc(1),
+        lastLoginAt: new Date(),
+      },
+    }).catch((e) => {
+      console.error('[登录统计] 记录登录次数失败', e);
+    });
+  },
 
   /**
    * 完成登录流程
@@ -245,18 +245,6 @@ Page({
         wx.switchTab({ url: '/pages/home/home' });
       }
     }, 1200);
-  },
-
-  // ======================================================
-  // 游客模式
-  // ======================================================
-  handleSkipLogin() {
-    app.setLoginStatus({
-      nickName: '游客',
-      avatarUrl: '',
-      isGuest: true,
-    });
-    wx.switchTab({ url: '/pages/home/home' });
   },
 
   // ======================================================

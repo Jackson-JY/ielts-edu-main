@@ -15,12 +15,10 @@ module.exports = {
       </view>
       <view class="profile-info">
         <text class="user-name">{{userName}}</text>
-        <text class="user-id" wx:if="{{isGuest}}">游客模式</text>
       </view>
-      <!-- 登录/退出按钮 -->
+      <!-- 退出按钮 -->
       <view class="login-action">
-        <button wx:if="{{!isLoggedIn || isGuest}}" class="btn-login" bindtap="goToLogin">立即登录</button>
-        <button wx:if="{{isLoggedIn && !isGuest}}" class="btn-logout" bindtap="handleLogout">退出登录</button>
+        <button wx:if="{{isLoggedIn}}" class="btn-logout" bindtap="handleLogout">退出登录</button>
       </view>
     </view>
   </view>

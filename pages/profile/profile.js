@@ -25,7 +25,6 @@ Page({
     },
     isLoading: false,
     isLoggedIn: false,
-    isGuest: false,
     isAdmin: false,
     avatarUrl: '',
     defaultAvatarUrl: '',
@@ -158,20 +157,15 @@ Page({
    * 检查登录状态并加载数据
    */
   async checkLoginAndLoad() {
-    const isLoggedIn = app.globalData.isLoggedIn;
-    const userInfo = app.globalData.userInfo;
-
-    // 未登录时跳转到登录页
-    if (!isLoggedIn || !userInfo) {
-      wx.redirectTo({ url: '/pages/login/login' });
-      return;
-    }
+    // 未登录时通过统一守卫跳转登录页（reLaunch 清栈）
+    if (!app.requireLogin()) return;
 
     this.loadUserData();
     this.loadExamScores();
   },
 
   onShow() {
+    if (!app.requireLogin()) return;
     this.loadUserData();
   },
 
@@ -182,8 +176,7 @@ Page({
     try {
       const userInfo = app.globalData.userInfo;
       const isLoggedIn = app.globalData.isLoggedIn;
-      const isGuest = userInfo && userInfo.isGuest;
-      
+
       // 优先从数据库获取最新用户信息
       let isAdmin = userInfo && userInfo.isAdmin === true;
       
@@ -204,7 +197,6 @@ Page({
       
       this.setData({
         isLoggedIn: isLoggedIn,
-        isGuest: isGuest || false,
         isAdmin: isAdmin,
       });
       
@@ -239,18 +231,11 @@ Page({
           app.logout();
           wx.showToast({ title: '已退出登录', icon: 'success' });
           setTimeout(() => {
-            wx.redirectTo({ url: '/pages/login/login' });
-          }, 1000);
+            wx.reLaunch({ url: '/pages/login/login' });
+          }, 800);
         }
       }
     });
-  },
-
-  /**
-   * 去登录
-   */
-  goToLogin() {
-    wx.redirectTo({ url: '/pages/login/login' });
   },
 
   /**

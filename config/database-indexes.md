@@ -36,8 +36,23 @@
 
 ## users
 
+**关键字段：**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `_openid` | String | 用户 openid（自动写入） |
+| `nickName` / `avatarUrl` | String | 昵称 / 头像 |
+| `isAdmin` | Boolean | 是否管理员 |
+| `blocked` | Boolean | 黑名单标记。`true`=禁止登录。登录时由 `getOpenId` 云函数服务端判定并拦截；已登录用户冷启动时 `app.verifyNotBlocked` 会校验并强制登出。在云开发控制台手动设置/删除此字段即可拉黑/恢复用户。 |
+| `loginCount` | Number | 累计**成功**登录次数。每次登录成功（老用户登录 / 新用户注册）自增。 |
+| `lastLoginAt` | Date | 最近一次成功登录时间。 |
+| `loginAttempts` | Number | 累计登录**尝试**次数（含被黑名单拒绝的尝试）。由 `getOpenId` 云函数在 `countAttempt` 参数为 true 时服务端自增；app 启动的黑名单校验不计入。`loginAttempts ≥ loginCount`，差值即被拒次数。 |
+| `lastAttemptAt` | Date | 最近一次登录尝试时间。 |
+
+**推荐索引：**
+
 - `_openid` 升序
-  - 用途：云函数管理员身份校验。
+  - 用途：云函数管理员身份校验、黑名单状态查询。
 - `_createTime` 降序
   - 用途：管理员读取用户列表。
 

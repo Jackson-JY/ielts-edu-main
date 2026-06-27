@@ -89,6 +89,7 @@ Page({
   },
 
   onShow() {
+    if (!getApp().requireLogin()) return;
     this.loadCourses();
   },
 

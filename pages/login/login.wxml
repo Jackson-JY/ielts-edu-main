@@ -64,9 +64,6 @@
       <text wx:else>注册中...</text>
     </button>
 
-    <button class="btn btn-secondary" bindtap="handleSkipLogin">
-      游客模式体验
-    </button>
   </view>
 
   <!-- 用户协议 -->

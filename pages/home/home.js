@@ -147,6 +147,7 @@ Page({
   },
 
   onShow() {
+    if (!app.requireLogin()) return;
     this.pickDailyQuote();
     this.loadUserData();
   },
