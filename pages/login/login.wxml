@@ -38,6 +38,19 @@
     </view>
   </view>
 
+  <!-- 用户协议勾选（必须由用户主动勾选，不默认同意） -->
+  <view class="agreement">
+    <view class="agree-check {{agreed ? 'checked' : ''}}" bindtap="onToggleAgree">
+      <text wx:if="{{agreed}}" class="agree-check-icon">✓</text>
+    </view>
+    <view class="agreement-text-wrap">
+      <text class="agreement-text" bindtap="onToggleAgree">我已阅读并同意</text>
+      <text class="link" catchtap="showAgreement">《用户协议》</text>
+      <text class="agreement-text" bindtap="onToggleAgree">和</text>
+      <text class="link" catchtap="showPrivacy">《隐私政策》</text>
+    </view>
+  </view>
+
   <!-- 按钮组 -->
   <view class="button-group">
     <!-- 第一步：获取 openid -->
@@ -64,14 +77,6 @@
       <text wx:else>注册中...</text>
     </button>
 
-  </view>
-
-  <!-- 用户协议 -->
-  <view class="agreement">
-    <text class="agreement-text">登录即表示同意</text>
-    <text class="link" bindtap="showAgreement">《用户协议》</text>
-    <text class="agreement-text">和</text>
-    <text class="link" bindtap="showPrivacy">《隐私政策》</text>
   </view>
 
 </view>

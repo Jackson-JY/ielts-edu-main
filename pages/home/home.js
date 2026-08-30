@@ -147,9 +147,26 @@ Page({
   },
 
   onShow() {
-    if (!app.requireLogin()) return;
+    // 首页允许未登录浏览（合规：进入后可先体验功能，不强制登录）
     this.pickDailyQuote();
     this.loadUserData();
+  },
+
+  /**
+   * 操作前确保已登录：未登录则提示前往登录，返回是否已登录
+   */
+  ensureLogin() {
+    if (app.globalData.isLoggedIn && app.globalData.userInfo) return true;
+    wx.showModal({
+      title: '登录提示',
+      content: '登录后才能使用该功能，是否前往登录？',
+      confirmText: '去登录',
+      cancelText: '再看看',
+      success: (r) => {
+        if (r.confirm) wx.navigateTo({ url: '/pages/login/login' });
+      },
+    });
+    return false;
   },
 
   // 随机挑选一条鼓励语展示在问候语下方
@@ -277,10 +294,8 @@ Page({
       return;
     }
 
-    if (!app.globalData.isLoggedIn) {
-      wx.showToast({ title: '请先登录后再打卡', icon: 'none' });
-      return;
-    }
+    // 打卡为写操作，需登录；未登录则提示前往登录
+    if (!this.ensureLogin()) return;
 
     // 打开自定义打卡内容输入弹窗（风格与庆祝弹窗统一）
     this.setData({

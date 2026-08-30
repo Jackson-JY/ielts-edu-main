@@ -1,0 +1,57 @@
+/* pages/agreement/agreement.wxss */
+.page {
+  min-height: 100vh;
+  padding: 32rpx 36rpx 80rpx;
+  background: #F6F8FB;
+  box-sizing: border-box;
+}
+
+.doc-header {
+  padding: 16rpx 0 28rpx;
+  border-bottom: 1rpx solid rgba(23, 33, 43, 0.08);
+  margin-bottom: 28rpx;
+}
+
+.doc-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #17212B;
+  margin-bottom: 12rpx;
+}
+
+.doc-updated {
+  font-size: 24rpx;
+  color: #9AA5B1;
+}
+
+.doc-section {
+  margin-bottom: 32rpx;
+}
+
+.doc-heading {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #17212B;
+  margin-bottom: 16rpx;
+}
+
+.doc-paragraph {
+  display: block;
+  font-size: 27rpx;
+  color: #4A5560;
+  line-height: 1.8;
+  margin-bottom: 12rpx;
+}
+
+.doc-footer {
+  margin-top: 40rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid rgba(23, 33, 43, 0.08);
+}
+
+.doc-footer-text {
+  font-size: 24rpx;
+  color: #9AA5B1;
+}

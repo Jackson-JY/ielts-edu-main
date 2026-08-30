@@ -6,6 +6,8 @@ const { CLOUD_IMAGES } = require('../../config/images');
 Page({
   data: {
     isLoading: false,
+    // 是否已勾选同意协议（默认 false，必须用户主动勾选）
+    agreed: false,
     openId: '',
     isOldUser: false,
     tempAvatarUrl: '',
@@ -43,8 +45,24 @@ Page({
   // ======================================================
   // Step 1：获取 OpenID 并检查用户状态
   // ======================================================
+  /** 勾选 / 取消勾选 协议同意 */
+  onToggleAgree() {
+    this.setData({ agreed: !this.data.agreed });
+  },
+
+  /** 校验是否已同意协议，未同意则提示 */
+  _ensureAgreed() {
+    if (!this.data.agreed) {
+      wx.showToast({ title: '请先阅读并勾选同意协议', icon: 'none' });
+      return false;
+    }
+    return true;
+  },
+
   async handleWechatLogin() {
     if (this.data.isLoading) return;
+    // 必须先勾选同意协议
+    if (!this._ensureAgreed()) return;
     this.setData({ isLoading: true });
 
     try {
@@ -110,6 +128,8 @@ Page({
 
   async handleCompleteRegister() {
     if (this.data.isLoading) return;
+    // 必须先勾选同意协议
+    if (!this._ensureAgreed()) return;
 
     const { openId, tempAvatarUrl, tempNickName } = this.data;
 
@@ -251,20 +271,10 @@ Page({
   // 协议弹窗
   // ======================================================
   showAgreement() {
-    wx.showModal({
-      title: '用户协议',
-      content: '本小程序遵循相关法律法规，收集的用户信息仅用于提供英语教学服务，不会泄露给任何第三方。',
-      showCancel: false,
-      confirmText: '知道了',
-    });
+    wx.navigateTo({ url: '/pages/agreement/agreement?type=user' });
   },
 
   showPrivacy() {
-    wx.showModal({
-      title: '隐私政策',
-      content: '我们高度重视您的隐私安全，承诺不会将您的个人信息泄露给任何第三方。如您有疑问，请联系客服。',
-      showCancel: false,
-      confirmText: '知道了',
-    });
+    wx.navigateTo({ url: '/pages/agreement/agreement?type=privacy' });
   },
 });

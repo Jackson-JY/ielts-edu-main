@@ -174,20 +174,56 @@
 /* 协议 */
 .agreement {
   display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12rpx;
+  margin-bottom: 28rpx;
+  padding: 0 20rpx;
+}
+
+/* 勾选框（默认不勾选） */
+.agree-check {
+  flex-shrink: 0;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 2rpx solid #C4CDD6;
+  display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 2rpx;
+  background: #FFFFFF;
+}
+
+.agree-check.checked {
+  background: #12B7A8;
+  border-color: #12B7A8;
+}
+
+.agree-check-icon {
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.agreement-text-wrap {
+  display: flex;
   flex-wrap: wrap;
-  gap: 4rpx;
+  align-items: center;
+  gap: 2rpx;
 }
 
 .agreement-text {
   font-size: 24rpx;
-  color: #BBBBBB;
+  color: #9AA5B1;
+  line-height: 1.5;
 }
 
 .link {
   font-size: 24rpx;
-  color: #A0C8C5;
+  color: #12B7A8;
+  line-height: 1.5;
 }
 
 /* ==================== */

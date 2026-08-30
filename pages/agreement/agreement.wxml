@@ -1,0 +1,16 @@
+<!--pages/agreement/agreement.wxml - 用户协议 / 隐私政策-->
+<view class="page" wx:if="{{doc}}">
+  <view class="doc-header">
+    <text class="doc-title">{{doc.title}}</text>
+    <text class="doc-updated">更新日期：{{doc.updated}}</text>
+  </view>
+
+  <view class="doc-section" wx:for="{{doc.sections}}" wx:key="heading">
+    <text class="doc-heading">{{item.heading}}</text>
+    <text class="doc-paragraph" wx:for="{{item.paragraphs}}" wx:for-item="p" wx:key="*this">{{p}}</text>
+  </view>
+
+  <view class="doc-footer">
+    <text class="doc-footer-text">感谢你的阅读与信任。</text>
+  </view>
+</view>
