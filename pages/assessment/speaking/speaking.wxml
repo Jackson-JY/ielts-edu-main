@@ -1,96 +1,169 @@
 <!-- pages/assessment/speaking/speaking.wxml -->
-<view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="header-top">
-      <text class="title">口语测评</text>
-      <view class="progress-badge">进度 2/4</view>
-    </view>
-    <view class="part-tabs">
-      <view 
-        class="part-tab {{currentPart === 'part1' ? 'active' : ''}}"
-        bindtap="switchPart"
-        data-part="part1">Part 1</view>
-      <view 
-        class="part-tab {{currentPart === 'part2' ? 'active' : ''}}"
-        bindtap="switchPart"
-        data-part="part2">Part 2</view>
-      <view 
-        class="part-tab {{currentPart === 'part3' ? 'active' : ''}}"
-        bindtap="switchPart"
-        data-part="part3">Part 3</view>
-    </view>
-  </view>
+<view class="page">
 
-  <!-- Main Content -->
-  <scroll-view class="content-area" scroll-y>
-    <view class="question-info">
-      <text class="question-count">第 {{currentQuestion + 1}} 题 / 共 {{totalQuestions}} 题</text>
-    </view>
+  <!-- 第一阶段：口语自评 -->
+  <block wx:if="{{phase === 'selfcheck'}}">
+    <self-assess
+      title="口语能力自评"
+      subtitle="以下 12 条描述，按你的实际情况打分：0 = 完全不符合，5 = 完全符合"
+      items="{{selfCheckItems}}"
+      bind:finish="onSelfCheckFinish"/>
+  </block>
 
-    <!-- Part 2 准备时间倒计时 -->
-    <view wx:if="{{currentPart === 'part2' && isPreparing}}" class="prepare-card">
-      <text class="prepare-title">准备时间</text>
-      <text class="prepare-time">{{prepareTimeText}}</text>
-      <text class="prepare-hint">请准备你的回答要点</text>
-    </view>
-
-    <!-- Part 2 Topic Card -->
-    <view wx:if="{{currentPart === 'part2'}}" class="topic-card">
-      <text class="topic-title">{{part2Topic.title}}</text>
-      <view class="topic-points">
-        <text class="point-item" wx:for="{{part2Topic.points}}" wx:key="index">• {{item}}</text>
-      </view>
-      <text class="time-hint">准备时间：60 秒 | 答题时间：最长 2 分钟</text>
-    </view>
-
-    <!-- Question Display -->
-    <view wx:else class="question-card">
-      <text class="question-title">{{questions[currentQuestion]}}</text>
-      <text class="time-hint">建议回答时长：{{currentPart === 'part1' ? '15-20' : '30-45'}} 秒</text>
-    </view>
-
-    <!-- Recording Area -->
-    <view class="recording-area">
-      <!-- 未录音状态：显示录音按钮 -->
-      <view wx:if="{{!currentAnswer}}" class="mic-btn {{isRecording ? 'recording' : ''}} {{isProcessing ? 'processing' : ''}}" bindtap="toggleRecording">
-        <image wx:if="{{!isProcessing}}" src="{{iconMic}}" mode="aspectFit" class="mic-icon"/>
-        <view wx:else class="processing-indicator">
-          <view class="processing-dot"></view>
-          <view class="processing-dot"></view>
-          <view class="processing-dot"></view>
+  <!-- 第二阶段：跟读评测（发音检测） -->
+  <block wx:elif="{{phase === 'shadowing'}}">
+    <view class="container">
+      <view class="header">
+        <view class="header-top">
+          <text class="title">跟读评测</text>
+          <view class="progress-badge">发音检测</view>
+        </view>
+        <view class="part-tabs">
+          <view class="part-tab active">朗读句子</view>
         </view>
       </view>
-      
-      <!-- 已录音状态：显示完成图标，不可点击 -->
-      <view wx:else class="mic-btn completed">
-        <image src="{{iconCheck}}" mode="aspectFit" class="mic-icon"/>
-      </view>
-      
-      <view class="recording-info">
-        <text class="recording-time">{{recordingTimeText}}</text>
-        <text class="recording-status">
-          {{isRecording ? '答题中...' : currentAnswer ? '录音完成' : '点击开始答题'}}
-        </text>
+
+      <scroll-view class="content-area" scroll-y>
+        <view class="shadowing-card">
+          <text class="shadowing-hint">{{shadowing.requirement}}</text>
+          <view class="shadowing-sentence">
+            <text>{{shadowingSentence}}</text>
+          </view>
+          <text class="time-hint">录音时长上限 {{shadowing.answerSeconds}} 秒</text>
+        </view>
+
+        <!-- SOE 评分结果 -->
+        <view wx:if="{{shadowingAnswer && shadowingAnswer.soeResult}}" class="soe-result-card">
+          <text class="soe-result-title">发音评测结果</text>
+          <view class="soe-scores">
+            <view class="soe-score-item">
+              <text class="soe-score-value">{{shadowingAnswer.soeResult.pronAccuracy}}</text>
+              <text class="soe-score-label">准确度</text>
+            </view>
+            <view class="soe-score-item">
+              <text class="soe-score-value">{{shadowingAnswer.soeResult.pronFluency}}</text>
+              <text class="soe-score-label">流利度</text>
+            </view>
+            <view class="soe-score-item">
+              <text class="soe-score-value">{{shadowingAnswer.soeResult.pronCompletion}}</text>
+              <text class="soe-score-label">完整度</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:elif="{{shadowingAnswer && !shadowingAnswer.soeResult}}" class="soe-skip-hint">
+          <text>发音评测未完成（可能未配置 SOE 服务），录音已保存</text>
+        </view>
+
+        <!-- 录音区 -->
+        <view class="recording-area">
+          <view
+            class="mic-btn {{isRecording ? 'recording' : ''}} {{isProcessing || soeLoading ? 'processing' : ''}} {{shadowingAnswer && !isRecording ? 'completed' : ''}}"
+            bindtap="toggleRecording">
+            <view wx:if="{{isRecording}}" class="recording-dot"></view>
+            <view wx:elif="{{isProcessing || soeLoading}}" class="processing-indicator">
+              <view class="processing-dot"></view>
+              <view class="processing-dot"></view>
+              <view class="processing-dot"></view>
+            </view>
+            <text wx:else class="mic-text">{{shadowingAnswer ? 'OK' : 'REC'}}</text>
+          </view>
+          <view class="recording-info">
+            <text class="recording-time">{{recordingTimeText}}</text>
+            <text class="recording-status">
+              {{isRecording ? '朗读中...' : isProcessing ? '保存中...' : soeLoading ? '评测发音中...' : shadowingAnswer ? '录音完成，可重录' : '点击开始朗读'}}
+            </text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="bottom-actions">
+        <button
+          class="btn btn-primary {{isRecording || isProcessing || soeLoading || !shadowingAnswer ? 'disabled' : ''}}"
+          disabled="{{isRecording || isProcessing || soeLoading || !shadowingAnswer}}"
+          bindtap="finishShadowing">
+          进入口语产出
+        </button>
       </view>
     </view>
+  </block>
 
-    <!-- 答题进度 -->
-    <view wx:if="{{answers.length > 0}}" class="progress-card">
-      <text class="progress-title">答题进度</text>
-      <view class="progress-stats">
-        <text class="stat-item">已答 {{answers.length}} 题</text>
-        <text class="stat-item" wx:if="{{currentPart === 'part1'}}">Part 1: {{part1Count}}/{{part1Questions.length}}</text>
-        <text class="stat-item" wx:if="{{currentPart === 'part2'}}">Part 2: {{part2Count}}/1</text>
-        <text class="stat-item" wx:if="{{currentPart === 'part3'}}">Part 3: {{part3Count}}/{{part3Questions.length}}</text>
+  <!-- 第三阶段：产出题 -->
+  <block wx:else>
+    <view class="container">
+      <!-- 题目切换 -->
+      <view class="header">
+        <view class="header-top">
+          <text class="title">口语产出</text>
+          <view class="progress-badge">第 {{currentTaskIndex + 1}} / 2 题</view>
+        </view>
+        <view class="part-tabs">
+          <view class="part-tab {{currentTaskIndex === 0 ? 'active' : ''}}">图片描述</view>
+          <view class="part-tab {{currentTaskIndex === 1 ? 'active' : ''}}">观点表达</view>
+        </view>
+      </view>
+
+      <scroll-view class="content-area" scroll-y>
+        <!-- 题 1：图片描述 -->
+        <block wx:if="{{currentTaskIndex === 0}}">
+          <!-- 准备倒计时 -->
+          <view wx:if="{{isPreparing}}" class="prepare-card">
+            <text class="prepare-title">准备时间</text>
+            <text class="prepare-time">{{prepareTimeText}}</text>
+            <text class="prepare-hint">请组织你的描述要点</text>
+            <view class="prepare-skip" bindtap="skipPrepare">跳过准备</view>
+          </view>
+
+          <view class="picture-card">
+            <image class="picture-img" src="{{task1.image}}" mode="widthFix"/>
+            <text class="question-title">{{task1.prompt}}</text>
+            <text class="time-hint">{{task1.requirement}}</text>
+            <view class="hint-tags">
+              <text class="hint-tag" wx:for="{{task1.hints}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+        </block>
+
+        <!-- 题 2：观点表达 -->
+        <block wx:else>
+          <view class="question-card">
+            <text class="question-opinion">{{opinionPrompt}}</text>
+            <text class="question-req">{{task2.prompt}}</text>
+            <text class="time-hint">{{task2.requirement}}</text>
+          </view>
+        </block>
+
+        <!-- 录音区 -->
+        <view class="recording-area">
+          <view
+            class="mic-btn {{isRecording ? 'recording' : ''}} {{isProcessing ? 'processing' : ''}} {{productionAnswers[currentTaskIndex] && !isRecording ? 'completed' : ''}}"
+            bindtap="toggleRecording">
+            <view wx:if="{{isRecording}}" class="recording-dot"></view>
+            <view wx:elif="{{isProcessing}}" class="processing-indicator">
+              <view class="processing-dot"></view>
+              <view class="processing-dot"></view>
+              <view class="processing-dot"></view>
+            </view>
+            <text wx:else class="mic-text">{{productionAnswers[currentTaskIndex] ? 'OK' : 'REC'}}</text>
+          </view>
+          <view class="recording-info">
+            <text class="recording-time">{{recordingTimeText}}</text>
+            <text class="recording-status">
+              {{isRecording ? '答题中...' : isProcessing ? '保存中...' : productionAnswers[currentTaskIndex] ? '录音完成，可重录' : '点击开始答题'}}
+            </text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 底部操作 -->
+      <view class="bottom-actions">
+        <button
+          class="btn btn-primary {{isRecording || isProcessing || !productionAnswers[currentTaskIndex] ? 'disabled' : ''}}"
+          disabled="{{isRecording || isProcessing || !productionAnswers[currentTaskIndex]}}"
+          bindtap="handleNext">
+          {{currentTaskIndex === 0 ? '进入下一题' : '完成口语测评'}}
+        </button>
       </view>
     </view>
-  </scroll-view>
-
-  <!-- Bottom Actions -->
-  <view class="bottom-actions">
-    <button class="btn btn-primary {{isRecording || isProcessing || !currentAnswer ? 'disabled' : ''}}" bindtap="handleNext" disabled="{{isRecording || isProcessing || !currentAnswer}}">
-      {{currentQuestion < totalQuestions - 1 ? '下一题' : currentPart === 'part3' ? '完成口语测评' : '进入下一部分'}}
-    </button>
-  </view>
+  </block>
 </view>

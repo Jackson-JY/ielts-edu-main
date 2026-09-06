@@ -3,6 +3,87 @@ page {
   background-color: #FFF9F5;
 }
 
+.page {
+  min-height: 100vh;
+}
+
+/* 图片描述卡片 */
+.picture-card {
+  padding: 40rpx;
+  background-color: #FFE8CC;
+  border-radius: 32rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+  box-sizing: border-box;
+}
+
+.picture-img {
+  width: 100%;
+  border-radius: 24rpx;
+}
+
+.question-opinion {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 20rpx;
+  word-wrap: break-word;
+}
+
+.question-req {
+  font-size: 28rpx;
+  color: #4A4A4A;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.hint-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  justify-content: center;
+  margin-top: 8rpx;
+}
+
+.hint-tag {
+  font-size: 22rpx;
+  color: #4A4A4A;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+.prepare-skip {
+  margin-top: 20rpx;
+  font-size: 24rpx;
+  color: #12B7A8;
+  text-decoration: underline;
+}
+
+/* 录音键文字 */
+.mic-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #0E8C80;
+}
+
+.mic-btn.completed .mic-text {
+  color: #FFFFFF;
+}
+
+.recording-dot {
+  width: 56rpx;
+  height: 56rpx;
+  background-color: #E85D5D;
+  border-radius: 50%;
+  animation: pulse 1.2s infinite;
+}
+
+
 .container {
   display: flex;
   flex-direction: column;
@@ -352,4 +433,86 @@ page {
   50% {
     transform: scaleY(1);
   }
+}
+
+/* ============ 跟读评测 ============ */
+.shadowing-card {
+  padding: 40rpx;
+  background-color: #FFF0E5;
+  border-radius: 32rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+  box-sizing: border-box;
+}
+
+.shadowing-hint {
+  font-size: 26rpx;
+  color: #8C5A2B;
+}
+
+.shadowing-sentence {
+  width: 100%;
+  padding: 32rpx;
+  background-color: #FFFFFF;
+  border-radius: 20rpx;
+  font-size: 34rpx;
+  line-height: 1.8;
+  color: #333;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.06);
+}
+
+/* SOE 评分结果卡片 */
+.soe-result-card {
+  padding: 32rpx;
+  background-color: #F0F9FF;
+  border-radius: 24rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.soe-result-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1890FF;
+}
+
+.soe-scores {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.soe-score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.soe-score-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #1890FF;
+}
+
+.soe-score-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.soe-skip-hint {
+  padding: 24rpx;
+  background-color: #FFF7E6;
+  border-radius: 16rpx;
+  margin-bottom: 40rpx;
+  font-size: 26rpx;
+  color: #D48806;
+  text-align: center;
 }

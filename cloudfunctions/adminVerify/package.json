@@ -1,0 +1,9 @@
+{
+  "name": "adminVerify",
+  "version": "1.0.0",
+  "description": "校验管理端 token",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

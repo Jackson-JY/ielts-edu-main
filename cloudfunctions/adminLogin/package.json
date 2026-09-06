@@ -1,0 +1,9 @@
+{
+  "name": "adminLogin",
+  "version": "1.0.0",
+  "description": "管理端登录：微信扫码 / 开发模式，签发 admin_sessions token",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

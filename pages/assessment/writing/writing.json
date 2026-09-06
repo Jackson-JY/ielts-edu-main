@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "Deer Edu",
-  "usingComponents": {}
+  "usingComponents": {
+    "self-assess": "/components/self-assess/index"
+  }
 }

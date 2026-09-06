@@ -1,71 +1,71 @@
 <!-- pages/assessment/result/result.wxml -->
 <view class="page">
   <view class="container">
-    <!-- 测评结果标题 -->
-    <view class="header">
-      <text class="title">测评结果</text>
-      <text class="subtitle">你的雅思水平评估结果</text>
+    <!-- 加载中 -->
+    <view wx:if="{{isLoading}}" class="empty-tip">
+      <text>加载中...</text>
     </view>
 
-    <!-- 总分展示 -->
-    <view class="score-card">
-      <view class="total-score">
-        <text class="score-value">{{totalScore}}</text>
-        <text class="score-label">总分</text>
+    <!-- 暂无结果 -->
+    <view wx:elif="{{!hasResult}}" class="empty-tip">
+      <text>暂无测评结果，请先完成测评</text>
+      <view class="action-btn primary" bindtap="goToHome">返回首页</view>
+    </view>
+
+    <block wx:else>
+      <!-- 结果标题 -->
+      <view class="header">
+        <text class="title">测评结果</text>
+        <text class="subtitle">词汇测试 + 听说读写能力模型评估</text>
       </view>
-      <view class="score-details">
-        <view class="score-item">
-          <text class="skill-name">听力</text>
-          <text class="skill-score">{{listeningScore}}</text>
-        </view>
-        <view class="score-divider"></view>
-        <view class="score-item">
-          <text class="skill-name">口语</text>
-          <text class="skill-score">{{speakingScore}}</text>
-        </view>
-        <view class="score-divider"></view>
-        <view class="score-item">
-          <text class="skill-name">阅读</text>
-          <text class="skill-score">{{readingScore}}</text>
-        </view>
-        <view class="score-divider"></view>
-        <view class="score-item">
-          <text class="skill-name">写作</text>
-          <text class="skill-score">{{writingScore}}</text>
-        </view>
-      </view>
-    </view>
 
-    <!-- CEFR 等级 -->
-    <view class="cefr-card">
-      <text class="cefr-label">CEFR 等级</text>
-      <text class="cefr-level">{{cefrLevel}}</text>
-      <text class="cefr-desc">{{cefrDesc}}</text>
-    </view>
-
-    <!-- 能力分析 -->
-    <view class="analysis-card">
-      <text class="card-title">能力分析</text>
-      <view class="analysis-item" wx:for="{{analysisItems}}" wx:key="index">
-        <view class="analysis-header">
-          <view class="skill-info">
-            <image wx:if="{{item.icon}}" class="skill-icon" src="{{item.icon}}" mode="aspectFit"/>
-            <text class="analysis-skill">{{item.skill}}</text>
+      <!-- 词汇量卡片 -->
+      <view class="score-card" wx:if="{{hasVocab}}">
+        <view class="total-score">
+          <text class="score-label">词汇量估值</text>
+          <view class="vocab-row">
+            <text class="score-value">{{vocabEstimate}}</text>
+            <text class="vocab-unit">词</text>
           </view>
-          <text class="analysis-score">{{item.score}}</text>
+          <view class="cefr-badge" wx:if="{{vocabCefr}}">{{vocabCefr}}</view>
+          <text class="confidence-tip" wx:if="{{!vocabConfidence}}">本次作答存在超时或过快作答，结果仅供参考</text>
         </view>
-        <view class="analysis-bar">
-          <view class="bar-fill" style="width: {{item.percentage}}%;"></view>
-        </view>
-        <text class="analysis-comment">{{item.comment}}</text>
       </view>
-    </view>
 
-    <!-- 操作按钮 -->
-    <view class="button-group">
-      <view class="action-btn primary" bindtap="goToHome">
-        <text>返回首页</text>
+      <!-- CEFR 等级 -->
+      <view class="cefr-card" wx:if="{{hasSelfAssess}}">
+        <text class="cefr-label">综合能力等级</text>
+        <text class="cefr-level">{{cefrLevel}}</text>
+        <text class="cefr-desc">{{cefrDesc}}</text>
       </view>
-    </view>
+
+      <!-- 四维能力分析 -->
+      <view class="analysis-card" wx:if="{{hasSelfAssess}}">
+        <text class="card-title">听说读写能力模型（0-5 级）</text>
+        <view class="analysis-item" wx:for="{{analysisItems}}" wx:key="skill">
+          <view class="analysis-header">
+            <text class="analysis-skill">{{item.skill}}</text>
+            <text class="analysis-score">{{item.levelText}} / 5</text>
+          </view>
+          <view class="analysis-bar">
+            <view class="bar-fill" style="width: {{item.percentage}}%;"></view>
+          </view>
+          <text class="analysis-comment">{{item.comment}}</text>
+        </view>
+      </view>
+
+      <!-- 未完成能力自评提示 -->
+      <view class="cefr-card" wx:if="{{!hasSelfAssess}}">
+        <text class="cefr-label">能力自评未完成</text>
+        <text class="cefr-desc">完成听说读写能力自评后，这里将展示你的四维能力等级与综合 CEFR 评级</text>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="button-group">
+        <view class="action-btn primary" bindtap="goToHome">
+          <text>返回首页</text>
+        </view>
+      </view>
+    </block>
   </view>
 </view>

@@ -1,0 +1,9 @@
+{
+  "name": "aiGenerateReport",
+  "version": "1.0.0",
+  "description": "AI 智能测评报告：能力图谱 + 大模型生成的提分分析",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "3.0.5-beta.1"
+  }
+}

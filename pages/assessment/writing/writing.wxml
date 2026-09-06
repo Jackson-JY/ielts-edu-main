@@ -1,63 +1,62 @@
 <!-- pages/assessment/writing/writing.wxml -->
-<view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="header-top">
-      <text class="title">写作测评</text>
-      <view class="progress-badge">进度 4/4</view>
-    </view>
-    <view class="task-tabs">
-      <view class="task-tab {{currentTask === 'task1' ? 'active' : ''}}" bindtap="switchTask" data-task="task1">Task 1</view>
-      <view class="task-tab {{currentTask === 'task2' ? 'active' : ''}}" bindtap="switchTask" data-task="task2">Task 2</view>
-    </view>
-  </view>
+<view class="page">
 
-  <!-- Main Content -->
-  <scroll-view class="content-area" scroll-y>
-    <!-- Task Description -->
-    <view class="task-card">
-      <text class="task-title">{{currentTaskData.title}}</text>
-      <text class="task-desc">{{currentTaskData.description}}</text>
-      <text class="word-count-hint">建议字数：{{currentTaskData.wordCount}}</text>
-    </view>
+  <!-- 第一阶段：写作自评 -->
+  <block wx:if="{{phase === 'selfcheck'}}">
+    <self-assess
+      title="写作能力自评"
+      subtitle="以下 12 条描述，按你的实际情况打分：0 = 完全不符合，5 = 完全符合"
+      items="{{selfCheckItems}}"
+      bind:finish="onSelfCheckFinish"/>
+  </block>
 
-    <!-- Step Tabs -->
-    <view class="step-tabs">
-      <view class="step-tab {{currentStep === 'outline' ? 'active' : ''}}" bindtap="switchStep" data-step="outline">Step 1 - 行文思路</view>
-      <view class="step-tab {{currentStep === 'content' ? 'active' : ''}}" bindtap="switchStep" data-step="content">Step 2 - 主体段落</view>
-    </view>
+  <!-- 第二阶段：产出题 -->
+  <block wx:else>
+    <view class="container">
+      <!-- Header -->
+      <view class="header">
+        <view class="header-top">
+          <text class="title">写作产出</text>
+          <view class="progress-badge">第 {{currentTaskIndex + 1}} / 2 题</view>
+        </view>
+        <view class="task-tabs">
+          <view class="task-tab {{currentTaskIndex === 0 ? 'active' : ''}}">句式改写</view>
+          <view class="task-tab {{currentTaskIndex === 1 ? 'active' : ''}}">观点论证</view>
+        </view>
+      </view>
 
-    <!-- Input Area -->
-    <view class="input-section">
-      <block wx:if="{{currentStep === 'outline'}}">
-        <text class="input-hint">请先写下你的写作思路（20-50 字）</text>
-        <textarea 
-          class="input-textarea"
-          placeholder="例如：开头段介绍图表主题，主体段描述主要数据变化，结尾段总结趋势..."
-          value="{{outline}}"
-          bindinput="onOutlineInput"
-          maxlength="200"
-        />
-        <text class="char-count">{{outline.length}} 字</text>
-      </block>
-      <block wx:else>
-        <text class="input-hint">写一段主体段落（80-150 字）</text>
-        <textarea 
-          class="input-textarea"
-          placeholder="开始写作..."
-          value="{{content}}"
-          bindinput="onContentInput"
-          maxlength="500"
-        />
-        <text class="char-count">{{content.length}} 字</text>
-      </block>
-    </view>
-  </scroll-view>
+      <!-- 题目内容 -->
+      <view class="task-card">
+        <text class="task-title">{{currentTask.title}}</text>
+        <text class="task-prompt">{{currentTask.prompt}}</text>
+        <text class="task-prompt-en" wx:if="{{currentTask.promptEn}}">{{currentTask.promptEn}}</text>
+        <text class="task-requirement">{{currentTask.requirement}}</text>
+      </view>
 
-  <!-- Bottom Actions -->
-  <view class="bottom-actions">
-    <button class="btn btn-primary" bindtap="handleNext">
-      {{currentStep === 'outline' ? '下一步' : currentTask === 'task1' ? '进入 Task 2' : '提交写作答案'}}
-    </button>
-  </view>
+      <!-- 各 slot 输入 -->
+      <view class="slot-list">
+        <view class="slot-item" wx:for="{{currentTask.slots}}" wx:key="key">
+          <view class="slot-header">
+            <text class="slot-label">{{item.label}}</text>
+            <text class="slot-hint">{{item.hint}}</text>
+          </view>
+          <textarea
+            class="slot-input"
+            placeholder="请输入内容（中/英文均可）"
+            value="{{taskInputs[currentTaskIndex][item.key] || ''}}"
+            bindinput="onSlotInput"
+            data-slot="{{item.key}}"
+            auto-height
+            maxlength="500"/>
+        </view>
+      </view>
+
+      <!-- 底部操作 -->
+      <view class="bottom-actions">
+        <button class="btn btn-primary" bindtap="handleSubmit" disabled="{{submitting}}">
+          {{currentTaskIndex === 0 ? '进入下一题' : mode === 'full' ? '完成测评，查看结果' : '提交写作测评'}}
+        </button>
+      </view>
+    </view>
+  </block>
 </view>

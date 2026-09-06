@@ -1,0 +1,106 @@
+<!-- pages/assessment/vocab/vocab.wxml -->
+<view class="container">
+
+  <!-- 加载中 -->
+  <view class="phase-loading" wx:if="{{phase === 'loading'}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在准备词汇量测评...</text>
+  </view>
+
+  <!-- 加载失败 -->
+  <view class="phase-error" wx:elif="{{phase === 'error'}}">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">{{errorMsg}}</text>
+    <button class="btn-primary" bindtap="onRetry">重新开始</button>
+  </view>
+
+  <!-- 答题中 -->
+  <block wx:elif="{{phase === 'test'}}">
+    <!-- Header -->
+    <view class="header">
+      <view class="header-top">
+        <text class="title">词汇量测评</text>
+        <view class="timer-badge {{timeLeft <= 5 ? 'timer-warn' : ''}}">
+          剩余 {{timeLeft}}s
+        </view>
+      </view>
+      <text class="subtitle">自适应词汇测试 · 已答 {{answeredCount}} 题</text>
+    </view>
+
+    <!-- Progress Bar -->
+    <view class="progress-section">
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{progressPercent}}%"></view>
+      </view>
+    </view>
+
+    <!-- Word -->
+    <view class="content-area">
+      <view class="word-display">
+        <text class="word-text">{{question.word}}</text>
+        <text class="word-hint">选择与单词含义最匹配的选项</text>
+      </view>
+
+      <!-- Options -->
+      <view class="options-list">
+        <view
+          class="option-item {{showFeedback && index === correctIdx ? 'option-correct' : ''}} {{showFeedback && index === selectedIdx && !feedbackCorrect ? 'option-wrong' : ''}}"
+          wx:for="{{question.options}}"
+          wx:key="index"
+          bindtap="selectAnswer"
+          data-index="{{index}}">
+          <view class="option-badge">{{optionLetters[index]}}</view>
+          <text class="option-text">{{item}}</text>
+          <text class="option-mark" wx:if="{{showFeedback && index === correctIdx}}">✓</text>
+          <text class="option-mark mark-wrong" wx:if="{{showFeedback && index === selectedIdx && !feedbackCorrect}}">✗</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 结果 -->
+  <scroll-view class="result-scroll" scroll-y wx:elif="{{phase === 'result'}}">
+    <view class="result-container">
+      <!-- 总分卡片 -->
+      <view class="result-hero">
+        <text class="result-label">词汇量估值</text>
+        <text class="result-vocab">{{result.vocabEstimate}}</text>
+        <text class="result-unit">词</text>
+        <view class="cefr-badge">{{result.cefrLevel}}</view>
+        <text class="cefr-desc">{{result.cefrDesc}}</text>
+      </view>
+
+      <!-- 统计 -->
+      <view class="result-stats">
+        <view class="stat-item">
+          <text class="stat-num">{{result.itemsAnswered}}</text>
+          <text class="stat-label">作答题数</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-num">{{result.lowConfidence ? '偏低' : '可信'}}</text>
+          <text class="stat-label">结果置信度</text>
+        </view>
+      </view>
+      <text class="low-confidence-tip" wx:if="{{result.lowConfidence}}">本次作答存在超时或过快作答，结果仅供参考</text>
+
+      <!-- 分频段正确率 -->
+      <view class="breakdown-card" wx:if="{{result.breakdown.length > 0}}">
+        <text class="breakdown-title">各词频段掌握情况</text>
+        <view class="breakdown-row" wx:for="{{result.breakdown}}" wx:key="band">
+          <text class="band-desc">{{item.desc}}</text>
+          <view class="band-bar">
+            <view class="band-fill" style="width: {{item.rate}}%"></view>
+          </view>
+          <text class="band-rate">{{item.correct}}/{{item.total}}</text>
+        </view>
+      </view>
+
+      <!-- 操作 -->
+      <view class="result-actions">
+        <button class="btn-primary" bindtap="onFinish">
+          {{mode === 'full' ? '继续：听力能力自评' : '完成'}}
+        </button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

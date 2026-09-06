@@ -1,106 +1,100 @@
 // pages/assessment/speaking/speaking.js
+// 口语模块：12 条口语自评（能力模型）+ 跟读评测（SOE 发音评分）+ 2 道产出题（图片描述 / 30 秒观点表达）
+// 录音复用原链路：上传云存储 → speaking_answers → ASR 转写
+const { SPEAKING_ITEMS, SPEAKING_PRODUCTION, SPEAKING_SHADOWING } = require('../../../utils/assessmentData');
+const assessmentStore = require('../../../utils/assessmentStore');
 const cloudStorage = require('../../../utils/cloudStorage');
 const cloudDB = require('../../../utils/cloudDB');
-const { CLOUD_IMAGES } = require('../../../config/images');
+const flow = require('../../../utils/assessmentFlow');
 
 Page({
   data: {
-    currentPart: 'part1',
-    currentQuestion: 0,
+    // 测评模式：'full' 完整测评，'single' 单项测评
+    mode: 'single',
+    // 页面阶段：selfcheck | shadowing | production
+    phase: 'selfcheck',
+    // 自评
+    selfCheckItems: SPEAKING_ITEMS,
+
+    // 跟读评测
+    shadowing: SPEAKING_SHADOWING,
+    shadowingSentence: '',
+    shadowingAnswer: null, // {question, audioFileID, duration, soeResult}
+    soeLoading: false,
+
+    // 产出题
+    task1: SPEAKING_PRODUCTION.task1,
+    task2: SPEAKING_PRODUCTION.task2,
+    currentTaskIndex: 0,
+    opinionPrompt: '',
+
+    // 录音状态
     isRecording: false,
     isProcessing: false,
     recordingTime: 0,
     recordingTimeText: '0:00',
-    iconMic: '',
-    iconCheck: '',
-    part1Questions: [
-      "Do you like reading?",
-      "What kind of books do you enjoy?",
-      "Do you prefer reading books or watching movies?",
-      "How often do you read?",
-      "What was the last book you read?",
-    ],
-    part2Topic: {
-      title: "Describe a place you like to visit",
-      points: [
-        "Where it is",
-        "How often you go there",
-        "What you do there",
-        "And explain why you like this place",
-      ],
-    },
-    part3Questions: [
-      "What are the benefits of traveling?",
-      "How has tourism changed in your country?",
-    ],
-    questions: [],
-    totalQuestions: 0,
-    recordTimer: null,
-    // 录音相关
     recorderManager: null,
-    tempAudioFile: '',
-    // 答题记录
-    answers: [],
-    currentAnswer: null,
-    // ASR 结果
-    transcribedText: '',
-    // 准备时间（Part 2 专用）
+    recordTimer: null,
+
+    // 准备时间（图片描述题）
     isPreparing: false,
     prepareTime: 0,
     prepareTimeText: '1:00',
     prepareTimer: null,
-    // 各 Part 答题数量统计
-    part1Count: 0,
-    part2Count: 0,
-    part3Count: 0,
-    // 测评模式：'full' 完整测评，'single' 单项测评
-    mode: 'single'
+
+    // 两道产出题作答记录 [{question, audioFileID, duration}]
+    productionAnswers: [null, null],
   },
 
-  async onLoad(options) {
-    await this.loadImageUrls();
-    // 设置测评模式
+  onLoad(options) {
     if (options.mode === 'full') {
       this.setData({ mode: 'full' });
     }
+    // 随机抽取一道观点题
+    const prompts = SPEAKING_PRODUCTION.task2.prompts;
+    this.setData({
+      opinionPrompt: prompts[Math.floor(Math.random() * prompts.length)],
+      // 随机抽取一句跟读句子
+      shadowingSentence: SPEAKING_SHADOWING.sentences[Math.floor(Math.random() * SPEAKING_SHADOWING.sentences.length)],
+    });
     this.initRecorder();
-    this.updateQuestions();
-    this.loadUserAnswers();
   },
 
   onUnload() {
-    this.stopRecording();
+    this.stopRecording(true);
     this.stopPrepareTimer();
+    this.stopRecordTimer();
   },
 
-  // 初始化录音管理器
+  // ==================== 自评 ====================
+
+  async onSelfCheckFinish(e) {
+    const res = await flow.submitWithGuard('保存中...', () =>
+      assessmentStore.saveSelfAssess('speaking', e.detail.ratings)
+    );
+    if (res === flow.SKIPPED) return;
+    // 进入跟读评测阶段
+    this.setData({ phase: 'shadowing' });
+  },
+
+  // ==================== 录音 ====================
+
   initRecorder() {
     const recorderManager = wx.getRecorderManager();
-    
+
     recorderManager.onStart(() => {
-      console.log('[录音] 开始录音');
       this.setData({ isRecording: true });
       this.startRecordTimer();
     });
 
     recorderManager.onStop((res) => {
-      console.log('[录音] 停止录音', res);
       this.setData({ isRecording: false });
       this.stopRecordTimer();
-      
-      const { tempFilePath, duration, fileSize } = res;
-      this.setData({ tempAudioFile: tempFilePath });
-      
-      // 保存当前录音
-      this.saveRecording(tempFilePath, duration);
+      this.saveRecording(res.tempFilePath, res.duration);
     });
 
     recorderManager.onError((err) => {
-      console.error('[录音] 录音错误:', err);
-      wx.showToast({
-        title: '录音失败: ' + err.message,
-        icon: 'none'
-      });
+      wx.showToast({ title: '录音失败，请重试', icon: 'none' });
       this.setData({ isRecording: false });
       this.stopRecordTimer();
     });
@@ -108,192 +102,109 @@ Page({
     this.setData({ recorderManager });
   },
 
-  // 更新当前题目列表
-  updateQuestions() {
-    const { currentPart, part1Questions, part3Questions } = this.data;
-    let questions = [];
-    
-    if (currentPart === 'part1') {
-      questions = part1Questions;
-    } else if (currentPart === 'part3') {
-      questions = part3Questions;
-    } else {
-      questions = [this.data.part2Topic.title];
-    }
-
-    this.setData({
-      questions,
-      totalQuestions: questions.length
-    });
-  },
-
-  // 加载用户之前的答题记录
-  async loadUserAnswers() {
-    const app = getApp();
-    const openId = app.globalData.openId;
-    
-    if (!openId) return;
-
-    const result = await cloudDB.get('speaking_answers', {
-      _openid: openId,
-      assessmentId: this.getAssessmentId()
-    });
-
-    if (result.success && result.data.length > 0) {
-      const answers = result.data[0].answers || [];
-      this.setData({
-        answers: answers
-      });
-      // 更新各 Part 计数
-      this.updatePartCounts(answers);
-    }
-  },
-
-  // 获取当前测评ID
-  getAssessmentId() {
-    // 从页面参数或全局数据获取
-    const pages = getCurrentPages();
-    const currentPage = pages[pages.length - 1];
-    return currentPage.options.assessmentId || 'default_assessment';
-  },
-
-  // 切换Part
-  switchPart(e) {
-    const part = e.currentTarget.dataset.part;
-    
-    // 如果正在录音，先停止
-    if (this.data.isRecording) {
-      this.stopRecording();
-    }
-
-    this.setData({
-      currentPart: part,
-      currentQuestion: 0,
-      isRecording: false,
-      isProcessing: false,
-      recordingTime: 0,
-      recordingTimeText: '0:00',
-      transcribedText: '',
-      currentAnswer: null,
-      tempAudioFile: ''
-    });
-    
-    this.stopRecordTimer();
-    this.updateQuestions();
-    this.loadUserAnswers();
-
-    // Part 2 开始准备时间
-    if (part === 'part2') {
-      this.startPrepareTimer();
-    }
-  },
-
-  // 开始准备时间（Part 2）
+  // 图片描述题：准备倒计时
   startPrepareTimer() {
+    this.stopPrepareTimer();
     this.setData({
       isPreparing: true,
-      prepareTime: 60,
-      prepareTimeText: '1:00'
+      prepareTime: this.data.task1.prepareSeconds,
+      prepareTimeText: this.formatTime(this.data.task1.prepareSeconds),
     });
 
     const timer = setInterval(() => {
-      const newTime = this.data.prepareTime - 1;
-      
-      if (newTime <= 0) {
+      const next = this.data.prepareTime - 1;
+      if (next <= 0) {
         this.stopPrepareTimer();
-        this.setData({
-          prepareTime: 0,
-          prepareTimeText: '0:00'
-        });
-        // 只有当前仍在 Part 2 时才显示提示
-        if (this.data.currentPart === 'part2') {
-          wx.showToast({
-            title: '准备时间结束，请开始答题',
-            icon: 'none'
-          });
-        }
+        this.setData({ prepareTime: 0, prepareTimeText: '0:00' });
+        wx.showToast({ title: '准备时间结束，请开始作答', icon: 'none' });
         return;
       }
-
-      const mins = Math.floor(newTime / 60);
-      const secs = newTime % 60;
-      const timeText = `${mins}:${secs.toString().padStart(2, '0')}`;
-
       this.setData({
-        prepareTime: newTime,
-        prepareTimeText: timeText
+        prepareTime: next,
+        prepareTimeText: this.formatTime(next),
       });
     }, 1000);
-
     this.setData({ prepareTimer: timer });
   },
 
-  // 停止准备计时器
   stopPrepareTimer() {
     if (this.data.prepareTimer) {
       clearInterval(this.data.prepareTimer);
-      this.setData({
-        prepareTimer: null,
-        isPreparing: false
-      });
+      this.setData({ prepareTimer: null, isPreparing: false });
     }
   },
 
-  // 开始/停止录音
+  skipPrepare() {
+    this.stopPrepareTimer();
+    wx.showToast({ title: '可直接开始作答', icon: 'none' });
+  },
+
   toggleRecording() {
+    if (this.data.isProcessing || this.data.soeLoading) return;
     if (this.data.isRecording) {
       this.stopRecording();
-    } else {
-      this.startRecording();
-    }
-  },
-
-  // 开始录音
-  startRecording() {
-    // Part 2 准备时间未结束不能开始
-    if (this.data.currentPart === 'part2' && this.data.isPreparing) {
-      wx.showToast({
-        title: '请等待准备时间结束',
-        icon: 'none'
-      });
       return;
     }
 
+    // 跟读阶段
+    if (this.data.phase === 'shadowing') {
+      if (this.data.shadowingAnswer) {
+        wx.showModal({
+          title: '重新录音',
+          content: '跟读录音已完成，重新录制将覆盖原结果',
+          success: (res) => {
+            if (res.confirm) this.startRecording();
+          },
+        });
+        return;
+      }
+      this.startRecording();
+      return;
+    }
+
+    // 产出题阶段
+    // 准备时间未结束不能开始（图片描述题）
+    if (this.data.currentTaskIndex === 0 && this.data.isPreparing) {
+      wx.showToast({ title: '请等待准备时间结束', icon: 'none' });
+      return;
+    }
+
+    // 已有录音，确认重录
+    if (this.data.productionAnswers[this.data.currentTaskIndex]) {
+      wx.showModal({
+        title: '重新录音',
+        content: '当前题目已有录音，重新录制将覆盖原录音',
+        success: (res) => {
+          if (res.confirm) this.startRecording();
+        },
+      });
+      return;
+    }
+    this.startRecording();
+  },
+
+  startRecording() {
     const recorderManager = this.data.recorderManager;
     if (!recorderManager) {
-      wx.showToast({
-        title: '录音功能初始化失败',
-        icon: 'none'
-      });
+      wx.showToast({ title: '录音功能初始化失败', icon: 'none' });
       return;
     }
-
-    // 配置录音参数
-    const options = {
-      duration: this.getMaxRecordTime() * 1000, // 最大录音时长
-      sampleRate: 16000, // 16kHz，适合语音识别
-      numberOfChannels: 1, // 单声道
-      encodeBitRate: 48000, // 编码码率
-      format: 'mp3', // 音频格式
-      frameSize: 50, // 指定帧大小
-    };
-
-    recorderManager.start(options);
+    recorderManager.start({
+      duration: this.getMaxRecordTime() * 1000,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      encodeBitRate: 96000, // 小程序允许范围 24000-96000
+      format: 'wav', // SOE 要求 16kHz，wav 支持 16kHz（mp3 仅支持 44.1kHz）
+      frameSize: 50,
+    });
   },
 
-  // 停止录音
-  stopRecording() {
+  stopRecording(silent) {
     const { recordingTime } = this.data;
-    
-    // 最小录音时长 1 秒
-    if (recordingTime < 1) {
-      wx.showToast({
-        title: '录音时间太短，请至少录制1秒',
-        icon: 'none'
-      });
+    if (!silent && recordingTime < 1) {
+      wx.showToast({ title: '录音时间太短，请至少录制 1 秒', icon: 'none' });
       return;
     }
-    
     const recorderManager = this.data.recorderManager;
     if (recorderManager && this.data.isRecording) {
       recorderManager.stop();
@@ -301,41 +212,32 @@ Page({
     this.stopRecordTimer();
   },
 
-  // 获取最大录音时长
   getMaxRecordTime() {
-    const { currentPart } = this.data;
-    // Part 1: 20秒, Part 2: 120秒, Part 3: 45秒
-    if (currentPart === 'part1') return 20;
-    if (currentPart === 'part2') return 120;
-    return 45;
+    // 跟读：30 秒；图片描述：120 秒；观点表达：30 秒
+    if (this.data.phase === 'shadowing') {
+      return this.data.shadowing.answerSeconds;
+    }
+    return this.data.currentTaskIndex === 0
+      ? this.data.task1.answerSeconds
+      : this.data.task2.answerSeconds;
   },
 
-  // 开始录音计时器
   startRecordTimer() {
     let seconds = 0;
     const maxTime = this.getMaxRecordTime();
-    
     const timer = setInterval(() => {
       seconds++;
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      const timeText = `${mins}:${secs.toString().padStart(2, '0')}`;
-      
       this.setData({
         recordingTime: seconds,
-        recordingTimeText: timeText
+        recordingTimeText: this.formatTime(seconds),
       });
-
-      // 自动停止
       if (seconds >= maxTime) {
-        this.stopRecording();
+        this.stopRecording(true);
       }
     }, 1000);
-
     this.setData({ recordTimer: timer });
   },
 
-  // 停止录音计时器
   stopRecordTimer() {
     if (this.data.recordTimer) {
       clearInterval(this.data.recordTimer);
@@ -343,349 +245,245 @@ Page({
     }
   },
 
-  // 保存录音并上传
+  formatTime(total) {
+    const mins = Math.floor(total / 60);
+    const secs = total % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  },
+
+  // 保存录音：上传云存储 → 跟读题调 SOE 评测 / 产出题写 speaking_answers + ASR
   async saveRecording(tempFilePath, duration) {
     this.setData({ isProcessing: true });
-    
     wx.showLoading({ title: '保存录音中...' });
 
+    const isShadowing = this.data.phase === 'shadowing';
+
     try {
-      // 1. 上传音频到云存储
       const app = getApp();
       const openId = app.globalData.openId || 'unknown';
       const timestamp = Date.now();
-      const cloudPath = `speaking_recordings/${openId}/${this.data.currentPart}_${this.data.currentQuestion}_${timestamp}.mp3`;
-      
+      const cloudPath = isShadowing
+        ? `speaking_recordings/${openId}/shadowing_${timestamp}.wav`
+        : `speaking_recordings/${openId}/production_${this.data.currentTaskIndex}_${timestamp}.wav`;
       const fileID = await cloudStorage.uploadFile(tempFilePath, cloudPath);
-      console.log('[录音] 上传成功:', fileID);
 
-      // 2. 生成 answerId 用于标识本次答题
-      const answerId = `${this.data.currentPart}_${this.data.currentQuestion}_${timestamp}`;
-      
-      // 3. 构建答题记录
-      const currentAnswer = {
-        id: answerId, // 用于 ASR 识别后更新
-        part: this.data.currentPart,
-        questionIndex: this.data.currentQuestion,
-        question: this.getCurrentQuestion(),
-        audioFileID: fileID,
-        duration: Math.round(duration / 1000), // 秒
-        transcribedText: '',
-        asrStatus: 'processing', // ASR 处理状态
-        score: null,
-        feedback: null,
-        createdAt: new Date()
-      };
-
-      this.setData({ currentAnswer });
-
-      // 4. 保存到数据库
-      const recordId = await this.saveAnswerToDatabase(currentAnswer);
-
-      wx.hideLoading();
-      
-      // 显示提示：后台识别中
-      wx.showToast({
-        title: '录音已保存，后台识别中',
-        icon: 'none',
-        duration: 2000
-      });
-
-      // 5. 启动后台 ASR 识别（不等待结果）
-      
-      if (recordId) {
-        wx.cloud.callFunction({
-          name: 'asrSpeechToText',
-          data: {
-            fileID: fileID,
-            duration: Math.round(duration / 1000),
-            recordId: recordId,
-            answerId: answerId
-          }
-        }).then(res => {
-          console.log('[ASR] 识别任务已启动:', res.result);
-        }).catch(err => {
-          console.error('[ASR] 启动识别任务失败:', err);
-        });
+      if (isShadowing) {
+        // 跟读题：调用 SOE 发音评测
+        await this.evaluateShadowing(fileID, duration);
       } else {
-        console.warn('[ASR] 未保存到数据库，跳过语音识别');
+        // 产出题：写库 + 触发 ASR
+        const taskIndex = this.data.currentTaskIndex;
+        const question =
+          taskIndex === 0 ? this.data.task1.prompt : this.data.opinionPrompt;
+
+        const answer = {
+          id: `production_${taskIndex}`,
+          part: 'production',
+          questionIndex: taskIndex,
+          question,
+          audioFileID: fileID,
+          duration: Math.round(duration / 1000),
+          createdAt: new Date(),
+        };
+
+        const answers = [...this.data.productionAnswers];
+        answers[taskIndex] = answer;
+        this.setData({ productionAnswers: answers });
+        this.saveToSpeakingAnswers(answer);
       }
 
-    } catch (error) {
-      console.error('[录音] 保存失败:', error);
-      wx.showToast({
-        title: '保存录音失败',
-        icon: 'none'
-      });
+      wx.hideLoading();
+      wx.showToast({ title: '录音已保存', icon: 'success' });
+    } catch (e) {
+      wx.hideLoading();
+      wx.showToast({ title: '保存录音失败', icon: 'none' });
     } finally {
       this.setData({ isProcessing: false });
     }
   },
 
-  // 获取当前问题
-  getCurrentQuestion() {
-    const { currentPart, currentQuestion, questions, part2Topic } = this.data;
-    
-    if (currentPart === 'part2') {
-      return {
-        title: part2Topic.title,
-        points: part2Topic.points
+  // 跟读评测：调用 soeEvaluate 云函数获取发音评分
+  async evaluateShadowing(fileID, duration) {
+    this.setData({ soeLoading: true });
+    wx.showLoading({ title: '评测发音中...' });
+
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'soeEvaluate',
+        data: {
+          fileID,
+          refText: this.data.shadowingSentence,
+        },
+      });
+
+      const result = res.result || {};
+      let soeResult = null;
+
+      if (result.success && result.result) {
+        soeResult = result.result;
+        wx.showToast({
+          title: `准确度 ${Math.round(soeResult.pronAccuracy)} 分`,
+          icon: 'none',
+        });
+      } else {
+        // SOE 不可用时不阻塞流程，给出提示
+        wx.showToast({
+          title: result.error || '发音评测未完成',
+          icon: 'none',
+          duration: 2000,
+        });
+      }
+
+      const answer = {
+        id: 'shadowing_0',
+        part: 'shadowing',
+        questionIndex: 0,
+        question: this.data.shadowingSentence,
+        audioFileID: fileID,
+        duration: Math.round(duration / 1000),
+        soeResult,
+        createdAt: new Date(),
       };
+
+      this.setData({ shadowingAnswer: answer });
+      // 跟读结果也写入 speaking_answers
+      this.saveToSpeakingAnswers(answer);
+    } catch (e) {
+      wx.showToast({ title: '发音评测失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ soeLoading: false });
     }
-    return questions[currentQuestion];
   },
 
-  // 保存答案到数据库，返回 recordId
-  async saveAnswerToDatabase(answer) {
+  // 保存到 speaking_answers 集合（沿用 assessmentId 机制），并触发 ASR
+  async saveToSpeakingAnswers(answer) {
     try {
       const app = getApp();
       const openId = app.globalData.openId;
-      
-      if (!openId) {
-        console.warn('[保存答案] 用户未登录，无法保存');
-        return null;
-      }
+      if (!openId) return;
 
-      const assessmentId = this.getAssessmentId();
-      
-      // 查找是否已有记录
-      const existing = await cloudDB.get('speaking_answers', {
-        _openid: openId,
-        assessmentId: assessmentId
-      });
+      const assessmentId = 'default_assessment';
+      const existing = await cloudDBQuery(assessmentId, openId);
 
-      let recordId;
-
-      if (existing.success && existing.data.length > 0) {
-        // 更新现有记录
-        recordId = existing.data[0]._id;
-        const answers = existing.data[0].answers || [];
-        
-        // 查找是否已有相同 part 和 question 的答案
-        const existingIndex = answers.findIndex(
-          a => a.part === answer.part && a.questionIndex === answer.questionIndex
+      let recordId = null;
+      if (existing) {
+        recordId = existing._id;
+        const answers = existing.answers || [];
+        const idx = answers.findIndex(
+          (a) => a.part === answer.part && a.questionIndex === answer.questionIndex
         );
-        
-        if (existingIndex >= 0) {
-          answers[existingIndex] = answer;
+        if (idx >= 0) {
+          answers[idx] = answer;
         } else {
           answers.push(answer);
         }
-
         await cloudDB.update('speaking_answers', recordId, {
-          answers: answers,
-          lastUpdateTime: new Date()
+          answers,
+          lastUpdateTime: new Date(),
         });
       } else {
-        // 创建新记录
-        const result = await cloudDB.add('speaking_answers', {
-          assessmentId: assessmentId,
+        const res = await cloudDB.add('speaking_answers', {
+          assessmentId,
           answers: [answer],
           status: 'in_progress',
-          startTime: new Date()
+          startTime: new Date(),
         });
-        recordId = result.success ? result.id : null;
+        recordId = res.success ? res.id : null;
       }
 
-      // 更新本地数据
-      const newAnswers = [...this.data.answers];
-      const existingIndex = newAnswers.findIndex(
-        a => a.part === answer.part && a.questionIndex === answer.questionIndex
-      );
-      
-      if (existingIndex >= 0) {
-        newAnswers[existingIndex] = answer;
-      } else {
-        newAnswers.push(answer);
+      // 产出题触发后台 ASR 转写；跟读题已有 SOE 评分，不触发 ASR
+      if (recordId && answer.part === 'production') {
+        wx.cloud.callFunction({
+          name: 'asrSpeechToText',
+          data: {
+            fileID: answer.audioFileID,
+            duration: answer.duration,
+            recordId,
+            answerId: `${answer.part}_${answer.questionIndex}`,
+            part: answer.part,
+            questionIndex: answer.questionIndex,
+          },
+        }).catch(() => {});
       }
-      
-      this.setData({ answers: newAnswers });
-      
-      // 更新各 Part 计数
-      this.updatePartCounts(newAnswers);
-      
-      console.log('[保存答案] 成功, recordId:', recordId);
-      return recordId;
-
-    } catch (error) {
-      console.error('[保存答案] 失败:', error);
-      return null;
+    } catch (e) {
+      // 保存失败不影响主流程
     }
   },
 
-  // 更新各 Part 答题数量统计
-  updatePartCounts(answers) {
-    const part1Count = answers.filter(a => a.part === 'part1').length;
-    const part2Count = answers.filter(a => a.part === 'part2').length;
-    const part3Count = answers.filter(a => a.part === 'part3').length;
-    
+  // ==================== 产出题导航 ====================
+
+  // 跟读阶段：进入下一阶段（产出题）
+  finishShadowing() {
+    if (this.data.isRecording || this.data.soeLoading) {
+      wx.showToast({ title: '请先完成录音', icon: 'none' });
+      return;
+    }
+    if (!this.data.shadowingAnswer) {
+      wx.showToast({ title: '请先完成跟读录音', icon: 'none' });
+      return;
+    }
+    // 进入产出题，图片描述题开始准备倒计时
     this.setData({
-      part1Count,
-      part2Count,
-      part3Count
+      phase: 'production',
+      currentTaskIndex: 0,
+      isRecording: false,
+      recordingTime: 0,
+      recordingTimeText: '0:00',
     });
+    this.startPrepareTimer();
   },
 
-  // 播放录音
-  playRecording() {
-    const { currentAnswer } = this.data;
-    if (!currentAnswer || !currentAnswer.audioFileID) {
-      wx.showToast({
-        title: '暂无录音',
-        icon: 'none'
-      });
-      return;
-    }
-
-    // 获取临时 URL 并播放
-    cloudStorage.getTempUrl(currentAnswer.audioFileID).then(url => {
-      const innerAudioContext = wx.createInnerAudioContext();
-      innerAudioContext.src = url;
-      innerAudioContext.play();
-      
-      innerAudioContext.onError((err) => {
-        console.error('[播放] 错误:', err);
-        wx.showToast({
-          title: '播放失败',
-          icon: 'none'
-        });
-      });
-    });
-  },
-
-  // 下一题/下一部分
   handleNext() {
-    const { currentQuestion, totalQuestions, currentPart } = this.data;
+    const { currentTaskIndex, productionAnswers } = this.data;
 
-    // 如果正在录音，先停止
     if (this.data.isRecording) {
-      this.stopRecording();
-      wx.showToast({
-        title: '请先完成当前录音',
-        icon: 'none'
-      });
+      wx.showToast({ title: '请先完成当前录音', icon: 'none' });
+      return;
+    }
+    if (!productionAnswers[currentTaskIndex]) {
+      wx.showToast({ title: '请先完成本题录音', icon: 'none' });
       return;
     }
 
-    if (currentQuestion < totalQuestions - 1) {
-      // 下一题
+    if (currentTaskIndex === 0) {
+      // 进入观点表达题
       this.setData({
-        currentQuestion: currentQuestion + 1,
+        currentTaskIndex: 1,
         isRecording: false,
         recordingTime: 0,
         recordingTimeText: '0:00',
-        transcribedText: '',
-        currentAnswer: null,
-        tempAudioFile: ''
       });
     } else {
-      // 下一部分或完成
-      if (currentPart === 'part1') {
-        this.setData({
-          currentPart: 'part2',
-          currentQuestion: 0,
-          isRecording: false,
-          recordingTime: 0,
-          recordingTimeText: '0:00',
-          transcribedText: '',
-          currentAnswer: null,
-          tempAudioFile: ''
-        });
-        this.updateQuestions();
-        this.startPrepareTimer();
-      } else if (currentPart === 'part2') {
-        this.setData({
-          currentPart: 'part3',
-          currentQuestion: 0,
-          isRecording: false,
-          recordingTime: 0,
-          recordingTimeText: '0:00',
-          transcribedText: '',
-          currentAnswer: null,
-          tempAudioFile: ''
-        });
-        this.updateQuestions();
-      } else {
-        // 完成口语测评，保存最终状态
-        this.completeSpeakingAssessment();
-      }
+      this.completeSpeaking();
     }
   },
 
-  // 完成口语测评
-  async completeSpeakingAssessment() {
-    wx.showLoading({ title: '提交中...' });
-
-    try {
-      const app = getApp();
-      const openId = app.globalData.openId;
-      
-      if (openId) {
-        const assessmentId = this.getAssessmentId();
-        const existing = await cloudDB.get('speaking_answers', {
-          _openid: openId,
-          assessmentId: assessmentId
-        });
-
-        if (existing.success && existing.data.length > 0) {
-          await cloudDB.update('speaking_answers', existing.data[0]._id, {
-            status: 'completed',
-            completeTime: new Date()
-          });
-        }
-      }
-
-      wx.hideLoading();
-      
-      // 根据模式决定跳转
-      if (this.data.mode === 'full') {
-        // 完整测评模式：跳转到阅读测评
-        wx.navigateTo({
-          url: '/pages/assessment/reading/reading?mode=full'
-        });
-      } else {
-        // 单项测评模式：返回首页
-        wx.showToast({
-          title: '口语测评完成',
-          icon: 'success',
-          duration: 1500
-        });
-        setTimeout(() => {
-          wx.switchTab({
-            url: '/pages/home/home'
-          });
-        }, 1500);
-      }
-    } catch (error) {
-      console.error('[完成测评] 失败:', error);
-      wx.hideLoading();
-      wx.showToast({
-        title: '提交失败',
-        icon: 'none'
-      });
-    }
-  },
-
-  // 返回首页
-  goToHome() {
-    wx.switchTab({
-      url: '/pages/home/home'
-    });
-  },
-
-  /**
-   * 加载云存储图片临时 URL
-   */
-  async loadImageUrls() {
-    try {
-      const fileIDs = [CLOUD_IMAGES.iconMic, CLOUD_IMAGES.iconCheck];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      this.setData({
-        iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
-        iconCheck: urlMap[CLOUD_IMAGES.iconCheck] || '',
-      });
-    } catch (e) {
-      console.error('[口语测评] 加载图片 URL 失败', e);
-    }
+  async completeSpeaking() {
+    const res = await flow.submitWithGuard('提交中...', () =>
+      assessmentStore.saveSection({
+        production: {
+          speaking: {
+            shadowing: this.data.shadowingAnswer,
+            answers: this.data.productionAnswers,
+            completedAt: new Date(),
+          },
+        },
+      })
+    );
+    if (res === flow.SKIPPED) return;
+    // 完整测评 → 写作模块；单项 → 回首页
+    flow.finishModule('speaking', this.data.mode, '口语测评完成');
   },
 });
+
+// 查询当前测评的 speaking_answers 记录
+async function cloudDBQuery(assessmentId, openId) {
+  const res = await cloudDB.get('speaking_answers', (q) =>
+    q
+      .where({ _openid: openId, assessmentId })
+      .orderBy('_createTime', 'desc')
+      .limit(1)
+  );
+  return res.success && res.data.length ? res.data[0] : null;
+}

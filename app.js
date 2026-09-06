@@ -518,6 +518,7 @@ App({
   logout() {
     this.globalData.isLoggedIn = false;
     this.globalData.userInfo = null;
+    this.globalData.openId = null;
     try {
       wx.removeStorageSync('loginInfo');
     } catch (e) {

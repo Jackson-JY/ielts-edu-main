@@ -1,0 +1,11 @@
+{
+  "envId": "cloud1-d7g66xvli7bb6bcc6",
+  "functions": [
+    {
+      "name": "soeEvaluate",
+      "timeout": 60,
+      "runtime": "Nodejs20.19",
+      "memorySize": 256
+    }
+  ]
+}

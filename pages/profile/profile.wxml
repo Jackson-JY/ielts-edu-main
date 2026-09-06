@@ -7,14 +7,22 @@ module.exports = {
 }
 </wxs>
 <view class="page">
-  <!-- 个人信息卡片 -->
+  <!-- 个人信息卡片（点击头像/昵称可编辑资料） -->
   <view class="profile-card">
     <view class="profile-header">
-      <view class="avatar">
-        <image class="avatar-icon" src="{{avatarUrl || defaultAvatarUrl || iconUser}}" mode="aspectFill"/>
-      </view>
-      <view class="profile-info">
-        <text class="user-name">{{userName}}</text>
+      <view class="profile-info-left" bindtap="onTapEditProfile">
+        <view class="avatar-wrap">
+          <view class="avatar">
+            <image class="avatar-icon" src="{{avatarUrl || defaultAvatarUrl || iconUser}}" mode="aspectFill"/>
+          </view>
+          <view class="avatar-edit-badge">
+            <text class="avatar-edit-icon">✎</text>
+          </view>
+        </view>
+        <view class="profile-info">
+          <text class="user-name">{{userName}}</text>
+          <text class="edit-profile-hint">点击修改资料</text>
+        </view>
       </view>
       <!-- 退出按钮 -->
       <view class="login-action">
@@ -298,6 +306,49 @@ module.exports = {
         </view>
         <view class="modal-btn confirm {{canSubmitCheckin ? '' : 'disabled'}}" bindtap="submitCheckin">
           <text>确认打卡</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 编辑资料弹窗（一键登录后在此完善头像昵称） -->
+  <view class="modal-overlay" wx:if="{{showEditProfile}}">
+    <view class="modal-mask" bindtap="hideEditProfile"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">编辑资料</text>
+        <text class="modal-subtitle">设置头像和昵称</text>
+      </view>
+
+      <!-- 头像选择（微信官方头像填写能力） -->
+      <view class="form-group edit-avatar-group">
+        <button class="edit-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onEditChooseAvatar">
+          <image class="edit-avatar-img" src="{{editAvatarUrl || avatarUrl || defaultAvatarUrl || iconUser}}" mode="aspectFill"/>
+          <view class="edit-avatar-badge">
+            <text>✎</text>
+          </view>
+        </button>
+        <text class="edit-avatar-hint">点击更换头像</text>
+      </view>
+
+      <!-- 昵称输入（微信官方昵称填写能力，自动联想微信昵称） -->
+      <view class="form-group">
+        <text class="form-label">昵称</text>
+        <input
+          class="edit-nickname-input"
+          type="nickname"
+          placeholder="请输入昵称"
+          value="{{editNickName}}"
+          bindinput="onEditNickNameInput"
+        />
+      </view>
+
+      <view class="modal-buttons">
+        <view class="modal-btn cancel" bindtap="hideEditProfile">
+          <text>取消</text>
+        </view>
+        <view class="modal-btn confirm {{savingProfile ? 'disabled' : ''}}" bindtap="saveProfile">
+          <text>{{savingProfile ? '保存中...' : '保存'}}</text>
         </view>
       </view>
     </view>

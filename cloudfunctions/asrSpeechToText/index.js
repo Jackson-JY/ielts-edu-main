@@ -21,7 +21,7 @@ const ASR_CONFIG = {
   action: 'SentenceRecognition',
   region: 'ap-guangzhou',
   engSerViceType: '16k_en', // 引擎服务类型（注意：SentenceRecognition 接口使用 EngSerViceType，不是 EngineModelType）
-  voiceFormat: 'mp3',
+  voiceFormat: 'wav',
 };
 
 // 生成腾讯云 API 签名
@@ -77,11 +77,10 @@ function generateSignature(payload, secretId, secretKey) {
 async function callTencentASR(audioBase64, secretId, secretKey) {
   return new Promise((resolve, reject) => {
     const payload = {
-      EngineModelType: ASR_CONFIG.engineModelType,
       VoiceFormat: ASR_CONFIG.voiceFormat,
       Data: audioBase64,
       DataLen: Buffer.from(audioBase64, 'base64').length,
-      EngSerViceType: '16k_en',  // 引擎服务类型，与 EngineModelType 保持一致
+      EngSerViceType: ASR_CONFIG.engSerViceType,  // 引擎服务类型
       SourceType: 1,  // 音频数据来源，1 表示直接上传音频数据
     };
     

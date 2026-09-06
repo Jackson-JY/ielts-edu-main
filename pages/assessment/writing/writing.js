@@ -1,140 +1,102 @@
 // pages/assessment/writing/writing.js
+// 写作模块：12 条写作自评（能力模型）+ 2 道产出题（句式改写 / CER 观点论证）
+const { WRITING_ITEMS, WRITING_PRODUCTION } = require('../../../utils/assessmentData');
+const assessmentStore = require('../../../utils/assessmentStore');
+const flow = require('../../../utils/assessmentFlow');
+
 Page({
   data: {
-    currentTask: 'task1',
-    currentStep: 'outline',
-    outline: '',
-    content: '',
-    task1: {
-      title: 'Task 1 - 图表描述',
-      description: 'The chart below shows the percentage of households in different countries that owned a smartphone in 2020.',
-      wordCount: '150+ 字'
-    },
-    task2: {
-      title: 'Task 2 - 观点论述',
-      description: 'Some people believe that technology has made our lives easier, while others think it has created new problems. Discuss both views and give your own opinion.',
-      wordCount: '250+ 字'
-    },
-    currentTaskData: {},
     // 测评模式：'full' 完整测评，'single' 单项测评
-    mode: 'single'
+    mode: 'single',
+    // 页面阶段：selfcheck | production
+    phase: 'selfcheck',
+    // 自评
+    selfCheckItems: WRITING_ITEMS,
+
+    // 产出题
+    tasks: [WRITING_PRODUCTION.task1, WRITING_PRODUCTION.task2],
+    currentTaskIndex: 0,
+    currentTask: WRITING_PRODUCTION.task1,
+    // 每题各 slot 的输入内容 { sentence1: '', ... }
+    taskInputs: [{}, {}],
+    submitting: false,
   },
 
   onLoad(options) {
-    // 设置测评模式
     if (options.mode === 'full') {
       this.setData({ mode: 'full' });
     }
-    this.updateTaskData();
   },
 
-  // 更新当前任务数据
-  updateTaskData() {
-    const { currentTask, task1, task2 } = this.data;
-    const currentTaskData = currentTask === 'task1' ? task1 : task2;
-    this.setData({ currentTaskData });
+  // ==================== 自评 ====================
+
+  async onSelfCheckFinish(e) {
+    const res = await flow.submitWithGuard('保存中...', () =>
+      assessmentStore.saveSelfAssess('writing', e.detail.ratings)
+    );
+    if (res === flow.SKIPPED) return;
+    this.setData({ phase: 'production' });
   },
 
-  // 切换 Task
-  switchTask(e) {
-    const task = e.currentTarget.dataset.task;
-    this.setData({
-      currentTask: task,
-      currentStep: 'outline',
-      outline: '',
-      content: ''
-    });
-    this.updateTaskData();
+  // ==================== 产出题 ====================
+
+  onSlotInput(e) {
+    const { slot } = e.currentTarget.dataset;
+    const { currentTaskIndex, taskInputs } = this.data;
+    const next = [...taskInputs];
+    next[currentTaskIndex] = { ...next[currentTaskIndex], [slot]: e.detail.value };
+    this.setData({ taskInputs: next });
   },
 
-  // 切换 Step
-  switchStep(e) {
-    const step = e.currentTarget.dataset.step;
-    this.setData({ currentStep: step });
-  },
+  handleSubmit() {
+    const { currentTaskIndex, taskInputs, tasks } = this.data;
+    const task = tasks[currentTaskIndex];
+    const inputs = taskInputs[currentTaskIndex] || {};
 
-  // 输入思路
-  onOutlineInput(e) {
-    this.setData({ outline: e.detail.value });
-  },
+    // 校验所有 slot 都已填写
+    const empty = task.slots.find((s) => !(inputs[s.key] || '').trim());
+    if (empty) {
+      wx.showToast({ title: `请填写「${empty.label}」`, icon: 'none' });
+      return;
+    }
 
-  // 输入正文
-  onContentInput(e) {
-    this.setData({ content: e.detail.value });
-  },
-
-  // 下一步/提交
-  handleNext() {
-    const { currentStep, currentTask, outline, content } = this.data;
-
-    if (currentStep === 'outline') {
-      // 验证思路字数
-      if (outline.length < 10) {
-        wx.showToast({
-          title: '思路至少10个字',
-          icon: 'none'
-        });
-        return;
-      }
-      this.setData({ currentStep: 'content' });
+    if (currentTaskIndex === 0) {
+      // 进入第二题
+      this.setData({
+        currentTaskIndex: 1,
+        currentTask: tasks[1],
+      });
+      wx.pageScrollTo({ scrollTop: 0, duration: 200 });
     } else {
-      // 验证正文字数
-      if (content.length < 50) {
-        wx.showToast({
-          title: '正文至少50个字',
-          icon: 'none'
-        });
-        return;
-      }
-
-      // 保存当前 Task 的答案
-      const writingData = wx.getStorageSync('writingData') || {};
-      writingData[currentTask] = { outline, content };
-      wx.setStorageSync('writingData', writingData);
-
-      if (currentTask === 'task1') {
-        // 进入 Task 2
-        this.setData({
-          currentTask: 'task2',
-          currentStep: 'outline',
-          outline: '',
-          content: ''
-        });
-        this.updateTaskData();
-      } else {
-        // 完成写作测评
-        this.completeWriting();
-      }
+      this.completeWriting();
     }
   },
 
-  // 完成写作测评
-  completeWriting() {
-    // 根据模式决定跳转
-    if (this.data.mode === 'full') {
-      // 完整测评模式：跳转到结果页
-      wx.redirectTo({
-        url: '/pages/assessment/result/result'
-      });
-    } else {
-      // 单项测评模式：返回首页
-      wx.showToast({
-        title: '写作测评完成',
-        icon: 'success',
-        duration: 1500
-      });
-      setTimeout(() => {
-        wx.switchTab({
-          url: '/pages/home/home'
-        });
-      }, 1500);
-    }
-  },
+  async completeWriting() {
+    if (this.data.submitting) return;
+    this.setData({ submitting: true });
 
-  // 返回首页
-  goToHome() {
-    wx.switchTab({
-      url: '/pages/home/home'
+    const res = await flow.submitWithGuard('提交中...', async () => {
+      // 写作产出数据
+      await assessmentStore.saveSection({
+        production: {
+          writing: {
+            task1: this.data.taskInputs[0],
+            task2: this.data.taskInputs[1],
+            completedAt: new Date(),
+          },
+        },
+      });
+      // 完整测评：写作是最后一个模块，标记整份测评完成
+      if (this.data.mode === 'full') {
+        await assessmentStore.finalize();
+      }
     });
-  }
+
+    this.setData({ submitting: false });
+    if (res === flow.SKIPPED) return;
+
+    // 完整测评 → 结果页；单项 → 回首页
+    flow.finishModule('writing', this.data.mode, '写作测评完成');
+  },
 });

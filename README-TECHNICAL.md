@@ -58,7 +58,7 @@ ielts-edu-main/ielts-edu-main/
     ├── learning-report/   # 学习报告
     ├── homework-detail/   # 作业详情
     ├── schedule-manage/   # 排课管理（管理员）
-    └── assessment/        # 测评模块（intro/listening/speaking/reading/writing/result）
+    └── assessment/        # 测评模块（intro/vocab/listening/speaking/reading/writing/result）
 ```
 
 ---
@@ -127,8 +127,9 @@ ielts-edu-main/ielts-edu-main/
 | `homework` | 作业 + 任务 | `title`, `subject`, `description`/`content`, `courseId`, `courseName`, `status`(pending/completed), `submitted`, `completion`(0-100), `estimatedTime`, `timeSpent`, `recordType`(task=任务), `assignedAt` |
 | `checkins` | 打卡记录 | `date`, `types`([listening/speaking/reading/writing/homework]), `content`, `duration`(分钟), `createdAt` |
 | `exam_scores` | 雅思成绩 | `date`, `listening`, `speaking`, `reading`, `writing`, `total`（均 0-9 分） |
-| `assessment_results` | 测评结果 | `totalScore`, `listeningScore`, `speakingScore`, `readingScore`, `writingScore` |
-| `speaking_answers` | 口语测评答题 | 语音答案记录 |
+| `assessment_results` | 测评结果（type=ability_model） | `vocab`(词汇估值), `selfAssess.{listening/reading/writing/speaking}`(`ratings` 12 条 0-5 + `level` 平均), `production.{writing/speaking}`(产出题作答), `status`(in_progress/completed) |
+| `speaking_answers` | 口语测评答题 | 语音答案记录，产出题 `part: production` |
+| `vocab_test_sessions` | 词汇量 CAT 测评会话 | `status`(active/completed), `responses`(作答数组，含 rtMs/timeout/suspicious), `currentTheta`, `currentSe`, `finalTheta`, `vocabEstimate`, `cefrLevel`, `breakdown`(分词频段正确率), `lowConfidence` |
 | `pomodoro_sessions` | 番茄专注会话 | `homeworkId`, `subject`, `totalFocusMinutes`, `completedPomodoros`(0/1), `isPartial`, `startedAt`, `endedAt`, `date` |
 
 ### 5.2 数据关联设计
@@ -153,6 +154,7 @@ ielts-edu-main/ielts-edu-main/
 | `initDatabase` | 自动创建 8 个集合 | 仅管理员 |
 | `migrateHomework` | 历史作业数据迁移（type→subject 等，支持 dryRun 预览） | 仅管理员 |
 | `asrSpeechToText` | 口语测评语音转文字 | — |
+| `vocabCatTest` | 词汇量 CAT 自适应测评（IRT 3PL + EAP + 最大信息量选题，actions: start/answer/result） | 按当前用户 OPENID 隔离会话 |
 | `sendCheckinReminder` | 打卡提醒（空目录，未实现） | — |
 
 ### 管理员身份校验统一模式
@@ -405,18 +407,28 @@ async function verifyAdmin() {
 
 ### 8.11 测评模块 `/pages/assessment`
 
-#### intro 介绍页
-- 4 个测评模块卡片：听力（Part 1 填空 10 题/约 5 分钟）、口语（Part1×5+Part2×1+Part3×2/约 8 分钟）、阅读（词汇量测试/约 5 分钟）、写作（2 题/约 10 分钟）
-- 模块卡底色：听力 `rgba(18,183,168,0.12)` / 口语 `rgba(23,33,43,0.08)` / 阅读 `rgba(18,183,168,0.20)` / 写作 `rgba(122,135,148,0.14)`
-- 支持单项测评 / 完整测评（顺序进入）/ 跳过 / 查看结果
+> 基于《入学测评（全）》测试文档：第一步词汇测试 → 第二步听说读写 48 项能力模型自评 → 第三步产出题
 
-#### listening / speaking / reading / writing
-- 各科目答题页面，结果写入 `assessment_results`（听/说/读/写 + 总分 0-9）
+#### intro 介绍页
+- 5 个测评模块卡片：词汇量（CAT 自适应测试/约 3-5 分钟）、听力（12 条自评/约 3 分钟）、口语（12 条自评+2 道产出题/约 8 分钟）、阅读（12 条自评/约 3 分钟）、写作（12 条自评+2 道产出题/约 8 分钟）
+- 支持单项测评 / 完整测评（词汇量→听力→口语→阅读→写作）/ 跳过 / 查看结果
+
+#### 能力自评（components/self-assess）
+- 通用自评组件：48 条描述存于 `utils/assessmentData.js`（听/读/写/说 × 12 条），单题展示、0-5 分打分、自动进入下一条
+- 完成后经 `utils/assessmentStore.js` 合并写入 `assessment_results.selfAssess.{skill}`（`ratings` 数组 + `level` 平均分 0-5）
+
+#### vocab / listening / speaking / reading / writing
+- vocab：词汇量 CAT 自适应测试（云函数 `vocabCatTest`，actions: start/answer/result），完成后词汇估值写入 `assessment_results.vocab`
+- listening：12 条听力自评
+- reading：12 条阅读自评
+- speaking：12 条口语自评 → 2 道产出题（图片描述：60 秒准备+120 秒录音，配图 `images/assessment-speaking-picture.jpg`；观点表达：随机 1 题 30 秒录音），录音上传云存储 → `speaking_answers`（part=production）→ ASR 转写
+- writing：12 条写作自评 → 2 道产出题（三种句式改写 / CER 论点论据论证），数据写入 `assessment_results.production.writing`
+- 完整测评中写作是最后一环，完成后调 `finalize()` 标记记录 `status: completed`
 
 #### result 结果页
-- 展示总分、CEFR 等级（A1-C2，按分数段映射）与描述
-- 四科分析：分数、百分比进度条、评语（按 ≥7 / ≥5 / <5 三档）
-- CEFR 映射：≥8→C2，≥7→C1，≥6→B2，≥5→B1，≥4→A2，<4→A1
+- 词汇量估值（含 CEFR 徽标与置信度提示，兜底查 `vocab_test_sessions`）
+- 四维能力等级条（0-5 级，来自自评平均分）+ 评语（≥4 / ≥2.5 / <2.5 三档）
+- 综合 CEFR：四维平均映射，≥4.5→C2，≥3.5→C1，≥2.5→B2，≥1.5→B1，≥0.8→A2，<0.8→A1
 
 ---
 

@@ -1,0 +1,11 @@
+{
+  "name": "soeEvaluate",
+  "version": "1.0.0",
+  "description": "腾讯云智聆口语评测 SOE（新版 WebSocket）：对跟读音频进行发音准确度/流利度/完整度评分",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0",
+    "ws": "^8.18.0"
+  }
+}
+

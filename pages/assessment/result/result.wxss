@@ -226,3 +226,47 @@
 .action-btn::after {
   border: none;
 }
+
+/* 空状态 */
+.empty-tip {
+  padding: 200rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40rpx;
+  font-size: 28rpx;
+  color: #9A97AA;
+}
+
+/* 词汇量卡片 */
+.vocab-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+}
+
+.vocab-unit {
+  font-size: 28rpx;
+  color: #9A97AA;
+}
+
+.cefr-badge {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #0E8C80;
+  background: #A7FBF5;
+  padding: 8rpx 28rpx;
+  border-radius: 24rpx;
+}
+
+.confidence-tip {
+  font-size: 22rpx;
+  color: #E8A15D;
+  text-align: center;
+}
+
+.analysis-score {
+  font-size: 26rpx;
+  color: #4A4A4A;
+  font-weight: 600;
+}

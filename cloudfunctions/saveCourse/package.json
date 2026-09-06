@@ -1,0 +1,9 @@
+{
+  "name": "saveCourse",
+  "version": "1.0.0",
+  "description": "排课写操作（管理员）：单节/循环排课",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

@@ -29,6 +29,11 @@ Page({
     avatarUrl: '',
     defaultAvatarUrl: '',
     iconUser: '',
+    // 编辑个人资料弹窗（延迟完善：一键登录后在这里设置头像昵称）
+    showEditProfile: false,
+    editNickName: '',
+    editAvatarUrl: '',      // 本地临时文件路径；为空表示不更换头像
+    savingProfile: false,
     // 云存储图标（使用临时 URL）
     iconTarget: '',
     iconChart: '',
@@ -186,6 +191,9 @@ Page({
           if (res.success && res.data.length > 0) {
             const dbUser = res.data[0];
             isAdmin = dbUser.isAdmin === true;
+            // 同步最新资料（昵称 / 头像可能在"编辑资料"中更新过）
+            if (dbUser.nickName) userInfo.nickName = dbUser.nickName;
+            if (dbUser.avatarUrl !== undefined) userInfo.avatarUrl = dbUser.avatarUrl;
             // 更新 globalData
             userInfo.isAdmin = isAdmin;
             app.globalData.userInfo = userInfo;
@@ -236,6 +244,96 @@ Page({
         }
       }
     });
+  },
+
+  // ======================================================
+  // 编辑个人资料（头像 / 昵称）
+  // ======================================================
+
+  /** 点击头像或昵称，打开编辑资料弹窗 */
+  onTapEditProfile() {
+    if (!this.data.isLoggedIn) return;
+    this.setData({
+      showEditProfile: true,
+      editNickName: this.data.userName === '未登录' ? '' : this.data.userName,
+      editAvatarUrl: '', // 空 = 保留现有头像
+    });
+  },
+
+  /** 编辑弹窗：选择头像回调（open-type="chooseAvatar"） */
+  onEditChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
+    if (avatarUrl) {
+      this.setData({ editAvatarUrl: avatarUrl });
+    }
+  },
+
+  /** 编辑弹窗：昵称输入（type="nickname"） */
+  onEditNickNameInput(e) {
+    this.setData({ editNickName: e.detail.value });
+  },
+
+  /** 关闭编辑弹窗 */
+  hideEditProfile() {
+    this.setData({ showEditProfile: false });
+  },
+
+  /** 保存个人资料：上传头像（如有更换）→ 更新 users 集合 → 同步全局状态 */
+  async saveProfile() {
+    if (this.data.savingProfile) return;
+
+    const nickName = (this.data.editNickName || '').trim();
+    if (!nickName) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' });
+      return;
+    }
+
+    this.setData({ savingProfile: true });
+
+    try {
+      const userId = this.data.userId || (app.globalData.userInfo && app.globalData.userInfo.userId);
+      if (!userId) throw new Error('缺少用户 ID');
+
+      // 1. 上传新头像到云存储（仅当用户本次选择了新头像）
+      let finalAvatarUrl = this.data.avatarUrl;
+      const tempAvatar = this.data.editAvatarUrl;
+      if (tempAvatar && tempAvatar.startsWith('wxfile://')) {
+        try {
+          const cloudPath = `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 6)}.jpg`;
+          const uploadRes = await wx.cloud.uploadFile({
+            cloudPath,
+            filePath: tempAvatar,
+          });
+          finalAvatarUrl = uploadRes.fileID;
+        } catch (e) {
+          console.error('[编辑资料] 上传头像失败', e);
+          // 头像上传失败不阻塞昵称保存
+        }
+      }
+
+      // 2. 更新云数据库
+      const updateData = { nickName, avatarUrl: finalAvatarUrl };
+      const res = await cloudDB.update('users', userId, updateData);
+      if (!res.success) throw new Error(res.error || '更新失败');
+
+      // 3. 同步全局登录状态与本地缓存
+      const userInfo = Object.assign({}, app.globalData.userInfo, updateData);
+      app.setLoginStatus(userInfo);
+
+      // 4. 刷新页面展示
+      this.setData({
+        userName: nickName,
+        avatarUrl: finalAvatarUrl,
+        showEditProfile: false,
+        savingProfile: false,
+      });
+
+      wx.showToast({ title: '资料已更新', icon: 'success' });
+    } catch (e) {
+      console.error('[编辑资料] 保存失败', e);
+      this.setData({ savingProfile: false });
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+    }
   },
 
   /**

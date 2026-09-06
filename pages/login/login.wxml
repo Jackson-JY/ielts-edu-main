@@ -8,36 +8,6 @@
     <text class="subtitle">专业陪伴，轻松备考</text>
   </view>
 
-  <!-- 新用户信息填写区域 -->
-  <view class="user-info-section" wx:if="{{openId && !isOldUser}}">
-    <view class="info-card">
-      <text class="info-title">完善个人信息</text>
-      
-      <view class="avatar-selector">
-        <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <view class="avatar-wrap">
-            <image class="avatar-img" src="{{tempAvatarUrl || iconUser}}" mode="aspectFill" />
-            <view class="avatar-edit">
-              <text class="edit-icon">+</text>
-            </view>
-          </view>
-        </button>
-        <text class="avatar-hint">点击更换头像</text>
-      </view>
-      
-      <view class="nickname-wrap">
-        <text class="field-label">昵称</text>
-        <input
-          type="nickname"
-          class="nickname-input"
-          placeholder="请输入昵称"
-          value="{{tempNickName}}"
-          bind:input="onNickNameInput"
-        />
-      </view>
-    </view>
-  </view>
-
   <!-- 用户协议勾选（必须由用户主动勾选，不默认同意） -->
   <view class="agreement">
     <view class="agree-check {{agreed ? 'checked' : ''}}" bindtap="onToggleAgree">
@@ -52,31 +22,44 @@
   </view>
 
   <!-- 按钮组 -->
-  <view class="button-group">
-    <!-- 第一步：获取 openid -->
-    <button
-      wx:if="{{!openId}}"
-      class="btn btn-primary"
-      bindtap="handleWechatLogin"
-      loading="{{isLoading}}"
-      disabled="{{isLoading}}"
-    >
-      <text wx:if="{{!isLoading}}">微信一键登录</text>
-      <text wx:else>登录中...</text>
-    </button>
+  <view class="button-group-wrap">
+    <view class="button-group">
+      <!-- 主按钮：手机号一键登录（微信原生授权弹窗，一次点击完成登录） -->
+      <button
+        class="btn btn-primary"
+        open-type="getPhoneNumber"
+        bindgetphonenumber="onGetPhoneNumber"
+        disabled="{{isLoading}}"
+      >
+        <!-- 仅当前方式为手机号登录时展示 loading，避免两按钮同时变"登录中" -->
+        <view wx:if="{{loginMethod === 'phone'}}" class="btn-loading">
+          <view class="spinner"></view>
+          <text>登录中...</text>
+        </view>
+        <text wx:else class="btn-phone-text">📱 手机号一键登录</text>
+      </button>
 
-    <!-- 第二步：新用户完成注册 -->
-    <button
-      wx:if="{{openId && !isOldUser}}"
-      class="btn btn-primary"
-      bindtap="handleCompleteRegister"
-      loading="{{isLoading}}"
-      disabled="{{isLoading || !tempNickName}}"
-    >
-      <text wx:if="{{!isLoading}}">完成注册</text>
-      <text wx:else>注册中...</text>
-    </button>
+      <!-- 次按钮：微信身份登录（静默，无需手机号） -->
+      <button
+        class="btn btn-secondary"
+        bindtap="handleWechatLogin"
+        disabled="{{isLoading}}"
+      >
+        <view wx:if="{{loginMethod === 'wechat'}}" class="btn-loading">
+          <view class="spinner"></view>
+          <text>登录中...</text>
+        </view>
+        <text wx:else>微信登录</text>
+      </button>
+    </view>
 
+    <!-- 未勾选协议时的点击拦截遮罩：防止授权弹窗在未同意协议前被触发 -->
+    <view class="btn-group-mask" wx:if="{{!agreed}}" catchtap="onMaskTap"></view>
+  </view>
+
+  <!-- 登录说明 -->
+  <view class="login-note">
+    <text>登录后将自动同步你的学习记录</text>
   </view>
 
 </view>

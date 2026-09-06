@@ -30,6 +30,17 @@ exports.main = async (event, context) => {
     if (user) {
       blocked = user.blocked === true;
 
+      // 补写 unionid（用于管理端微信扫码登录的身份关联）
+      if (!user.unionid && wxContext.UNIONID) {
+        try {
+          await db.collection('users').doc(user._id).update({
+            data: { unionid: wxContext.UNIONID },
+          });
+        } catch (e) {
+          console.error('[getOpenId] 补写 unionid 失败', e);
+        }
+      }
+
       // 记录登录尝试（无论是否被拒）
       if (countAttempt) {
         try {

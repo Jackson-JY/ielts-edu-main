@@ -3,16 +3,23 @@ page {
   background-color: #FFF9F5;
 }
 
+.page {
+  min-height: 100vh;
+}
+
 .container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: 180rpx;
 }
 
 /* Header */
 .header {
   padding: 30rpx;
   border-bottom: 2rpx solid rgba(154, 151, 170, 0.2);
+  box-sizing: border-box;
 }
 
 .header-top {
@@ -39,7 +46,6 @@ page {
 .task-tabs {
   display: flex;
   gap: 16rpx;
-  box-sizing: border-box;
 }
 
 .task-tab {
@@ -56,99 +62,98 @@ page {
   background-color: #A7FBF5;
 }
 
-/* Content Area */
-.content-area {
-  flex: 1;
-  padding: 30rpx;
-}
-
-/* Task Card */
+/* 题目卡片 */
 .task-card {
-  padding: 30rpx;
-  background-color: #F5F0FF;
-  border-radius: 24rpx;
-  margin-bottom: 30rpx;
+  margin: 30rpx;
+  padding: 40rpx;
+  background: #F5F0FF;
+  border-radius: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  box-sizing: border-box;
 }
 
 .task-title {
-  font-size: 32rpx;
-  font-weight: 600;
+  font-size: 34rpx;
+  font-weight: 700;
   color: #4A4A4A;
-  display: block;
-  margin-bottom: 16rpx;
 }
 
-.task-desc {
-  font-size: 28rpx;
+.task-prompt {
+  font-size: 30rpx;
   color: #4A4A4A;
-  display: block;
-  margin-bottom: 16rpx;
   line-height: 1.6;
 }
 
-.word-count-hint {
+.task-prompt-en {
+  font-size: 26rpx;
+  color: #7A8794;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.task-requirement {
   font-size: 24rpx;
   color: #9A97AA;
+  line-height: 1.5;
 }
 
-/* Step Tabs */
-.step-tabs {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 30rpx;
-  box-sizing: border-box;
-}
-
-.step-tab {
-  flex: 1;
-  padding: 20rpx 0;
-  text-align: center;
-  font-size: 26rpx;
-  color: #4A4A4A;
-  background-color: #F5F0FF;
-  border-radius: 16rpx;
-}
-
-.step-tab.active {
-  background-color: #A7FBF5;
-}
-
-/* Input Section */
-.input-section {
+/* 输入区 */
+.slot-list {
+  padding: 0 30rpx;
   display: flex;
   flex-direction: column;
+  gap: 32rpx;
 }
 
-.input-hint {
-  font-size: 26rpx;
+.slot-item {
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(23, 33, 43, 0.06);
+}
+
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.slot-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+}
+
+.slot-hint {
+  font-size: 22rpx;
   color: #9A97AA;
-  margin-bottom: 16rpx;
 }
 
-.input-textarea {
+.slot-input {
   width: 100%;
-  min-height: 300rpx;
-  background-color: #F5F0FF;
-  border-radius: 24rpx;
-  padding: 30rpx;
+  min-height: 120rpx;
   font-size: 28rpx;
   color: #4A4A4A;
   line-height: 1.6;
+  background: #F6F8FB;
+  border-radius: 20rpx;
+  padding: 20rpx;
   box-sizing: border-box;
 }
 
-.char-count {
-  font-size: 24rpx;
-  color: #9A97AA;
-  text-align: right;
-  margin-top: 16rpx;
-}
-
-/* Bottom Actions */
+/* 底部操作 */
 .bottom-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 30rpx;
   border-top: 2rpx solid rgba(154, 151, 170, 0.2);
   background-color: #FFF9F5;
+  box-sizing: border-box;
 }
 
 .btn {
@@ -170,4 +175,9 @@ page {
 .btn-primary {
   background-color: #A7FBF5;
   color: #4A4A4A;
+}
+
+.btn-primary.disabled {
+  background-color: #E0E0E0;
+  color: #9A97AA;
 }

@@ -1,0 +1,9 @@
+{
+  "name": "vocabCatTest",
+  "version": "1.0.0",
+  "description": "词汇量 CAT 自适应测评云函数 - IRT 3PL + EAP + 最大信息量选题",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

@@ -1,38 +1,8 @@
 <!-- pages/assessment/reading/reading.wxml -->
-<view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="header-top">
-      <text class="title">阅读测评</text>
-      <view class="progress-badge">进度 3/4</view>
-    </view>
-    <text class="subtitle">词汇量测试 - {{currentQuestion + 1}} / {{totalQuestions}}</text>
-  </view>
-
-  <!-- Progress Bar -->
-  <view class="progress-section">
-    <view class="progress-bar">
-      <view class="progress-fill" style="width: {{progressPercent}}%"></view>
-    </view>
-  </view>
-
-  <!-- Main Content -->
-  <view class="content-area">
-    <view class="word-display">
-      <text class="word-text">{{currentQuestionData.word}}</text>
-      <text class="word-hint">选择与单词含义最匹配的选项</text>
-    </view>
-
-    <view class="options-list">
-      <view 
-        class="option-item"
-        wx:for="{{currentQuestionData.options}}"
-        wx:key="index"
-        bindtap="selectAnswer"
-        data-index="{{index}}">
-        <view class="option-badge">{{optionLetters[index]}}</view>
-        <text class="option-text">{{item}}</text>
-      </view>
-    </view>
-  </view>
+<view class="page">
+  <self-assess
+    title="阅读能力自评"
+    subtitle="以下 12 条描述，按你的实际情况打分：0 = 完全不符合，5 = 完全符合"
+    items="{{items}}"
+    bind:finish="onSelfAssessFinish"/>
 </view>

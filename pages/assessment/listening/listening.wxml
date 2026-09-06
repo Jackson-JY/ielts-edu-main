@@ -1,50 +1,8 @@
 <!-- pages/assessment/listening/listening.wxml -->
-<view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="header-top">
-      <text class="title">听力测评</text>
-      <view class="progress-badge">进度 1/4</view>
-    </view>
-    <text class="subtitle">已答 {{answeredCount}} / 共 10 题</text>
-  </view>
-
-  <!-- Audio Player -->
-  <view class="audio-player">
-    <view class="player-controls">
-      <view class="play-btn {{isPlaying || hasPlayed ? 'disabled' : ''}}" bindtap="togglePlay">
-        <image wx:if="{{!isPlaying && !hasPlayed}}" src="{{iconPlay}}" mode="aspectFit" class="play-icon"/>
-        <image wx:elif="{{isPlaying}}" src="{{iconPause}}" mode="aspectFit" class="play-icon"/>
-        <image wx:else src="{{iconCheck}}" mode="aspectFit" class="play-icon"/>
-      </view>
-      <view class="progress-area">
-        <view class="progress-bar">
-          <view class="progress-fill" style="width: {{progressPercent}}%"></view>
-        </view>
-        <text class="status-text">{{hasPlayed ? '已播放' : isPlaying ? '播放中' : '点击播放音频'}}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- Questions -->
-  <scroll-view class="questions-area" scroll-y>
-    <view class="question-item" wx:for="{{questions}}" wx:key="index">
-      <text class="question-text">{{index + 1}}. {{item}}</text>
-      <input 
-        class="answer-input" 
-        placeholder="请输入答案"
-        value="{{answers[index]}}"
-        bindinput="onAnswerInput"
-        data-index="{{index}}"
-      />
-    </view>
-  </scroll-view>
-
-  <!-- Bottom Actions -->
-  <view class="bottom-actions">
-    <button class="btn btn-secondary" bindtap="goBack">上一题</button>
-    <button class="btn btn-primary" bindtap="submitAnswers">
-      {{answeredCount === 10 ? '提交听力答案' : '下一题'}}
-    </button>
-  </view>
+<view class="page">
+  <self-assess
+    title="听力能力自评"
+    subtitle="以下 12 条描述，按你的实际情况打分：0 = 完全不符合，5 = 完全符合"
+    items="{{items}}"
+    bind:finish="onSelfAssessFinish"/>
 </view>
