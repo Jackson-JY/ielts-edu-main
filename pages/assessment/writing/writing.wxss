@@ -1,6 +1,6 @@
 /* pages/assessment/writing/writing.wxss */
 page {
-  background-color: #FFF9F5;
+  background-color: #F5F5F7;
 }
 
 .page {
@@ -17,8 +17,8 @@ page {
 
 /* Header */
 .header {
-  padding: 30rpx;
-  border-bottom: 2rpx solid rgba(154, 151, 170, 0.2);
+  padding: 32rpx;
+  border-bottom: 1rpx solid #E5E5EA;
   box-sizing: border-box;
 }
 
@@ -32,15 +32,17 @@ page {
 .title {
   font-size: 36rpx;
   font-weight: 600;
-  color: #4A4A4A;
+  color: #1D1D1F;
+  letter-spacing: -0.01em;
 }
 
 .progress-badge {
   font-size: 24rpx;
   padding: 8rpx 24rpx;
-  background-color: #E8D4F8;
-  color: #4A4A4A;
-  border-radius: 30rpx;
+  background-color: #E6F7F5;
+  color: #0E8C81;
+  border-radius: 999px;
+  font-weight: 600;
 }
 
 .task-tabs {
@@ -53,21 +55,25 @@ page {
   padding: 16rpx 0;
   text-align: center;
   font-size: 28rpx;
-  color: #4A4A4A;
-  background-color: #F5F0FF;
-  border-radius: 16rpx;
+  color: #6E6E73;
+  background-color: #F2F2F7;
+  border-radius: 999px;
 }
 
 .task-tab.active {
-  background-color: #A7FBF5;
+  background-color: #E6F7F5;
+  color: #0E8C81;
+  font-weight: 600;
 }
 
 /* 题目卡片 */
 .task-card {
-  margin: 30rpx;
-  padding: 40rpx;
-  background: #F5F0FF;
-  border-radius: 32rpx;
+  margin: 32rpx;
+  padding: 32rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 16rpx;
@@ -77,41 +83,44 @@ page {
 .task-title {
   font-size: 34rpx;
   font-weight: 700;
-  color: #4A4A4A;
+  color: #1D1D1F;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
 }
 
 .task-prompt {
   font-size: 30rpx;
-  color: #4A4A4A;
+  color: #1D1D1F;
   line-height: 1.6;
 }
 
 .task-prompt-en {
   font-size: 26rpx;
-  color: #7A8794;
+  color: #6E6E73;
   line-height: 1.6;
   font-style: italic;
 }
 
 .task-requirement {
   font-size: 24rpx;
-  color: #9A97AA;
+  color: #8E8E93;
   line-height: 1.5;
 }
 
 /* 输入区 */
 .slot-list {
-  padding: 0 30rpx;
+  padding: 0 32rpx;
   display: flex;
   flex-direction: column;
-  gap: 32rpx;
+  gap: 24rpx;
 }
 
 .slot-item {
   background: #FFFFFF;
-  border-radius: 32rpx;
+  border-radius: 24rpx;
   padding: 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(23, 33, 43, 0.06);
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .slot-header {
@@ -124,24 +133,25 @@ page {
 .slot-label {
   font-size: 28rpx;
   font-weight: 600;
-  color: #4A4A4A;
+  color: #1D1D1F;
 }
 
 .slot-hint {
   font-size: 22rpx;
-  color: #9A97AA;
+  color: #8E8E93;
 }
 
 .slot-input {
   width: 100%;
   min-height: 120rpx;
   font-size: 28rpx;
-  color: #4A4A4A;
+  color: #1D1D1F;
   line-height: 1.6;
-  background: #F6F8FB;
-  border-radius: 20rpx;
+  background: #F5F5F7;
+  border-radius: 16rpx;
   padding: 20rpx;
   box-sizing: border-box;
+  border: 1rpx solid #E5E5EA;
 }
 
 /* 底部操作 */
@@ -150,22 +160,24 @@ page {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 30rpx;
-  border-top: 2rpx solid rgba(154, 151, 170, 0.2);
-  background-color: #FFF9F5;
+  padding: 32rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #E5E5EA;
+  background-color: #F5F5F7;
   box-sizing: border-box;
 }
 
 .btn {
   width: 100%;
-  height: 96rpx;
-  border-radius: 48rpx;
+  height: 88rpx;
+  border-radius: 999px;
   font-size: 30rpx;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
+  transition: filter 0.18s ease;
 }
 
 .btn::after {
@@ -173,11 +185,22 @@ page {
 }
 
 .btn-primary {
-  background-color: #A7FBF5;
-  color: #4A4A4A;
+  background-color: #12B7A8;
+  color: #FFFFFF;
+}
+
+.btn-primary:active {
+  filter: brightness(0.92);
 }
 
 .btn-primary.disabled {
-  background-color: #E0E0E0;
-  color: #9A97AA;
+  opacity: 0.42;
+  background-color: #12B7A8;
+  color: #FFFFFF;
+}
+
+.btn-primary[disabled] {
+  opacity: 0.42;
+  background-color: #12B7A8;
+  color: #FFFFFF;
 }

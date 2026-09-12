@@ -4,7 +4,7 @@
   <view class="header">
     <view class="header-content">
       <view class="title-row">
-        <image class="title-icon" src="{{iconChart}}" mode="aspectFit"/>
+        <icon name="chart" color="#12B7A8" size="44rpx"/>
         <text class="title">学习报告</text>
       </view>
       <text class="subtitle">追踪你的雅思学习进度</text>
@@ -14,21 +14,24 @@
         <text class="date-text">{{currentDateRange}}</text>
       </view>
       <button class="share-btn" bindtap="generateShareImage">
-        <image class="share-icon" src="{{iconDocument}}" mode="aspectFit"/>
+        <icon name="share" color="#FFFFFF" size="28rpx"/>
         <text class="share-text">生成海报</text>
       </button>
     </view>
   </view>
 
-  <!-- 核心数据概览 -->
+  <!-- 核心数据概览：总时长超大数字 + 2×2 网格 -->
   <view class="stats-overview">
     <view class="stat-card primary">
-      <view class="stat-icon">
-        <image class="stat-icon-img" src="{{iconFire}}" mode="aspectFit"/>
+      <view class="stat-primary-content">
+        <text class="stat-eyebrow">总学习时长</text>
+        <view class="stat-primary-row">
+          <text class="stat-value-big">{{studyData.totalHours || 0}}</text>
+          <text class="stat-unit">小时</text>
+        </view>
       </view>
-      <view class="stat-content">
-        <text class="stat-value">{{studyData.totalHours || 0}}</text>
-        <text class="stat-label">总学习时长(小时)</text>
+      <view class="stat-primary-icon">
+        <icon name="flame" color="#12B7A8" size="48rpx"/>
       </view>
     </view>
     <view class="stat-grid">
@@ -55,15 +58,15 @@
   <view class="section-card">
     <view class="card-header">
       <view class="card-title-row">
-        <image class="card-title-icon" src="{{iconCheck}}" mode="aspectFit"/>
+        <icon name="check" color="#12B7A8" size="34rpx"/>
         <text class="card-title">听说读写打卡统计</text>
       </view>
-      <text class="card-subtitle">各项打卡次数一目了然</text>
+      <text class="card-subtitle">各项打卡次数</text>
     </view>
 
     <view class="subject-checkin-grid">
       <view class="subject-checkin-item" wx:for="{{subjectCheckinStats}}" wx:key="id">
-        <image class="subject-checkin-icon" src="{{item.icon}}" mode="aspectFit"/>
+        <icon name="{{item.iconName}}" color="#12B7A8" size="48rpx"/>
         <text class="subject-checkin-count">{{item.count}}</text>
         <text class="subject-checkin-label">{{item.label}}打卡</text>
       </view>
@@ -74,29 +77,29 @@
   <view class="section-card">
     <view class="card-header">
       <view class="card-title-row">
-        <image class="card-title-icon" src="{{iconTarget}}" mode="aspectFit"/>
+        <icon name="target" color="#12B7A8" size="34rpx"/>
         <text class="card-title">科目成绩趋势</text>
       </view>
       <text class="card-subtitle">各科目成绩变化</text>
     </view>
-    
+
     <!-- 两科一行 -->
     <view class="subject-charts-row">
       <!-- 听力趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <image class="subject-icon" src="{{iconHeadphones}}" mode="aspectFit"/>
+          <icon name="headphones" color="#12B7A8" size="34rpx"/>
           <text class="subject-name">听力</text>
         </view>
         <view class="mini-chart-container">
           <canvas type="2d" id="listeningCanvas" class="mini-chart-canvas"></canvas>
         </view>
       </view>
-      
+
       <!-- 阅读趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <image class="subject-icon" src="{{iconBook}}" mode="aspectFit"/>
+          <icon name="book" color="#12B7A8" size="34rpx"/>
           <text class="subject-name">阅读</text>
         </view>
         <view class="mini-chart-container">
@@ -109,18 +112,18 @@
       <!-- 写作趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <image class="subject-icon" src="{{iconPen}}" mode="aspectFit"/>
+          <icon name="pen" color="#12B7A8" size="34rpx"/>
           <text class="subject-name">写作</text>
         </view>
         <view class="mini-chart-container">
           <canvas type="2d" id="writingCanvas" class="mini-chart-canvas"></canvas>
         </view>
       </view>
-      
+
       <!-- 口语趋势 -->
       <view class="subject-chart-item">
         <view class="subject-chart-header">
-          <image class="subject-icon" src="{{iconMic}}" mode="aspectFit"/>
+          <icon name="mic" color="#12B7A8" size="34rpx"/>
           <text class="subject-name">口语</text>
         </view>
         <view class="mini-chart-container">
@@ -132,7 +135,7 @@
     <!-- 总成绩趋势 -->
     <view class="total-score-section">
       <view class="total-score-header">
-        <image class="total-score-icon" src="{{iconChart}}" mode="aspectFit"/>
+        <icon name="chart" color="#12B7A8" size="38rpx"/>
         <text class="total-score-title">总成绩趋势</text>
       </view>
       <view class="total-chart-container">
@@ -144,94 +147,94 @@
         </block>
       </view>
     </view>
+  </view>
 
-    <!-- 成绩详情表格 -->
-    <view class="section-card" wx:if="{{examScores.length > 0}}">
-      <view class="card-header">
-        <view class="card-title-row">
-          <image class="card-title-icon" src="{{iconDocument}}" mode="aspectFit"/>
-          <text class="card-title">成绩详情</text>
-        </view>
-        <text class="card-subtitle">各科目成绩一览</text>
+  <!-- 成绩详情表格 -->
+  <view class="section-card" wx:if="{{examScores.length > 0}}">
+    <view class="card-header">
+      <view class="card-title-row">
+        <icon name="trophy" color="#12B7A8" size="34rpx"/>
+        <text class="card-title">成绩详情</text>
       </view>
-      <scroll-view scroll-x class="score-table-wrapper">
-        <view class="score-table">
-          <!-- 表头：科目 + 提高 + 次数列（倒序，最后一次优先） -->
-          <view class="table-header">
-            <text class="table-cell header-cell subject-cell">科目</text>
-            <text class="table-cell header-cell improve-col">提高</text>
-            <block wx:for="{{examScoresReverse}}" wx:key="index">
-              <text class="table-cell header-cell date-col {{item.isLatest ? 'latest-col' : ''}}">第{{item.actualCount}}次</text>
-            </block>
-          </view>
-          <!-- 听力行 -->
-          <view class="table-row">
-            <view class="table-cell subject-cell subject-cell-with-icon">
-              <image class="table-subject-icon" src="{{iconHeadphones}}" mode="aspectFit"/>
-              <text>听力</text>
-            </view>
-            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].listeningImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].listeningImprovement < 0 ? 'improve-negative' : '')}}">
-              {{examScoresReverse[0].listeningImprovement > 0 ? '+' + examScoresReverse[0].listeningImprovement : (examScoresReverse[0].listeningImprovement < 0 ? examScoresReverse[0].listeningImprovement : '-')}}
-            </text>
-            <block wx:for="{{examScoresReverse}}" wx:key="index">
-              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.listening || '-'}}</text>
-            </block>
-          </view>
-          <!-- 阅读行 -->
-          <view class="table-row">
-            <view class="table-cell subject-cell subject-cell-with-icon">
-              <image class="table-subject-icon" src="{{iconBook}}" mode="aspectFit"/>
-              <text>阅读</text>
-            </view>
-            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].readingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].readingImprovement < 0 ? 'improve-negative' : '')}}">
-              {{examScoresReverse[0].readingImprovement > 0 ? '+' + examScoresReverse[0].readingImprovement : (examScoresReverse[0].readingImprovement < 0 ? examScoresReverse[0].readingImprovement : '-')}}
-            </text>
-            <block wx:for="{{examScoresReverse}}" wx:key="index">
-              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.reading || '-'}}</text>
-            </block>
-          </view>
-          <!-- 写作行 -->
-          <view class="table-row">
-            <view class="table-cell subject-cell subject-cell-with-icon">
-              <image class="table-subject-icon" src="{{iconPen}}" mode="aspectFit"/>
-              <text>写作</text>
-            </view>
-            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].writingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].writingImprovement < 0 ? 'improve-negative' : '')}}">
-              {{examScoresReverse[0].writingImprovement > 0 ? '+' + examScoresReverse[0].writingImprovement : (examScoresReverse[0].writingImprovement < 0 ? examScoresReverse[0].writingImprovement : '-')}}
-            </text>
-            <block wx:for="{{examScoresReverse}}" wx:key="index">
-              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.writing || '-'}}</text>
-            </block>
-          </view>
-          <!-- 口语行 -->
-          <view class="table-row">
-            <view class="table-cell subject-cell subject-cell-with-icon">
-              <image class="table-subject-icon" src="{{iconMic}}" mode="aspectFit"/>
-              <text>口语</text>
-            </view>
-            <text class="table-cell improve-col subject-improve {{examScoresReverse[0].speakingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].speakingImprovement < 0 ? 'improve-negative' : '')}}">
-              {{examScoresReverse[0].speakingImprovement > 0 ? '+' + examScoresReverse[0].speakingImprovement : (examScoresReverse[0].speakingImprovement < 0 ? examScoresReverse[0].speakingImprovement : '-')}}
-            </text>
-            <block wx:for="{{examScoresReverse}}" wx:key="index">
-              <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.speaking || '-'}}</text>
-            </block>
-          </view>
-          <!-- 总分行 -->
-          <view class="table-row total-row">
-            <view class="table-cell subject-cell subject-cell-with-icon">
-              <image class="table-subject-icon" src="{{iconChart}}" mode="aspectFit"/>
-              <text>总分</text>
-            </view>
-            <text class="table-cell improve-col total-improve {{examScoresReverse[0].improvement > 0 ? 'improve-positive' : (examScoresReverse[0].improvement < 0 ? 'improve-negative' : '')}}">
-              {{examScoresReverse[0].improvement > 0 ? '+' + examScoresReverse[0].improvement : (examScoresReverse[0].improvement < 0 ? examScoresReverse[0].improvement : '-')}}
-            </text>
-            <block wx:for="{{examScoresReverse}}" wx:key="index">
-              <text class="table-cell date-col total-cell {{item.isLatest ? 'latest-col' : ''}}">{{item.total || '-'}}</text>
-            </block>
-          </view>
-        </view>
-      </scroll-view>
+      <text class="card-subtitle">各科目成绩一览</text>
     </view>
+    <scroll-view scroll-x class="score-table-wrapper">
+      <view class="score-table">
+        <!-- 表头：科目 + 提高 + 次数列（倒序，最后一次优先） -->
+        <view class="table-header">
+          <text class="table-cell header-cell subject-cell">科目</text>
+          <text class="table-cell header-cell improve-col">提高</text>
+          <block wx:for="{{examScoresReverse}}" wx:key="index">
+            <text class="table-cell header-cell date-col {{item.isLatest ? 'latest-col' : ''}}">第{{item.actualCount}}次</text>
+          </block>
+        </view>
+        <!-- 听力行 -->
+        <view class="table-row">
+          <view class="table-cell subject-cell subject-cell-with-icon">
+            <icon name="headphones" color="#12B7A8" size="28rpx"/>
+            <text>听力</text>
+          </view>
+          <text class="table-cell improve-col subject-improve {{examScoresReverse[0].listeningImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].listeningImprovement < 0 ? 'improve-negative' : '')}}">
+            {{examScoresReverse[0].listeningImprovement > 0 ? '+' + examScoresReverse[0].listeningImprovement : (examScoresReverse[0].listeningImprovement < 0 ? examScoresReverse[0].listeningImprovement : '-')}}
+          </text>
+          <block wx:for="{{examScoresReverse}}" wx:key="index">
+            <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.listening || '-'}}</text>
+          </block>
+        </view>
+        <!-- 阅读行 -->
+        <view class="table-row">
+          <view class="table-cell subject-cell subject-cell-with-icon">
+            <icon name="book" color="#12B7A8" size="28rpx"/>
+            <text>阅读</text>
+          </view>
+          <text class="table-cell improve-col subject-improve {{examScoresReverse[0].readingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].readingImprovement < 0 ? 'improve-negative' : '')}}">
+            {{examScoresReverse[0].readingImprovement > 0 ? '+' + examScoresReverse[0].readingImprovement : (examScoresReverse[0].readingImprovement < 0 ? examScoresReverse[0].readingImprovement : '-')}}
+          </text>
+          <block wx:for="{{examScoresReverse}}" wx:key="index">
+            <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.reading || '-'}}</text>
+          </block>
+        </view>
+        <!-- 写作行 -->
+        <view class="table-row">
+          <view class="table-cell subject-cell subject-cell-with-icon">
+            <icon name="pen" color="#12B7A8" size="28rpx"/>
+            <text>写作</text>
+          </view>
+          <text class="table-cell improve-col subject-improve {{examScoresReverse[0].writingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].writingImprovement < 0 ? 'improve-negative' : '')}}">
+            {{examScoresReverse[0].writingImprovement > 0 ? '+' + examScoresReverse[0].writingImprovement : (examScoresReverse[0].writingImprovement < 0 ? examScoresReverse[0].writingImprovement : '-')}}
+          </text>
+          <block wx:for="{{examScoresReverse}}" wx:key="index">
+            <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.writing || '-'}}</text>
+          </block>
+        </view>
+        <!-- 口语行 -->
+        <view class="table-row">
+          <view class="table-cell subject-cell subject-cell-with-icon">
+            <icon name="mic" color="#12B7A8" size="28rpx"/>
+            <text>口语</text>
+          </view>
+          <text class="table-cell improve-col subject-improve {{examScoresReverse[0].speakingImprovement > 0 ? 'improve-positive' : (examScoresReverse[0].speakingImprovement < 0 ? 'improve-negative' : '')}}">
+            {{examScoresReverse[0].speakingImprovement > 0 ? '+' + examScoresReverse[0].speakingImprovement : (examScoresReverse[0].speakingImprovement < 0 ? examScoresReverse[0].speakingImprovement : '-')}}
+          </text>
+          <block wx:for="{{examScoresReverse}}" wx:key="index">
+            <text class="table-cell date-col {{item.isLatest ? 'latest-col' : ''}}">{{item.speaking || '-'}}</text>
+          </block>
+        </view>
+        <!-- 总分行 -->
+        <view class="table-row total-row">
+          <view class="table-cell subject-cell subject-cell-with-icon">
+            <icon name="chart" color="#12B7A8" size="28rpx"/>
+            <text>总分</text>
+          </view>
+          <text class="table-cell improve-col total-improve {{examScoresReverse[0].improvement > 0 ? 'improve-positive' : (examScoresReverse[0].improvement < 0 ? 'improve-negative' : '')}}">
+            {{examScoresReverse[0].improvement > 0 ? '+' + examScoresReverse[0].improvement : (examScoresReverse[0].improvement < 0 ? examScoresReverse[0].improvement : '-')}}
+          </text>
+          <block wx:for="{{examScoresReverse}}" wx:key="index">
+            <text class="table-cell date-col total-cell {{item.isLatest ? 'latest-col' : ''}}">{{item.total || '-'}}</text>
+          </block>
+        </view>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 底部留白 -->

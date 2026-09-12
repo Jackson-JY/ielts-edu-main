@@ -3,15 +3,17 @@
 
   <!-- Logo 区域 -->
   <view class="logo-section">
-    <image class="logo-img" src="{{logoUrl}}" mode="aspectFill" />
-    <text class="title">欢迎来到雅思学习</text>
+    <view class="logo-mark">
+      <image wx:if="{{logoUrl}}" class="logo-img" src="{{logoUrl}}" mode="aspectFill"/>
+    </view>
+    <text class="title">Deer Edu</text>
     <text class="subtitle">专业陪伴，轻松备考</text>
   </view>
 
   <!-- 用户协议勾选（必须由用户主动勾选，不默认同意） -->
   <view class="agreement">
     <view class="agree-check {{agreed ? 'checked' : ''}}" bindtap="onToggleAgree">
-      <text wx:if="{{agreed}}" class="agree-check-icon">✓</text>
+      <icon wx:if="{{agreed}}" name="check" color="#FFFFFF" size="22rpx"/>
     </view>
     <view class="agreement-text-wrap">
       <text class="agreement-text" bindtap="onToggleAgree">我已阅读并同意</text>
@@ -30,13 +32,14 @@
         open-type="getPhoneNumber"
         bindgetphonenumber="onGetPhoneNumber"
         disabled="{{isLoading}}"
+        hover-class="btn-press"
       >
         <!-- 仅当前方式为手机号登录时展示 loading，避免两按钮同时变"登录中" -->
         <view wx:if="{{loginMethod === 'phone'}}" class="btn-loading">
           <view class="spinner"></view>
-          <text>登录中...</text>
+          <text>登录中</text>
         </view>
-        <text wx:else class="btn-phone-text">📱 手机号一键登录</text>
+        <text wx:else class="btn-phone-text">手机号一键登录</text>
       </button>
 
       <!-- 次按钮：微信身份登录（静默，无需手机号） -->
@@ -44,10 +47,11 @@
         class="btn btn-secondary"
         bindtap="handleWechatLogin"
         disabled="{{isLoading}}"
+        hover-class="btn-press"
       >
         <view wx:if="{{loginMethod === 'wechat'}}" class="btn-loading">
           <view class="spinner"></view>
-          <text>登录中...</text>
+          <text>登录中</text>
         </view>
         <text wx:else>微信登录</text>
       </button>

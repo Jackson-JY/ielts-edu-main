@@ -1,7 +1,7 @@
 // pages/login/login.js
-const app = getApp();
-const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
+const cloudStorage = require('../../utils/cloudStorage');
+const app = getApp();
 
 Page({
   data: {
@@ -11,9 +11,8 @@ Page({
     loginMethod: '',
     // 是否已勾选同意协议（默认 false，必须用户主动勾选）
     agreed: false,
-    // 云存储图标临时 URL
+    // Logo 云存储临时链接
     logoUrl: '',
-    iconUser: '',
   },
 
   async onLoad() {
@@ -22,23 +21,12 @@ Page({
       wx.switchTab({ url: '/pages/home/home' });
       return;
     }
-    await this.loadImageUrls();
-  },
-
-  /**
-   * 加载云存储图片临时 URL
-   */
-  async loadImageUrls() {
-    try {
-      const fileIDs = [CLOUD_IMAGES.logo, CLOUD_IMAGES.iconUser];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      this.setData({
-        logoUrl: urlMap[CLOUD_IMAGES.logo] || '',
-        iconUser: urlMap[CLOUD_IMAGES.iconUser] || '',
-      });
-    } catch (e) {
-      console.error('[登录页] 加载图片 URL 失败', e);
-    }
+    // Logo 存于云存储，解析为 HTTPS 临时链接（cloudStorage 内置 50 分钟缓存）
+    cloudStorage.getTempUrl(CLOUD_IMAGES.logo).then((url) => {
+      if (url && url.indexOf('http') === 0) {
+        this.setData({ logoUrl: url });
+      }
+    });
   },
 
   // ======================================================

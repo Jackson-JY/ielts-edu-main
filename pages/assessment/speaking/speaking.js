@@ -50,6 +50,15 @@ Page({
     if (options.mode === 'full') {
       this.setData({ mode: 'full' });
     }
+    // 场景图存于云存储：先清空避免 cloud:// 直接进入 image 组件，解析为 HTTPS 临时链接后再渲染
+    const pictureFileID = this.data.task1.image;
+    this.setData({ 'task1.image': '' });
+    cloudStorage.getTempUrl(pictureFileID).then((url) => {
+      // 仅在拿到 https 临时链接时渲染，失败保持空态避免 cloud:// 裂图
+      if (url && url.indexOf('http') === 0) {
+        this.setData({ 'task1.image': url });
+      }
+    });
     // 随机抽取一道观点题
     const prompts = SPEAKING_PRODUCTION.task2.prompts;
     this.setData({

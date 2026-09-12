@@ -15,8 +15,13 @@
           data-id="{{item.id}}"
           data-label="{{item.label}}"
           bindtap="onTapSubjectModule">
-      <view class="subject-module-icon-wrap" style="background-color: {{item.bgColor}};">
-        <image class="subject-module-icon" src="{{item.icon}}" mode="aspectFit"/>
+      <view class="subject-module-top">
+        <view class="subject-module-icon-wrap">
+          <icon name="{{item.iconName}}" color="#12B7A8" size="36rpx"/>
+        </view>
+        <view class="subject-module-arrow-wrap">
+          <icon name="chevron-right" color="#8E8E93" size="28rpx"/>
+        </view>
       </view>
       <text class="subject-module-label">{{item.label}}</text>
       <text class="subject-module-count" wx:if="{{item.total > 0}}">{{item.completed}}/{{item.total}} 已完成</text>
@@ -24,19 +29,19 @@
       <view class="subject-module-progress" wx:if="{{item.total > 0}}">
         <view class="subject-module-progress-fill" style="width: {{item.progress}}%;"></view>
       </view>
-      <view class="subject-module-arrow">›</view>
     </view>
   </view>
 
-  <!-- 我的任务区域（宫格视图下方） -->
+  <!-- 我的任务区域 -->
   <view class="task-section" wx:if="{{!activeSubject}}">
     <view class="task-section-header">
       <view class="task-section-titles">
         <text class="task-section-title">我的任务</text>
-        <text class="task-section-sub">自己安排的小目标，完成就打勾 ✓</text>
+        <text class="task-section-sub">自己安排的小目标，完成即勾选</text>
       </view>
       <view class="task-add-btn" bindtap="onTapAddTask">
-        <text>＋ 添加</text>
+        <icon name="plus" color="#FFFFFF" size="24rpx"/>
+        <text>添加</text>
       </view>
     </view>
 
@@ -44,12 +49,12 @@
       <view class="task-item {{item.isCompleted ? 'task-item-done' : ''}}"
             wx:for="{{tasks}}"
             wx:key="id">
-        <!-- 勾选 -->
+        <!-- 勾选：未完成空心圆，已完成薄荷绿填充 + 白对勾 -->
         <view class="task-check {{item.isCompleted ? 'checked' : ''}}"
               data-id="{{item.id}}"
               data-completed="{{item.isCompleted}}"
               catchtap="onToggleTaskComplete">
-          <text wx:if="{{item.isCompleted}}">✓</text>
+          <icon wx:if="{{item.isCompleted}}" name="check" color="#FFFFFF" size="24rpx"/>
         </view>
         <!-- 内容 -->
         <view class="task-body">
@@ -59,19 +64,27 @@
             <text class="task-duration-label">{{item.durationLabel}}</text>
           </view>
         </view>
-        <!-- 番茄 + 删除 -->
+        <!-- 专注 + 删除 -->
         <view class="task-actions">
-          <view class="task-pomodoro-btn"
+          <view class="task-focus-btn"
                 data-id="{{item.id}}"
                 data-content="{{item.content}}"
-                catchtap="onTapStartTaskPomodoro">🍅</view>
-          <view class="task-del-btn" data-id="{{item.id}}" catchtap="onTapDeleteTask">×</view>
+                catchtap="onTapStartTaskPomodoro">
+            <icon name="clock" color="#12B7A8" size="22rpx"/>
+            <text>专注</text>
+          </view>
+          <view class="task-del-btn" data-id="{{item.id}}" catchtap="onTapDeleteTask">
+            <icon name="trash" color="#8E8E93" size="24rpx"/>
+          </view>
         </view>
       </view>
     </view>
 
     <view class="task-empty" wx:else>
-      <text class="task-empty-text">还没有任务，点「＋ 添加」创建一个吧～</text>
+      <view class="task-empty-icon-wrap">
+        <icon name="check-circle" color="#8E8E93" size="48rpx"/>
+      </view>
+      <text class="task-empty-text">暂无任务，点击添加</text>
     </view>
   </view>
 
@@ -79,7 +92,7 @@
   <view class="subject-detail" wx:if="{{activeSubject}}">
     <view class="detail-header">
       <view class="back-btn" bindtap="onBackToModules">
-        <text class="back-arrow">‹</text>
+        <icon name="chevron-left" color="#1D1D1F" size="28rpx"/>
         <text>返回</text>
       </view>
       <text class="detail-title">{{activeSubjectLabel}}作业</text>
@@ -94,7 +107,10 @@
             bindtap="onHomeworkTap">
         <!-- 左栏：作业内容 -->
         <view class="detail-col detail-col-left">
-          <text class="detail-student" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
+          <view class="detail-student" wx:if="{{item.studentName}}">
+            <icon name="user" color="#12B7A8" size="20rpx"/>
+            <text class="detail-student-text">{{item.studentName}}</text>
+          </view>
           <text class="detail-content">{{item.content}}</text>
           <view class="detail-tags" wx:if="{{item.courseName}}">
             <text class="detail-tag">{{item.courseName}}</text>
@@ -115,33 +131,37 @@
             <text class="detail-progress-text">完成度 {{item.completion}}%</text>
           </view>
 
-          <!-- 打卡按钮行：完成标记 + 番茄按钮 -->
+          <!-- 打卡按钮行：完成标记 + 专注按钮 -->
           <view class="detail-actions-row" wx:if="{{!isAdmin}}">
             <view class="detail-checkin {{item.isCompleted ? 'checked' : ''}}"
                   data-id="{{item.id}}"
                   data-completed="{{item.isCompleted}}"
                   catchtap="onToggleHomeworkComplete">
-              <text wx:if="{{item.isCompleted}}">✅</text>
+              <icon wx:if="{{item.isCompleted}}" name="check" color="#0E8C81" size="20rpx"/>
               <text wx:else>完成</text>
             </view>
-            <!-- 🍅 番茄时钟按钮 -->
-            <view class="pomodoro-btn"
+            <!-- 专注按钮 -->
+            <view class="detail-focus-btn"
                   data-id="{{item.id}}"
                   data-content="{{item.content}}"
                   data-subject="{{activeSubjectLabel}}"
                   catchtap="onTapStartPomodoro">
-              <text>🍅</text>
+              <icon name="clock" color="#12B7A8" size="20rpx"/>
+              <text>专注</text>
             </view>
           </view>
           <!-- 管理员视角：仅展示状态 -->
           <view class="detail-status-tag {{item.isCompleted ? 'completed' : ''}}" wx:else>
-            <text>{{item.isCompleted ? '已完成 ✅' : '进行中'}}</text>
+            <text>{{item.isCompleted ? '已完成' : '进行中'}}</text>
           </view>
         </view>
       </view>
     </view>
 
     <view class="empty-homework" wx:else>
+      <view class="empty-icon-wrap">
+        <icon name="book" color="#8E8E93" size="48rpx"/>
+      </view>
       <text class="empty-text">该模块暂无作业</text>
     </view>
   </view>
@@ -153,7 +173,7 @@
       <text class="task-modal-title">添加任务</text>
       <text class="task-modal-label">任务信息</text>
       <textarea class="task-modal-textarea"
-                placeholder="要做点什么呢？"
+                placeholder="要做点什么呢"
                 placeholder-class="task-modal-ph"
                 value="{{taskInputContent}}"
                 bindinput="onTaskInputContent"
@@ -169,7 +189,7 @@
       <view class="task-modal-actions">
         <view class="task-modal-btn cancel" bindtap="closeTaskInput">取消</view>
         <view class="task-modal-btn confirm {{taskSubmitting ? 'disabled' : ''}}" bindtap="onConfirmAddTask">
-          {{taskSubmitting ? '添加中...' : '添加任务'}}
+          {{taskSubmitting ? '添加中' : '添加任务'}}
         </view>
       </view>
     </view>

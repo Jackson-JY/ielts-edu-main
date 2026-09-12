@@ -1,33 +1,37 @@
 /* 学习报告页面样式 */
 page {
-  background: linear-gradient(180deg, #F8F4FF 0%, #F5F0FF 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #F5F5F7;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .page {
   padding: 0 32rpx 60rpx;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
-/* 顶部标题区 */
+/* ==================== 顶部标题区 ==================== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: 40rpx 0 32rpx;
+  gap: 24rpx;
 }
 
 .header-content {
   flex: 1;
+  min-width: 0;
 }
 
 .title {
   font-size: 44rpx;
-  font-weight: 800;
-  color: #4A4A4A;
+  font-weight: 700;
+  color: #1D1D1F;
   display: block;
-  margin-bottom: 12rpx;
-  letter-spacing: -0.5rpx;
+  margin-bottom: 8rpx;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .title-row,
@@ -37,15 +41,9 @@ page {
   gap: 12rpx;
 }
 
-.title-icon {
-  width: 44rpx;
-  height: 44rpx;
-  flex-shrink: 0;
-}
-
 .subtitle {
   font-size: 26rpx;
-  color: #9A97AA;
+  color: #6E6E73;
   display: block;
 }
 
@@ -54,43 +52,44 @@ page {
   flex-direction: column;
   align-items: flex-end;
   gap: 16rpx;
+  flex-shrink: 0;
 }
 
 .date-badge {
-  background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
-  border-radius: 32rpx;
-  padding: 16rpx 28rpx;
-  box-shadow: 0 4rpx 16rpx rgba(108, 92, 231, 0.3);
+  background: #F2F2F7;
+  border-radius: 999px;
+  padding: 12rpx 24rpx;
 }
 
 .date-text {
   font-size: 24rpx;
-  color: #FFFFFF;
+  color: #6E6E73;
   font-weight: 600;
 }
 
-/* 分享按钮 */
+/* 分享按钮：薄荷绿胶囊 + share 图标 */
 .share-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8rpx;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
-  border-radius: 32rpx;
-  padding: 12rpx 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(255, 107, 107, 0.3);
+  background: #12B7A8;
+  border-radius: 999px;
+  padding: 0 24rpx;
+  height: 64rpx;
   border: none;
   margin: 0;
   line-height: 1;
+  box-sizing: border-box;
+  transition: filter 0.18s ease;
 }
 
 .share-btn::after {
   border: none;
 }
 
-.share-icon {
-  width: 28rpx;
-  height: 28rpx;
-  flex-shrink: 0;
+.share-btn:active {
+  filter: brightness(0.92);
 }
 
 .share-text {
@@ -99,211 +98,170 @@ page {
   font-weight: 600;
 }
 
-/* 核心数据概览 */
+/* ==================== 核心数据概览 ==================== */
 .stats-overview {
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
 }
 
-.stat-card {
-  background: linear-gradient(145deg, #6C5CE7 0%, #8B7FE8 100%);
-  border-radius: 32rpx;
-  padding: 40rpx;
+/* 总时长超大数字卡片 */
+.stat-card.primary {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
   display: flex;
   align-items: center;
-  gap: 28rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 8rpx 32rpx rgba(108, 92, 231, 0.25);
+  justify-content: space-between;
+  gap: 24rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
-.stat-icon {
-  width: 88rpx;
-  height: 88rpx;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 24rpx;
+.stat-primary-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-eyebrow {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #8E8E93;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.stat-primary-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}
+
+.stat-value-big {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #1D1D1F;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.stat-unit {
+  font-size: 28rpx;
+  color: #6E6E73;
+  font-weight: 500;
+}
+
+.stat-primary-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
+  background: #E6F7F5;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.stat-icon-img {
-  width: 52rpx;
-  height: 52rpx;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 64rpx;
-  font-weight: 800;
-  color: #FFFFFF;
-  display: block;
-  line-height: 1.1;
-}
-
-.stat-label {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.8);
-  display: block;
-  margin-top: 8rpx;
-}
-
-/* 迷你统计网格 */
+/* 迷你统计网格 2×2 */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16rpx;
 }
 
 .stat-mini {
   background: #FFFFFF;
-  border-radius: 24rpx;
-  padding: 24rpx 16rpx;
-  text-align: center;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .mini-value {
   font-size: 36rpx;
   font-weight: 700;
-  color: #6C5CE7;
+  color: #1D1D1F;
   display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 6rpx;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
 .mini-label {
   font-size: 22rpx;
-  color: #9A97AA;
+  color: #8E8E93;
   display: block;
 }
 
+/* ==================== 卡片头部 ==================== */
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 16rpx;
   margin-bottom: 28rpx;
 }
 
-/* 听说读写打卡统计 */
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+  display: block;
+  margin-bottom: 6rpx;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.card-subtitle {
+  font-size: 24rpx;
+  color: #8E8E93;
+  display: block;
+}
+
+/* ==================== 听说读写打卡统计 ==================== */
 .subject-checkin-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16rpx;
 }
 
 .subject-checkin-item {
-  background: linear-gradient(180deg, #F8FBFF 0%, #F0F6FF 100%);
-  border-radius: 24rpx;
-  padding: 28rpx 12rpx;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 28rpx 16rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-}
-
-.subject-checkin-icon {
-  width: 48rpx;
-  height: 48rpx;
-  margin-bottom: 4rpx;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .subject-checkin-count {
   font-size: 36rpx;
   font-weight: 700;
-  color: #12B7A8;
+  color: #1D1D1F;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
 .subject-checkin-label {
   font-size: 22rpx;
-  color: #9A97AA;
+  color: #8E8E93;
 }
 
-.header-left {
-  flex: 1;
-}
-
-.card-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #4A4A4A;
-  display: block;
-  margin-bottom: 8rpx;
-}
-
-.card-title-icon {
-  width: 34rpx;
-  height: 34rpx;
-  flex-shrink: 0;
-}
-
-.card-subtitle {
-  font-size: 24rpx;
-  color: #9A97AA;
-  display: block;
-}
-
-/* 趋势图图例 */
-.trend-legend {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  background: #F8F4FF;
-  padding: 12rpx 20rpx;
-  border-radius: 24rpx;
-}
-
-.legend-dot {
-  width: 16rpx;
-  height: 16rpx;
-  background: #6C5CE7;
-  border-radius: 50%;
-}
-
-.legend-text {
-  font-size: 22rpx;
-  color: #6C5CE7;
-  font-weight: 500;
-}
-
-/* 图表容器 */
-.chart-container {
-  background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 100%);
-  border-radius: 20rpx;
-  padding: 20rpx;
-  margin-bottom: 16rpx;
-}
-
-.trend-canvas {
-  width: 100%;
-  height: 280rpx;
-}
-
-.trend-labels {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 20rpx;
-}
-
-.trend-label {
-  font-size: 22rpx;
-  color: #9A97AA;
-  text-align: center;
-  flex: 1;
-}
-
-/* 科目趋势图 - 两科一行 */
+/* ==================== 科目趋势图 ==================== */
 .subject-charts-row {
   display: flex;
-  gap: 20rpx;
-  margin-bottom: 24rpx;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
 }
 
 .subject-chart-item {
   flex: 1;
-  background: linear-gradient(145deg, #FAFAFA 0%, #F5F5F5 100%);
-  border-radius: 20rpx;
+  background: #F2F2F7;
+  border-radius: 16rpx;
   padding: 20rpx;
 }
 
@@ -311,19 +269,13 @@ page {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-bottom: 16rpx;
-}
-
-.subject-icon {
-  width: 34rpx;
-  height: 34rpx;
-  flex-shrink: 0;
+  margin-bottom: 12rpx;
 }
 
 .subject-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #4A4A4A;
+  color: #1D1D1F;
 }
 
 .mini-chart-container {
@@ -335,35 +287,30 @@ page {
   height: 100%;
 }
 
-/* 总成绩趋势 */
+/* ==================== 总成绩趋势 ==================== */
 .total-score-section {
-  margin-top: 32rpx;
+  margin-top: 24rpx;
   padding-top: 24rpx;
-  border-top: 2rpx dashed #E8E8E8;
+  border-top: 1rpx solid #E5E5EA;
 }
 
 .total-score-header {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-bottom: 20rpx;
-}
-
-.total-score-icon {
-  width: 38rpx;
-  height: 38rpx;
-  flex-shrink: 0;
+  margin-bottom: 16rpx;
 }
 
 .total-score-title {
   font-size: 30rpx;
   font-weight: 700;
-  color: #4A4A4A;
+  color: #1D1D1F;
+  letter-spacing: -0.01em;
 }
 
 .total-chart-container {
-  background: linear-gradient(145deg, #FFF8E7 0%, #FFF3D9 100%);
-  border-radius: 20rpx;
+  background: #F2F2F7;
+  border-radius: 16rpx;
   padding: 20rpx;
   margin-bottom: 16rpx;
 }
@@ -381,41 +328,35 @@ page {
 
 .total-chart-label {
   font-size: 20rpx;
-  color: #9A97AA;
+  color: #8E8E93;
   text-align: center;
   flex: 1;
 }
 
-/* 底部留白 */
+/* ==================== 底部留白 ==================== */
 .footer-space {
   height: 40rpx;
 }
 
-/* 空状态 */
+/* ==================== 空状态 ==================== */
 .empty-state {
   text-align: center;
   padding: 80rpx 40rpx;
 }
 
-.empty-icon {
-  font-size: 80rpx;
-  margin-bottom: 24rpx;
-  display: block;
-}
-
 .empty-text {
   font-size: 30rpx;
-  color: #9A97AA;
+  color: #6E6E73;
   display: block;
   margin-bottom: 12rpx;
 }
 
 .empty-sub {
   font-size: 24rpx;
-  color: #B8B5C4;
+  color: #8E8E93;
 }
 
-/* 隐藏的画布 - 使用 visibility 而不是移出屏幕 */
+/* 隐藏的画布用于生成分享图片 */
 .share-canvas {
   position: absolute;
   left: 0;
@@ -426,7 +367,7 @@ page {
   z-index: -1;
 }
 
-/* 成绩详情表格 */
+/* ==================== 成绩详情表格 ==================== */
 .score-table-wrapper {
   overflow-x: auto;
   margin: 0 -16rpx;
@@ -438,9 +379,10 @@ page {
   min-width: 100%;
 }
 
+/* 表头：浅灰背景 */
 .table-header {
   display: flex;
-  background: linear-gradient(145deg, #6C5CE7 0%, #A29BFE 100%);
+  background: #F2F2F7;
   border-radius: 16rpx 16rpx 0 0;
   padding: 16rpx 0;
 }
@@ -448,7 +390,7 @@ page {
 .table-row {
   display: flex;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid rgba(154, 151, 170, 0.15);
+  border-bottom: 1rpx solid #E5E5EA;
 }
 
 .table-row:last-child {
@@ -456,26 +398,22 @@ page {
   border-radius: 0 0 16rpx 16rpx;
 }
 
-.table-row.latest-row {
-  background: rgba(108, 92, 231, 0.08);
-}
-
 .table-cell {
   font-size: 24rpx;
-  color: #4A4A4A;
+  color: #1D1D1F;
   text-align: center;
   flex: 1;
   min-width: 80rpx;
 }
 
 .header-cell {
-  color: #FFFFFF;
+  color: #6E6E73;
   font-weight: 600;
   font-size: 24rpx;
 }
 
 .subject-cell {
-  min-width: 120rpx;
+  min-width: 140rpx;
   flex: none;
   text-align: left;
   padding-left: 16rpx;
@@ -487,12 +425,6 @@ page {
   align-items: center;
   gap: 8rpx;
   box-sizing: border-box;
-}
-
-.table-subject-icon {
-  width: 28rpx;
-  height: 28rpx;
-  flex-shrink: 0;
 }
 
 .date-col {
@@ -508,32 +440,35 @@ page {
   font-weight: 600;
 }
 
+/* 总分行高亮 */
 .total-row {
-  background: rgba(255, 193, 7, 0.08);
+  background: #F2F2F7;
 }
 
 .total-cell {
   font-weight: 700;
-  color: #FFC107;
+  color: #12B7A8;
 }
 
 .subject-improve {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .total-improve {
   font-weight: 700;
 }
 
+/* 提高/下降：薄荷绿 / 系统红 */
 .improve-positive {
-  color: #4CAF50;
+  color: #12B7A8;
 }
 
 .improve-negative {
-  color: #FF6B6B;
+  color: #FF3B30;
 }
 
+/* 最新成绩列高亮 */
 .latest-col {
-  background: rgba(108, 92, 231, 0.1);
+  background: #E6F7F5;
   font-weight: 600;
 }

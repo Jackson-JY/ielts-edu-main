@@ -3,21 +3,21 @@
   <view class="container">
     <!-- 标题区域 -->
     <view class="header">
-      <text class="main-title">先测一测，找到你的起点</text>
+      <text class="main-title">测评你的雅思水平</text>
       <text class="subtitle">选择任意一项进行测评，或完成完整测评</text>
     </view>
 
     <!-- 测评模块列表（可点击选择） -->
     <view class="modules-list">
-      <view 
-        class="module-item" 
-        wx:for="{{modules}}" 
+      <view
+        class="module-item"
+        wx:for="{{modules}}"
         wx:key="id"
         data-index="{{index}}"
         bindtap="selectModule"
       >
-        <view class="module-icon" style="background-color: {{item.bgColor}};">
-          <image wx:if="{{item.icon}}" src="{{item.icon}}" mode="aspectFit" class="icon-img"/>
+        <view class="module-icon">
+          <icon name="{{item.iconName}}" color="#12B7A8" size="40rpx"/>
         </view>
         <view class="module-content">
           <text class="module-title">{{item.title}}</text>
@@ -25,7 +25,7 @@
           <text class="module-duration">{{item.duration}}</text>
         </view>
         <view class="module-arrow">
-          <text class="arrow-icon">→</text>
+          <icon name="chevron-right" color="#8E8E93" size="32rpx"/>
         </view>
       </view>
     </view>

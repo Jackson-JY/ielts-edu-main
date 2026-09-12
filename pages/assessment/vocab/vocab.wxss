@@ -1,6 +1,6 @@
 /* pages/assessment/vocab/vocab.wxss */
 page {
-  background-color: #FFF9F5;
+  background-color: #F5F5F7;
 }
 
 .container {
@@ -18,16 +18,17 @@ page {
   align-items: center;
   justify-content: center;
   padding: 60rpx;
+  gap: 24rpx;
 }
 
 .loading-spinner {
-  width: 72rpx;
-  height: 72rpx;
-  border: 6rpx solid #E8F5F4;
+  width: 64rpx;
+  height: 64rpx;
+  border: 5rpx solid #E5E5EA;
   border-top-color: #12B7A8;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-bottom: 30rpx;
+  margin-bottom: 12rpx;
 }
 
 @keyframes spin {
@@ -36,19 +37,15 @@ page {
 
 .loading-text {
   font-size: 28rpx;
-  color: #9A97AA;
-}
-
-.error-icon {
-  font-size: 80rpx;
-  margin-bottom: 24rpx;
+  color: #8E8E93;
 }
 
 .error-text {
   font-size: 28rpx;
-  color: #9A97AA;
-  margin-bottom: 40rpx;
+  color: #6E6E73;
+  margin-bottom: 24rpx;
   text-align: center;
+  line-height: 1.5;
 }
 
 .btn-primary {
@@ -56,70 +53,80 @@ page {
   color: #FFFFFF;
   font-size: 30rpx;
   font-weight: 600;
-  border-radius: 44rpx;
-  padding: 8rpx 60rpx;
+  border-radius: 999px;
+  height: 88rpx;
+  padding: 0 60rpx;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.18s ease;
 }
 
 .btn-primary::after {
   border: none;
 }
 
+.btn-primary:active {
+  filter: brightness(0.92);
+}
+
 /* ==================== Header ==================== */
 .header {
-  padding: 30rpx;
-  border-bottom: 2rpx solid rgba(154, 151, 170, 0.2);
+  padding: 32rpx;
+  border-bottom: 1rpx solid #E5E5EA;
 }
 
 .header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
 }
 
 .title {
   font-size: 36rpx;
   font-weight: 600;
-  color: #4A4A4A;
+  color: #1D1D1F;
+  letter-spacing: -0.01em;
 }
 
 .timer-badge {
   font-size: 26rpx;
   font-weight: 600;
   padding: 8rpx 24rpx;
-  background-color: #A7FBF5;
-  color: #17212B;
-  border-radius: 30rpx;
+  background-color: #E6F7F5;
+  color: #0E8C81;
+  border-radius: 999px;
   font-variant-numeric: tabular-nums;
 }
 
 .timer-badge.timer-warn {
-  background-color: #FFD4B8;
-  color: #B25A2B;
+  background-color: rgba(255, 59, 48, 0.12);
+  color: #FF3B30;
 }
 
 .subtitle {
   font-size: 26rpx;
-  color: #9A97AA;
+  color: #6E6E73;
 }
 
 /* ==================== Progress ==================== */
 .progress-section {
-  padding: 30rpx 30rpx 0;
+  padding: 24rpx 32rpx 0;
 }
 
 .progress-bar {
-  height: 16rpx;
-  background-color: #F5F0FF;
-  border-radius: 8rpx;
+  height: 8rpx;
+  background-color: #E5E5EA;
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: #A7FBF5;
-  border-radius: 8rpx;
+  background-color: #12B7A8;
+  border-radius: 999px;
   transition: width 0.3s ease;
 }
 
@@ -129,25 +136,27 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 40rpx 30rpx;
+  padding: 40rpx 32rpx;
 }
 
 .word-display {
   text-align: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 56rpx;
 }
 
 .word-text {
   font-size: 72rpx;
   font-weight: 700;
-  color: #4A4A4A;
+  color: #1D1D1F;
   display: block;
   margin-bottom: 20rpx;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .word-hint {
   font-size: 26rpx;
-  color: #9A97AA;
+  color: #6E6E73;
 }
 
 /* Options */
@@ -160,38 +169,39 @@ page {
 .option-item {
   display: flex;
   align-items: center;
-  padding: 32rpx;
-  background-color: #F5F0FF;
+  padding: 28rpx 32rpx;
+  background-color: #FFFFFF;
   border-radius: 24rpx;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-  border: 3rpx solid transparent;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .option-item:active {
-  transform: scale(0.98);
+  background: #F2F2F7;
 }
 
 .option-item.option-correct {
-  background-color: rgba(18, 183, 168, 0.15);
+  background-color: #E6F7F5;
   border-color: #12B7A8;
 }
 
 .option-item.option-wrong {
-  background-color: rgba(255, 122, 122, 0.12);
-  border-color: #FF7A7A;
+  background-color: rgba(255, 59, 48, 0.10);
+  border-color: #FF3B30;
 }
 
 .option-badge {
   width: 56rpx;
   height: 56rpx;
-  background-color: #E8D4F8;
+  background-color: #F2F2F7;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26rpx;
   font-weight: 600;
-  color: #4A4A4A;
+  color: #6E6E73;
   margin-right: 24rpx;
   flex-shrink: 0;
 }
@@ -199,18 +209,12 @@ page {
 .option-text {
   flex: 1;
   font-size: 32rpx;
-  color: #4A4A4A;
+  color: #1D1D1F;
 }
 
 .option-mark {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #12B7A8;
   margin-left: 16rpx;
-}
-
-.option-mark.mark-wrong {
-  color: #FF7A7A;
+  flex-shrink: 0;
 }
 
 /* ==================== 结果页 ==================== */
@@ -220,7 +224,7 @@ page {
 }
 
 .result-container {
-  padding: 40rpx 30rpx 60rpx;
+  padding: 32rpx 32rpx 60rpx;
   display: flex;
   flex-direction: column;
 }
@@ -229,46 +233,55 @@ page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: linear-gradient(160deg, #A7FBF5 0%, #D4F8F5 60%, #FFFFFF 100%);
-  border-radius: 32rpx;
-  padding: 60rpx 40rpx 50rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 8rpx 32rpx rgba(18, 183, 168, 0.15);
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 48rpx 40rpx;
+  margin-bottom: 24rpx;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .result-label {
   font-size: 26rpx;
-  color: #6B7A85;
+  color: #6E6E73;
   margin-bottom: 12rpx;
 }
 
+.result-num-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}
+
 .result-vocab {
-  font-size: 100rpx;
+  font-size: 96rpx;
   font-weight: 700;
-  color: #17212B;
+  color: #1D1D1F;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .result-unit {
   font-size: 28rpx;
-  color: #6B7A85;
-  margin: 8rpx 0 24rpx;
+  color: #8E8E93;
+  margin: 0 0 24rpx;
 }
 
 .cefr-badge {
-  font-size: 34rpx;
+  font-size: 30rpx;
   font-weight: 700;
   color: #FFFFFF;
   background-color: #12B7A8;
-  padding: 10rpx 48rpx;
-  border-radius: 36rpx;
+  padding: 8rpx 40rpx;
+  border-radius: 999px;
   margin-bottom: 16rpx;
+  letter-spacing: -0.01em;
 }
 
 .cefr-desc {
   font-size: 26rpx;
-  color: #4A4A4A;
+  color: #6E6E73;
   text-align: center;
 }
 
@@ -283,33 +296,36 @@ page {
   flex: 1;
   background-color: #FFFFFF;
   border-radius: 24rpx;
-  padding: 30rpx;
+  padding: 28rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4rpx 20rpx rgba(23, 33, 43, 0.06);
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .stat-num {
   font-size: 40rpx;
   font-weight: 700;
-  color: #17212B;
+  color: #1D1D1F;
   margin-bottom: 8rpx;
+  letter-spacing: -0.01em;
 }
 
 .stat-label {
   font-size: 24rpx;
-  color: #9A97AA;
+  color: #8E8E93;
 }
 
 .low-confidence-tip {
   font-size: 24rpx;
-  color: #B25A2B;
-  background-color: #FFD4B8;
+  color: #FF3B30;
+  background-color: rgba(255, 59, 48, 0.08);
   border-radius: 16rpx;
   padding: 16rpx 24rpx;
   margin-bottom: 24rpx;
   text-align: center;
+  line-height: 1.5;
 }
 
 /* 分频段 */
@@ -318,15 +334,17 @@ page {
   border-radius: 24rpx;
   padding: 32rpx;
   margin-bottom: 36rpx;
-  box-shadow: 0 4rpx 20rpx rgba(23, 33, 43, 0.06);
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .breakdown-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #4A4A4A;
+  color: #1D1D1F;
   margin-bottom: 24rpx;
   display: block;
+  letter-spacing: -0.01em;
 }
 
 .breakdown-row {
@@ -342,30 +360,30 @@ page {
 .band-desc {
   width: 220rpx;
   font-size: 24rpx;
-  color: #6B7A85;
+  color: #6E6E73;
   flex-shrink: 0;
 }
 
 .band-bar {
   flex: 1;
-  height: 16rpx;
-  background-color: #F5F0FF;
-  border-radius: 8rpx;
+  height: 8rpx;
+  background-color: #E5E5EA;
+  border-radius: 999px;
   overflow: hidden;
   margin: 0 20rpx;
 }
 
 .band-fill {
   height: 100%;
-  background: linear-gradient(90deg, #12B7A8, #A7FBF5);
-  border-radius: 8rpx;
+  background: #12B7A8;
+  border-radius: 999px;
   transition: width 0.5s ease;
 }
 
 .band-rate {
   width: 90rpx;
   font-size: 24rpx;
-  color: #4A4A4A;
+  color: #1D1D1F;
   text-align: right;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
@@ -379,5 +397,6 @@ page {
 
 .result-actions .btn-primary {
   width: 100%;
-  padding: 24rpx 0;
+  height: 88rpx;
+  padding: 0;
 }

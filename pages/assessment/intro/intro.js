@@ -1,14 +1,12 @@
 // pages/assessment/intro/intro.js
-const cloudStorage = require('../../../utils/cloudStorage');
-const { CLOUD_IMAGES } = require('../../../config/images');
 
-// 模块 id → 图标 fileID 映射
+// 模块 id → 图标名映射（使用全局 icon 组件，无需云存储图片）
 const ICON_BY_MODULE = {
-  vocab: CLOUD_IMAGES.iconBook,
-  listening: CLOUD_IMAGES.iconHeadphones,
-  speaking: CLOUD_IMAGES.iconMic,
-  reading: CLOUD_IMAGES.iconDocument,
-  writing: CLOUD_IMAGES.iconPen,
+  vocab: 'book',
+  listening: 'headphones',
+  speaking: 'mic',
+  reading: 'book',
+  writing: 'pen',
 };
 
 Page({
@@ -20,8 +18,7 @@ Page({
         title: '词汇量',
         desc: 'CAT 自适应词汇测试 · 约 20-40 题',
         duration: '约 3-5 分钟',
-        icon: '',
-        bgColor: 'rgba(18, 183, 168, 0.24)',
+        iconName: 'book',
         path: '/pages/assessment/vocab/vocab'
       },
       {
@@ -29,9 +26,7 @@ Page({
         title: '听力',
         desc: '48 项能力模型 · 12 条听力自评',
         duration: '约 3 分钟',
-        icon: '',
-        // 主色 #12B7A8 的浅色变体，与全局配色保持同一家族
-        bgColor: 'rgba(18, 183, 168, 0.12)',
+        iconName: 'headphones',
         path: '/pages/assessment/listening/listening'
       },
       {
@@ -39,9 +34,7 @@ Page({
         title: '口语',
         desc: '12 条自评 + 图片描述、观点表达 2 道产出题',
         duration: '约 8 分钟',
-        icon: '',
-        // 主色加深的同色系变体（略偏蓝灰，呼应文字主色 #17212B）
-        bgColor: 'rgba(23, 33, 43, 0.08)',
+        iconName: 'mic',
         path: '/pages/assessment/speaking/speaking'
       },
       {
@@ -49,9 +42,7 @@ Page({
         title: '阅读',
         desc: '48 项能力模型 · 12 条阅读自评',
         duration: '约 3 分钟',
-        icon: '',
-        // 主色 + 浅灰过渡，比听力模块略深一档，制造同色系层次
-        bgColor: 'rgba(18, 183, 168, 0.20)',
+        iconName: 'book',
         path: '/pages/assessment/reading/reading'
       },
       {
@@ -59,40 +50,17 @@ Page({
         title: '写作',
         desc: '12 条自评 + 句式改写、CER 论证 2 道产出题',
         duration: '约 8 分钟',
-        icon: '',
-        // 中性浅灰蓝，与页面背景 #F6F8FB 同色系but更深一档，作为第四档层次
-        bgColor: 'rgba(122, 135, 148, 0.14)',
+        iconName: 'pen',
         path: '/pages/assessment/writing/writing'
       }
     ]
-  },
-
-  async onLoad() {
-    await this.loadImageUrls();
-  },
-
-  /**
-   * 加载云存储图片临时 URL
-   */
-  async loadImageUrls() {
-    try {
-      const fileIDs = Object.values(ICON_BY_MODULE);
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      const modules = this.data.modules.map((m) => ({
-        ...m,
-        icon: urlMap[ICON_BY_MODULE[m.id]] || '',
-      }));
-      this.setData({ modules });
-    } catch (e) {
-      // 图标加载失败时降级为空图标，不影响页面使用
-    }
   },
 
   // 选择单项测评
   selectModule(e) {
     const { index } = e.currentTarget.dataset;
     const module = this.data.modules[index];
-    
+
     wx.navigateTo({
       url: module.path,
     });

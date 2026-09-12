@@ -1,6 +1,6 @@
 /* pages/homework-detail/homework-detail.wxss - 作业详情页（与全站风格统一） */
 .page {
-  background: #F6F8FB;
+  background: #F5F5F7;
   min-height: 100vh;
   padding: 96rpx 32rpx 60rpx;
   box-sizing: border-box;
@@ -16,20 +16,15 @@
   height: 64rpx;
   border-radius: 50%;
   background: #FFFFFF;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6rpx 18rpx rgba(23, 33, 43, 0.08);
   z-index: 10;
 }
-.back-btn:active {
-  transform: scale(0.94);
-}
-.back-icon {
-  font-size: 44rpx;
-  color: #17212B;
-  line-height: 1;
-  margin-top: -4rpx;
+.back-btn-active {
+  background: #F2F2F7;
 }
 
 /* 加载中 */
@@ -41,17 +36,18 @@
 }
 .loading-text {
   font-size: 28rpx;
-  color: #9AA5B1;
+  color: #8E8E93;
 }
 
 /* ========== 头部 Hero ========== */
 .hw-hero {
   background: #FFFFFF;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   border-radius: 24rpx;
   padding: 32rpx;
   margin-bottom: 20rpx;
-  border: 1rpx solid rgba(23, 33, 43, 0.06);
-  box-shadow: 0 10rpx 28rpx rgba(23, 33, 43, 0.05);
+  animation: page-enter 250ms ease-out;
 }
 .hw-hero-top {
   display: flex;
@@ -67,29 +63,30 @@
 }
 .subject-label {
   font-size: 24rpx;
-  font-weight: 700;
-  color: #17212B;
+  font-weight: 600;
+  color: #1D1D1F;
 }
 .status-pill {
   padding: 8rpx 22rpx;
   border-radius: 999rpx;
-  font-size: 23rpx;
-  font-weight: 700;
+  font-size: 24rpx;
+  font-weight: 500;
 }
 .status-pill.done {
-  background: rgba(18, 183, 168, 0.12);
-  color: #12B7A8;
+  background: #E6F7F5;
+  color: #0E8C81;
 }
 .status-pill.doing {
-  background: #F2F5F8;
-  color: #64717F;
+  background: #F2F2F7;
+  color: #6E6E73;
 }
 .hw-title {
   display: block;
   font-size: 38rpx;
-  font-weight: 800;
-  color: #17212B;
+  font-weight: 600;
+  color: #1D1D1F;
   line-height: 1.35;
+  letter-spacing: -0.02em;
 }
 .hw-meta {
   display: flex;
@@ -98,34 +95,35 @@
   margin-top: 16rpx;
 }
 .hw-meta-item {
-  font-size: 23rpx;
-  color: #7A8794;
+  font-size: 24rpx;
+  color: #6E6E73;
 }
 .hw-meta-dot {
-  font-size: 23rpx;
+  font-size: 24rpx;
   color: #C4CDD6;
 }
 
 /* ========== 通用卡片 ========== */
 .section-card {
   background: #FFFFFF;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   border-radius: 24rpx;
   padding: 32rpx;
   margin-bottom: 20rpx;
-  border: 1rpx solid rgba(23, 33, 43, 0.06);
-  box-shadow: 0 10rpx 28rpx rgba(23, 33, 43, 0.05);
 }
 .card-label {
   display: block;
   font-size: 26rpx;
-  font-weight: 800;
-  color: #17212B;
+  font-weight: 600;
+  color: #1D1D1F;
   margin-bottom: 20rpx;
+  letter-spacing: -0.01em;
 }
 .card-body {
   display: block;
   font-size: 28rpx;
-  color: #4A5560;
+  color: #1D1D1F;
   line-height: 1.7;
 }
 
@@ -138,9 +136,9 @@
 }
 .progress-track {
   flex: 1;
-  height: 16rpx;
+  height: 12rpx;
   border-radius: 999rpx;
-  background: #F2F5F8;
+  background: #F2F2F7;
   overflow: hidden;
 }
 .progress-fill {
@@ -152,8 +150,8 @@
 .progress-pct {
   flex-shrink: 0;
   font-size: 28rpx;
-  font-weight: 800;
-  color: #12B7A8;
+  font-weight: 600;
+  color: #0E8C81;
   min-width: 80rpx;
   text-align: right;
 }
@@ -164,17 +162,17 @@
   gap: 16rpx;
 }
 .stat-cell {
-  background: #F6F8FB;
-  border-radius: 18rpx;
+  background: #F5F5F7;
+  border-radius: 16rpx;
   padding: 20rpx;
   display: flex;
   flex-direction: column;
   gap: 12rpx;
 }
 .stat-label {
-  font-size: 23rpx;
-  color: #7A8794;
-  font-weight: 600;
+  font-size: 24rpx;
+  color: #6E6E73;
+  font-weight: 500;
 }
 .stat-input-wrap {
   display: flex;
@@ -185,13 +183,13 @@
   flex: 1;
   min-width: 0;
   font-size: 40rpx;
-  font-weight: 800;
-  color: #17212B;
+  font-weight: 600;
+  color: #1D1D1F;
   line-height: 1.1;
 }
 .stat-suffix {
   font-size: 24rpx;
-  color: #9AA5B1;
+  color: #8E8E93;
   flex-shrink: 0;
 }
 
@@ -201,16 +199,16 @@
   justify-content: space-between;
   margin-top: 24rpx;
   padding-top: 24rpx;
-  border-top: 1rpx solid rgba(23, 33, 43, 0.06);
+  border-top: 1rpx solid #E5E5EA;
 }
 .estimate-label {
   font-size: 26rpx;
-  color: #7A8794;
+  color: #6E6E73;
 }
 .estimate-value {
   font-size: 28rpx;
-  font-weight: 700;
-  color: #17212B;
+  font-weight: 600;
+  color: #1D1D1F;
 }
 
 /* ========== 更新按钮 ========== */
@@ -219,13 +217,12 @@
 }
 .complete-btn {
   width: 100%;
-  height: 92rpx;
-  border-radius: 20rpx;
+  height: 88rpx;
+  border-radius: 999px;
   background: #12B7A8;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12rpx 28rpx rgba(18, 183, 168, 0.26);
   border: none;
 }
 .complete-btn::after {
@@ -233,10 +230,21 @@
 }
 .complete-btn text {
   font-size: 30rpx;
-  font-weight: 700;
+  font-weight: 600;
   color: #FFFFFF;
 }
-.complete-btn:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 6rpx 16rpx rgba(18, 183, 168, 0.22);
+.btn-press {
+  filter: brightness(0.92);
+}
+
+/* 入场动画 */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

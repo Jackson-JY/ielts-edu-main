@@ -29,22 +29,22 @@
     <view class="calendar-header">
       <text class="calendar-title">{{currentMonth}}月</text>
       <view class="calendar-nav">
-        <view class="nav-btn" bindtap="prevMonth">
-          <text>‹</text>
+        <view class="nav-btn" bindtap="prevMonth" hover-class="nav-btn-active">
+          <icon name="chevron-left" color="#1D1D1F" size="32rpx"/>
         </view>
-        <view class="nav-btn" bindtap="nextMonth">
-          <text>›</text>
+        <view class="nav-btn" bindtap="nextMonth" hover-class="nav-btn-active">
+          <icon name="chevron-right" color="#1D1D1F" size="32rpx"/>
         </view>
       </view>
     </view>
-    
+
     <view class="calendar-weekdays">
       <text class="weekday" wx:for="{{weekDays}}" wx:key="index">{{item}}</text>
     </view>
-    
+
     <view class="calendar-days">
       <block wx:for="{{calendarDays}}" wx:key="index">
-        <view 
+        <view
           class="day-item {{item.isCurrentMonth ? '' : 'other-month'}} {{item.isToday ? 'today' : ''}} {{item.isChecked ? 'checked' : ''}}"
         >
           <text class="day-number">{{item.day}}</text>
@@ -55,8 +55,9 @@
   </view>
 
   <!-- 今日打卡按钮 -->
-  <view class="checkin-button {{todayChecked ? 'checked' : ''}}" bindtap="doCheckin">
-    <text>{{todayChecked ? '今日已打卡 ✓' : '立即打卡'}}</text>
+  <view class="checkin-button {{todayChecked ? 'checked' : ''}}" bindtap="doCheckin" hover-class="btn-press">
+    <icon wx:if="{{todayChecked}}" name="check" color="#6E6E73" size="32rpx"/>
+    <text>{{todayChecked ? '今日已打卡' : '立即打卡'}}</text>
   </view>
 
   <!-- 打卡动态 -->

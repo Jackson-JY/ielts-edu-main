@@ -16,7 +16,7 @@
       <!-- Header -->
       <view class="header">
         <view class="header-top">
-          <text class="title">写作产出</text>
+          <text class="title">写作测试</text>
           <view class="progress-badge">第 {{currentTaskIndex + 1}} / 2 题</view>
         </view>
         <view class="task-tabs">
@@ -54,7 +54,7 @@
       <!-- 底部操作 -->
       <view class="bottom-actions">
         <button class="btn btn-primary" bindtap="handleSubmit" disabled="{{submitting}}">
-          {{currentTaskIndex === 0 ? '进入下一题' : mode === 'full' ? '完成测评，查看结果' : '提交写作测评'}}
+          {{currentTaskIndex === 0 ? '下一题' : mode === 'full' ? '完成测评，查看结果' : '完成测评'}}
         </button>
       </view>
     </view>

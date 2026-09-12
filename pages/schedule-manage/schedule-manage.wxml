@@ -3,6 +3,13 @@
 module.exports = {
   includes: function(arr, val) {
     return arr.indexOf(val) !== -1;
+  },
+  getSubjectIcon: function(subject) {
+    if (subject === '听力') return 'headphones';
+    if (subject === '口语') return 'mic';
+    if (subject === '阅读') return 'book';
+    if (subject === '写作') return 'pen';
+    return 'book';
   }
 }
 </wxs>
@@ -10,23 +17,23 @@ module.exports = {
 <view class="page">
   <!-- 页面头部 -->
   <view class="page-header">
-    <view class="back-btn" bindtap="goBack">
-      <text class="back-icon">‹</text>
+    <view class="back-btn" bindtap="goBack" hover-class="icon-btn-active">
+      <icon name="chevron-left" color="#1D1D1F" size="36rpx"/>
     </view>
     <text class="page-title">排课管理</text>
-    <view class="add-btn" bindtap="showAddModal">
-      <text class="add-icon">+</text>
+    <view class="add-btn" bindtap="showAddModal" hover-class="icon-btn-active">
+      <icon name="plus" color="#0E8C81" size="32rpx"/>
     </view>
   </view>
 
   <!-- 加载状态 -->
   <view class="loading-container" wx:if="{{loading}}">
-    <text class="loading-text">加载中...</text>
+    <text class="loading-text">加载中</text>
   </view>
 
   <!-- 无权限提示 -->
   <view class="empty-state" wx:elif="{{!isAdmin}}">
-    <image class="empty-icon-img" src="{{iconUser}}" mode="aspectFit"/>
+    <icon name="user" color="#8E8E93" size="80rpx"/>
     <text class="empty-text">您没有管理员权限</text>
   </view>
 
@@ -35,12 +42,12 @@ module.exports = {
     <!-- 视图切换 + 日期导航 -->
     <view class="view-header">
       <view class="date-nav">
-        <view class="nav-btn" bindtap="changeDate" data-direction="-1">
-          <text class="nav-icon">‹</text>
+        <view class="nav-btn" bindtap="changeDate" data-direction="-1" hover-class="icon-btn-active">
+          <icon name="chevron-left" color="#1D1D1F" size="32rpx"/>
         </view>
         <text class="date-text">{{dateRangeText}}</text>
-        <view class="nav-btn" bindtap="changeDate" data-direction="1">
-          <text class="nav-icon">›</text>
+        <view class="nav-btn" bindtap="changeDate" data-direction="1" hover-class="icon-btn-active">
+          <icon name="chevron-right" color="#1D1D1F" size="32rpx"/>
         </view>
       </view>
       <view class="view-tabs">
@@ -58,9 +65,9 @@ module.exports = {
 
     <!-- 学生筛选 -->
     <view class="student-filter-bar">
-      <view class="filter-btn {{selectedStudentId ? 'active' : ''}}" bindtap="toggleStudentFilter">
+      <view class="filter-btn {{selectedStudentId ? 'active' : ''}}" bindtap="toggleStudentFilter" hover-class="btn-press">
         <text>{{selectedStudentId ? (studentListMap[selectedStudentId] || '已筛选') : '全部学生'}}</text>
-        <text class="filter-arrow">▼</text>
+        <icon name="chevron-down" color="#6E6E73" size="20rpx"/>
       </view>
       <text class="schedule-count">共 {{filteredScheduleList.length}} 节</text>
     </view>
@@ -69,18 +76,19 @@ module.exports = {
     <view class="filter-dropdown" wx:if="{{showStudentFilter}}">
       <view class="filter-overlay" bindtap="toggleStudentFilter"></view>
       <view class="filter-content">
-        <view class="filter-item {{selectedStudentId === '' ? 'selected' : ''}}" bindtap="onFilterStudentTap" data-id="" data-name="全部学生">
+        <view class="filter-item {{selectedStudentId === '' ? 'selected' : ''}}" bindtap="onFilterStudentTap" data-id="" data-name="全部学生" hover-class="list-item-press">
           <text>全部学生</text>
-          <text class="check" wx:if="{{selectedStudentId === ''}}">✓</text>
+          <icon wx:if="{{selectedStudentId === ''}}" name="check" color="#0E8C81" size="32rpx"/>
         </view>
-        <view class="filter-item {{selectedStudentId === item.id ? 'selected' : ''}}" 
-              wx:for="{{studentList}}" 
+        <view class="filter-item {{selectedStudentId === item.id ? 'selected' : ''}}"
+              wx:for="{{studentList}}"
               wx:key="id"
-              bindtap="onFilterStudentTap" 
-              data-id="{{item.id}}" 
-              data-name="{{item.name}}">
+              bindtap="onFilterStudentTap"
+              data-id="{{item.id}}"
+              data-name="{{item.name}}"
+              hover-class="list-item-press">
           <text>{{item.name}}</text>
-          <text class="check" wx:if="{{selectedStudentId === item.id}}">✓</text>
+          <icon wx:if="{{selectedStudentId === item.id}}" name="check" color="#0E8C81" size="32rpx"/>
         </view>
       </view>
     </view>
@@ -110,10 +118,10 @@ module.exports = {
         <text class="month-weekday" wx:for="{{dayNames}}" wx:key="index">{{item}}</text>
       </view>
       <view class="month-days-grid">
-        <view class="month-day-cell" 
+        <view class="month-day-cell"
               wx:for="{{monthDays}}"
               wx:key="index">
-          <view wx:if="{{item}}" 
+          <view wx:if="{{item}}"
                 class="month-day {{item.isToday ? 'today' : ''}} {{item.courseCount > 0 ? 'has-course' : ''}} {{selectedDate === item.date ? 'selected' : ''}}"
                 bindtap="selectDay"
                 data-day="{{item.day}}"
@@ -127,52 +135,52 @@ module.exports = {
 
     <!-- 课程列表 -->
     <view class="schedule-list">
-      <view class="schedule-item {{item.isPast ? 'past' : ''}}" 
-            wx:for="{{filteredScheduleList}}" 
+      <view class="schedule-item {{item.isPast ? 'past' : ''}}"
+            wx:for="{{filteredScheduleList}}"
             wx:key="id"
             data-schedule="{{item}}"
-            bindtap="editSchedule">
+            bindtap="editSchedule"
+            hover-class="card-press">
         <view class="schedule-icon-wrapper">
-          <image class="subject-icon" src="{{item.subjectIcon}}" mode="aspectFit" wx:if="{{item.subjectIcon}}"/>
-          <text class="subject-icon-text" wx:else>{{item.subject}}</text>
+          <icon name="{{utils.getSubjectIcon(item.subject)}}" color="#12B7A8" size="40rpx"/>
         </view>
-        
+
         <view class="schedule-content">
           <view class="schedule-title-row">
             <text class="schedule-title">{{item.title}}</text>
           </view>
-          
+
           <view class="schedule-info">
             <view class="info-item">
-              <image class="info-icon" src="{{iconCalendar}}" mode="aspectFit"/>
+              <icon name="calendar" color="#8E8E93" size="24rpx"/>
               <text>{{item.date}} {{item.startTime}}-{{item.endTime}}</text>
             </view>
             <view class="info-item" wx:if="{{item.studentName}}">
-              <image class="info-icon" src="{{iconUser}}" mode="aspectFit"/>
+              <icon name="user" color="#8E8E93" size="24rpx"/>
               <text>{{item.studentName}}</text>
             </view>
             <view class="info-item" wx:if="{{item.teacher}}">
-              <image class="info-icon" src="{{iconMic}}" mode="aspectFit"/>
+              <icon name="mic" color="#8E8E93" size="24rpx"/>
               <text>{{item.teacher}}</text>
             </view>
             <view class="info-item" wx:if="{{item.location}}">
-              <image class="info-icon" src="{{iconBook}}" mode="aspectFit"/>
+              <icon name="book" color="#8E8E93" size="24rpx"/>
               <text>{{item.location}}</text>
             </view>
           </view>
-          
+
           <view class="schedule-info" wx:if="{{item.scheduleMode === '循环'}}">
             <view class="repeat-tag">
-              <image class="info-icon" src="{{iconRefresh}}" mode="aspectFit"/>
+              <icon name="reset" color="#0E8C81" size="20rpx"/>
               <text>循环课程</text>
             </view>
           </view>
-          
+
           <text class="schedule-desc" wx:if="{{item.description}}">{{item.description}}</text>
         </view>
 
         <view class="schedule-actions">
-          <view class="action-btn delete" catchtap="deleteSchedule" data-schedule="{{item}}">
+          <view class="action-btn delete" catchtap="deleteSchedule" data-schedule="{{item}}" hover-class="btn-press">
             <text>删除</text>
           </view>
         </view>
@@ -180,7 +188,7 @@ module.exports = {
 
       <!-- 空状态 -->
       <view class="empty-state" wx:if="{{!loading && filteredScheduleList.length === 0}}">
-        <image class="empty-icon-img" src="{{iconCalendar}}" mode="aspectFit"/>
+        <icon name="calendar" color="#8E8E93" size="80rpx"/>
         <text class="empty-text">暂无课程安排</text>
         <text class="empty-sub">点击右上角添加课程</text>
       </view>
@@ -195,33 +203,35 @@ module.exports = {
         <text class="modal-title">{{editingSchedule ? '编辑课程' : '添加课程'}}</text>
         <text class="modal-subtitle">设置课程时间地点</text>
       </view>
-      
+
       <!-- 排课模式选择 -->
       <view class="form-group">
         <text class="form-label">排课方式</text>
         <view class="mode-selector">
-          <view 
+          <view
             class="mode-btn {{scheduleMode === 'single' ? 'active' : ''}}"
             data-mode="single"
             catchtap="onScheduleModeChange"
+            hover-class="btn-press"
           >
             <text>单节课</text>
           </view>
-          <view 
+          <view
             class="mode-btn {{scheduleMode === '循环' ? 'active' : ''}}"
             data-mode="循环"
             catchtap="onScheduleModeChange"
+            hover-class="btn-press"
           >
             <text>循环排课</text>
           </view>
         </view>
       </view>
-      
+
       <!-- 课程名称 -->
       <view class="form-group">
         <text class="form-label">课程名称 *</text>
-        <input 
-          class="form-input" 
+        <input
+          class="form-input"
           placeholder="如：雅思听力强化"
           value="{{formData.title}}"
           data-field="title"
@@ -232,11 +242,11 @@ module.exports = {
       <!-- 学生选择 -->
       <view class="form-group">
         <text class="form-label">选择学生</text>
-        <view class="form-input student-picker" catchtap="onStudentInputTap">
+        <view class="form-input student-picker" catchtap="onStudentInputTap" hover-class="btn-press">
           <text class="{{formData.studentName ? '' : 'placeholder'}}">
             {{formData.studentName || '点击选择学生'}}
           </text>
-          <text class="picker-arrow">›</text>
+          <icon name="chevron-right" color="#8E8E93" size="24rpx"/>
         </view>
       </view>
 
@@ -246,7 +256,7 @@ module.exports = {
         <picker mode="selector" range="{{subjects}}" value="{{subjects.indexOf(formData.subject)}}" bindchange="onSubjectChange">
           <view class="form-picker">
             <text>{{formData.subject}}</text>
-            <text class="picker-arrow">›</text>
+            <icon name="chevron-right" color="#8E8E93" size="24rpx"/>
           </view>
         </picker>
       </view>
@@ -257,7 +267,7 @@ module.exports = {
         <picker mode="date" value="{{formData.date}}" start="{{maxDate}}" bindchange="onFormInput" data-field="date">
           <view class="form-picker">
             <text>{{formData.date || '选择日期'}}</text>
-            <text class="picker-arrow">›</text>
+            <icon name="chevron-right" color="#8E8E93" size="24rpx"/>
           </view>
         </picker>
       </view>
@@ -285,49 +295,49 @@ module.exports = {
         <view class="form-group">
           <text class="form-label">重复星期</text>
           <view class="weekday-selector">
-            <view 
+            <view
               class="weekday-btn {{utils.includes(repeatConfig.weekdays, 1) ? 'active' : ''}}"
               data-weekday="1"
               catchtap="onWeekdayToggle"
             >
               <text>周一</text>
             </view>
-            <view 
+            <view
               class="weekday-btn {{utils.includes(repeatConfig.weekdays, 2) ? 'active' : ''}}"
               data-weekday="2"
               catchtap="onWeekdayToggle"
             >
               <text>周二</text>
             </view>
-            <view 
+            <view
               class="weekday-btn {{utils.includes(repeatConfig.weekdays, 3) ? 'active' : ''}}"
               data-weekday="3"
               catchtap="onWeekdayToggle"
             >
               <text>周三</text>
             </view>
-            <view 
+            <view
               class="weekday-btn {{utils.includes(repeatConfig.weekdays, 4) ? 'active' : ''}}"
               data-weekday="4"
               catchtap="onWeekdayToggle"
             >
               <text>周四</text>
             </view>
-            <view 
+            <view
               class="weekday-btn {{utils.includes(repeatConfig.weekdays, 5) ? 'active' : ''}}"
               data-weekday="5"
               catchtap="onWeekdayToggle"
             >
               <text>周五</text>
             </view>
-            <view 
+            <view
               class="weekday-btn {{utils.includes(repeatConfig.weekdays, 6) ? 'active' : ''}}"
               data-weekday="6"
               catchtap="onWeekdayToggle"
             >
               <text>周六</text>
             </view>
-            <view 
+            <view
               class="weekday-btn {{utils.includes(repeatConfig.weekdays, 7) ? 'active' : ''}}"
               data-weekday="7"
               catchtap="onWeekdayToggle"
@@ -342,7 +352,7 @@ module.exports = {
           <picker mode="selector" range="{{[1,2,3,4,5,6,7,8]}}" value="{{repeatConfig.weekCount - 1}}" bindchange="onWeekCountChange">
             <view class="form-picker">
               <text>{{repeatConfig.weekCount}} 周</text>
-              <text class="picker-arrow">›</text>
+              <icon name="chevron-right" color="#8E8E93" size="24rpx"/>
             </view>
           </picker>
         </view>
@@ -355,8 +365,8 @@ module.exports = {
       <!-- 教师 -->
       <view class="form-group">
         <text class="form-label">教师</text>
-        <input 
-          class="form-input" 
+        <input
+          class="form-input"
           placeholder="授课教师姓名"
           value="{{formData.teacher}}"
           data-field="teacher"
@@ -367,8 +377,8 @@ module.exports = {
       <!-- 地点 -->
       <view class="form-group">
         <text class="form-label">上课地点</text>
-        <input 
-          class="form-input" 
+        <input
+          class="form-input"
           placeholder="如：在线/教室301"
           value="{{formData.location}}"
           data-field="location"
@@ -379,9 +389,9 @@ module.exports = {
       <!-- 描述 -->
       <view class="form-group">
         <text class="form-label">课程描述</text>
-        <textarea 
-          class="form-textarea" 
-          placeholder="课程简介..."
+        <textarea
+          class="form-textarea"
+          placeholder="课程简介"
           value="{{formData.description}}"
           data-field="description"
           bindinput="onFormInput"
@@ -390,10 +400,10 @@ module.exports = {
       </view>
 
       <view class="modal-buttons">
-        <view class="modal-btn cancel" catchtap="hideModal">
+        <view class="modal-btn cancel" catchtap="hideModal" hover-class="btn-press">
           <text>取消</text>
         </view>
-        <view class="modal-btn confirm" catchtap="saveSchedule">
+        <view class="modal-btn confirm" catchtap="saveSchedule" hover-class="btn-press">
           <text>保存</text>
         </view>
       </view>
@@ -405,9 +415,11 @@ module.exports = {
     <view class="picker-content" catchtap="">
       <view class="picker-header">
         <text class="picker-title">选择学生</text>
-        <view class="close-btn" bindtap="onCloseStudentPicker">×</view>
+        <view class="close-btn" bindtap="onCloseStudentPicker" hover-class="icon-btn-active">
+          <icon name="close" color="#6E6E73" size="32rpx"/>
+        </view>
       </view>
-      
+
       <!-- 搜索框 -->
       <view class="search-box">
         <input
@@ -417,22 +429,23 @@ module.exports = {
           bindinput="onStudentSearch"
         />
       </view>
-      
+
       <!-- 学生列表 -->
       <scroll-view class="student-list" scroll-y>
-        <view 
+        <view
           class="student-item {{item.id === formData.studentId ? 'student-selected' : ''}}"
           wx:for="{{filteredStudents}}"
           wx:key="id"
           bindtap="onSelectStudent"
           data-student="{{item}}"
+          hover-class="list-item-press"
         >
           <view class="student-avatar">
             <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/>
             <text wx:else class="avatar-placeholder">{{item.name.length > 0 ? item.name[0] : '?'}}</text>
           </view>
           <text class="student-name">{{item.name}}</text>
-          <view class="check-icon" wx:if="{{item.id === formData.studentId}}">✓</view>
+          <icon wx:if="{{item.id === formData.studentId}}" name="check" color="#0E8C81" size="32rpx"/>
         </view>
         <view class="empty-tip" wx:if="{{filteredStudents.length === 0}}">
           <text>未找到匹配的学生</text>

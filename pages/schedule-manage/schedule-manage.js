@@ -1,8 +1,6 @@
 // pages/schedule-manage/schedule-manage.js - 管理员排课页面
 const app = getApp();
 const cloudDB = require('../../utils/cloudDB');
-const { CLOUD_IMAGES } = require('../../config/images');
-const cloudStorage = require('../../utils/cloudStorage');
 
 Page({
   data: {
@@ -34,19 +32,11 @@ Page({
     },
     subjects: ['听力', '阅读', '写作', '口语'],
     subjectColors: {
-      '听力': '#A7FBF5',
-      '阅读': '#FFD4B8',
-      '写作': '#FFE8F0',
-      '口语': '#E8D4F8',
+      '听力': '#E6F7F5',
+      '阅读': '#FFF1E5',
+      '写作': '#FFE5EC',
+      '口语': '#F0E6FA',
     },
-    // 云存储图标
-    iconHeadphones: '',
-    iconBook: '',
-    iconPen: '',
-    iconMic: '',
-    iconCalendar: '',
-    iconUser: '',
-    iconRefresh: '',
     maxDate: '',
     // 学生列表
     studentList: [],
@@ -73,35 +63,6 @@ Page({
     this.checkAdminAndLoad();
     // 加载学生列表
     this.loadStudents();
-    // 加载云存储图标
-    this.loadIcons();
-  },
-
-  // 加载云存储图标
-  async loadIcons() {
-    try {
-      const fileIDs = [
-        CLOUD_IMAGES.iconHeadphones,
-        CLOUD_IMAGES.iconMic,
-        CLOUD_IMAGES.iconBook,
-        CLOUD_IMAGES.iconPen,
-        CLOUD_IMAGES.iconCalendar,
-        CLOUD_IMAGES.iconUser,
-        CLOUD_IMAGES.iconRefresh,
-      ];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      this.setData({
-        iconHeadphones: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
-        iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
-        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
-        iconPen: urlMap[CLOUD_IMAGES.iconPen] || '',
-        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
-        iconUser: urlMap[CLOUD_IMAGES.iconUser] || '',
-        iconRefresh: urlMap[CLOUD_IMAGES.iconRefresh] || '',
-      });
-    } catch (e) {
-      console.error('加载图标失败', e);
-    }
   },
 
   initMaxDate() {
@@ -412,15 +373,7 @@ Page({
   },
 
   formatSchedule(item) {
-    const subjectColor = this.data.subjectColors[item.subject] || '#D4E8FF';
-    // 根据科目获取对应图标
-    let icon = this.data.iconBook; // 默认阅读图标
-    switch (item.subject) {
-      case '听力': icon = this.data.iconHeadphones; break;
-      case '口语': icon = this.data.iconMic; break;
-      case '阅读': icon = this.data.iconBook; break;
-      case '写作': icon = this.data.iconPen; break;
-    }
+    const subjectColor = this.data.subjectColors[item.subject] || '#E5E5EA';
     // 标准化日期格式：取前10位 YYYY-MM-DD
     const normalizedDate = (item.date || '').substring(0, 10);
     return {
@@ -428,7 +381,6 @@ Page({
       id: item._id,
       date: normalizedDate, // 确保日期格式统一
       subjectColor,
-      subjectIcon: icon,
       isPast: this.isPastSchedule(normalizedDate, item.endTime),
     };
   },

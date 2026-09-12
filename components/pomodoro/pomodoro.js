@@ -1,7 +1,5 @@
 // components/pomodoro/pomodoro.js
 const cloudDB = require('../../utils/cloudDB');
-const cloudStorage = require('../../utils/cloudStorage');
-const { CLOUD_IMAGES } = require('../../config/images');
 const { formatDate } = require('../../utils/dateUtil');
 
 Component({
@@ -83,11 +81,6 @@ Component({
     todayFocusMinutes: 0,    // 今日专注分钟
     totalPomodoros: 0,       // 历史累计番茄数
     totalFocusMinutes: 0,    // 历史累计专注分钟
-
-    // ─── 图标 ─────────────────────────────────────────────────
-    iconPlay: '',
-    iconPause: '',
-    iconRefresh: '',
   },
 
   // 注意：以下两个实例字段必须在 attached() 里用 this.xxx = 赋值才会生效。
@@ -102,7 +95,6 @@ Component({
       //   导致 `save.id > this._lastSaveId` 恒为 false，写库永远不触发。
       this._lastSaveId = 0;
 
-      this._loadIcons();
       this._loadTodayStats();
 
       // 注册到全局监听器
@@ -157,11 +149,11 @@ Component({
 
       const phaseMap = {
         idle: '准备开始',
-        working: '专注中 🎯',
+        working: '专注中',
         paused: '已暂停',
-        work_done: '专注完成 🎉',
-        resting: '休息中 ☕',
-        rest_done: '休息完毕！',
+        work_done: '专注完成',
+        resting: '休息中',
+        rest_done: '休息完成',
       };
 
       this.setData({
@@ -229,8 +221,8 @@ Component({
     /** 重置 */
     onTapReset() {
       wx.showModal({
-        title: '重置番茄时钟',
-        content: '确定要重置当前番茄吗？本轮进度将会清除。',
+        title: '重置专注计时',
+        content: '确定要重置当前计时吗？本轮进度将会清除。',
         confirmText: '重置',
         cancelText: '取消',
         success: (res) => {
@@ -481,22 +473,6 @@ Component({
         });
       } catch (e) {
         console.error('[番茄] 加载统计失败', e);
-      }
-    },
-
-    // ─── 图标 ────────────────────────────────────────────────────
-
-    async _loadIcons() {
-      try {
-        const fileIDs = [CLOUD_IMAGES.iconPlay, CLOUD_IMAGES.iconPause, CLOUD_IMAGES.iconRefresh];
-        const urlMap = await cloudStorage.getTempUrls(fileIDs);
-        this.setData({
-          iconPlay: urlMap[CLOUD_IMAGES.iconPlay] || '',
-          iconPause: urlMap[CLOUD_IMAGES.iconPause] || '',
-          iconRefresh: urlMap[CLOUD_IMAGES.iconRefresh] || '',
-        });
-      } catch (e) {
-        console.error('[番茄组件] 加载图标失败', e);
       }
     },
   },

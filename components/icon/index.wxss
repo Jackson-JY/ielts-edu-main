@@ -1,0 +1,5 @@
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  /* 颜色由 SVG 内部 stroke 控制，此处只控制尺寸 */
+}

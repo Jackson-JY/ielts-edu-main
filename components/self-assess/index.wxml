@@ -35,8 +35,8 @@
           show-value="{{false}}"
           block-size="28"
           block-color="#12B7A8"
-          activeColor="#A7FBF5"
-          backgroundColor="#ECE8F4"
+          activeColor="#12B7A8"
+          backgroundColor="#E5E5EA"
           bindchange="onSliderChange"
           bindchanging="onSliderChanging" />
         <text class="sa-slider-end-label">5</text>

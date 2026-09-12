@@ -1,22 +1,15 @@
 <!-- pages/profile/profile.wxml -->
-<wxs module="utils">
-module.exports = {
-  indexOf: function(arr, value) {
-    return arr.indexOf(value);
-  }
-}
-</wxs>
 <view class="page">
-  <!-- 个人信息卡片（点击头像/昵称可编辑资料） -->
+  <!-- 个人信息卡片：白色简洁卡片 -->
   <view class="profile-card">
     <view class="profile-header">
       <view class="profile-info-left" bindtap="onTapEditProfile">
         <view class="avatar-wrap">
           <view class="avatar">
-            <image class="avatar-icon" src="{{avatarUrl || defaultAvatarUrl || iconUser}}" mode="aspectFill"/>
+            <image class="avatar-icon" src="{{avatarUrl || defaultAvatarUrl}}" mode="aspectFill"/>
           </view>
           <view class="avatar-edit-badge">
-            <text class="avatar-edit-icon">✎</text>
+            <icon name="pen" color="#FFFFFF" size="20rpx"/>
           </view>
         </view>
         <view class="profile-info">
@@ -24,14 +17,13 @@ module.exports = {
           <text class="edit-profile-hint">点击修改资料</text>
         </view>
       </view>
-      <!-- 退出按钮 -->
       <view class="login-action">
         <button wx:if="{{isLoggedIn}}" class="btn-logout" bindtap="handleLogout">退出登录</button>
       </view>
     </view>
   </view>
 
-  <!-- 打卡统计 -->
+  <!-- 打卡统计：超大数字 + 两列数据 -->
   <view class="stats-card">
     <text class="streak-num">{{streakDays}}</text>
     <text class="streak-label">连续打卡天数</text>
@@ -48,18 +40,20 @@ module.exports = {
     </view>
   </view>
 
-  <!-- 番茄时钟入口卡片 -->
+  <!-- 番茄专注入口：去掉 emoji，改时钟图标 -->
   <view class="pomodoro-entry-card" bindtap="onTapOpenPomodoro">
     <view class="pomodoro-entry-left">
-      <text class="pomodoro-entry-icon">🍅</text>
+      <view class="pomodoro-entry-icon-wrap">
+        <icon name="clock" color="#12B7A8" size="36rpx"/>
+      </view>
       <view class="pomodoro-entry-info">
-        <text class="pomodoro-entry-title">番茄时钟</text>
-        <text class="pomodoro-entry-sub" wx:if="{{todayPomodoros > 0}}">今日 {{todayPomodoros}} 个 · 专注 {{todayFocusMinutes}} 分钟</text>
+        <text class="pomodoro-entry-title">番茄专注</text>
+        <text class="pomodoro-entry-sub" wx:if="{{todayPomodoros > 0}}">今日 {{todayPomodoros}} 次 · 专注 {{todayFocusMinutes}} 分钟</text>
         <text class="pomodoro-entry-sub" wx:else>点击开始专注</text>
       </view>
     </view>
     <view class="pomodoro-entry-right">
-      <text class="pomodoro-entry-arrow">›</text>
+      <icon name="chevron-right" color="#8E8E93" size="32rpx"/>
     </view>
   </view>
 
@@ -68,18 +62,17 @@ module.exports = {
     <view class="section-header">
       <text class="section-title">打卡日历</text>
       <view class="checkin-btn" bindtap="showCheckinForm">
-        <text class="checkin-btn-icon">+</text>
+        <icon name="plus" color="#12B7A8" size="24rpx"/>
         <text class="checkin-btn-text">打卡</text>
       </view>
     </view>
-    <!-- 月份选择导航 -->
     <view class="month-nav">
       <view class="month-btn" bindtap="prevMonth">
-        <text class="month-arrow">‹</text>
+        <icon name="chevron-left" color="#1D1D1F" size="32rpx"/>
       </view>
       <text class="month-label">{{monthLabel}}</text>
       <view class="month-btn {{!canGoNext ? 'month-btn-disabled' : ''}}" bindtap="nextMonth">
-        <text class="month-arrow">›</text>
+        <icon name="chevron-right" color="#1D1D1F" size="32rpx"/>
       </view>
     </view>
     <view class="calendar-header">
@@ -107,14 +100,14 @@ module.exports = {
         </view>
       </view>
     </view>
-    <!-- 热力图例 -->
+    <!-- 热力图例：薄荷绿系 -->
     <view class="heatmap-legend">
       <text class="legend-label">少</text>
-      <view class="legend-cell" style="background-color: #FFF9F5;"></view>
-      <view class="legend-cell" style="background-color: rgba(167,251,245,0.2);"></view>
-      <view class="legend-cell" style="background-color: rgba(167,251,245,0.5);"></view>
-      <view class="legend-cell" style="background-color: rgba(167,251,245,0.75);"></view>
-      <view class="legend-cell" style="background-color: #A7FBF5;"></view>
+      <view class="legend-cell" style="background-color: #F2F2F7;"></view>
+      <view class="legend-cell" style="background-color: #E6F7F5;"></view>
+      <view class="legend-cell" style="background-color: #80DED5;"></view>
+      <view class="legend-cell" style="background-color: #12B7A8;"></view>
+      <view class="legend-cell" style="background-color: #0E8C81;"></view>
       <text class="legend-label">多</text>
     </view>
   </view>
@@ -124,39 +117,39 @@ module.exports = {
     <view class="card-header">
       <text class="card-title">考试成绩记录</text>
       <view class="add-button" bindtap="showAddScoreModal">
-        <text class="add-icon">+</text>
+        <icon name="plus" color="#12B7A8" size="24rpx"/>
         <text class="add-text">添加成绩</text>
       </view>
     </view>
-    
-    <!-- 最新成绩 -->
+
+    <!-- 最新成绩：薄荷绿总分大数字 + 四科分数横向排列 -->
     <block wx:if="{{examScores.length > 0}}">
       <view class="latest-score">
-        <text class="score-date">最近一次考试 - {{examScores[0].date}}</text>
+        <text class="score-date">最近一次考试 · {{examScores[0].date}}</text>
         <view class="total-score">
-          <text class="score-value">{{examScores[0].total}}</text>
+          <text class="score-value-total">{{examScores[0].total}}</text>
           <text class="score-label">总分</text>
         </view>
         <view class="score-details">
           <view class="score-item">
-            <text class="score-label">听力</text>
-            <text class="score-value">{{examScores[0].listening}}</text>
+            <text class="score-item-label">听力</text>
+            <text class="score-item-value">{{examScores[0].listening}}</text>
           </view>
           <view class="score-item">
-            <text class="score-label">口语</text>
-            <text class="score-value">{{examScores[0].speaking}}</text>
+            <text class="score-item-label">口语</text>
+            <text class="score-item-value">{{examScores[0].speaking}}</text>
           </view>
           <view class="score-item">
-            <text class="score-label">阅读</text>
-            <text class="score-value">{{examScores[0].reading}}</text>
+            <text class="score-item-label">阅读</text>
+            <text class="score-item-value">{{examScores[0].reading}}</text>
           </view>
           <view class="score-item">
-            <text class="score-label">写作</text>
-            <text class="score-value">{{examScores[0].writing}}</text>
+            <text class="score-item-label">写作</text>
+            <text class="score-item-value">{{examScores[0].writing}}</text>
           </view>
         </view>
       </view>
-      
+
       <!-- 成绩趋势图 -->
       <view class="score-trend">
         <text class="trend-title">成绩趋势</text>
@@ -170,49 +163,57 @@ module.exports = {
         </view>
       </view>
     </block>
-    
-    <!-- 无成绩时的提示 -->
+
     <view class="empty-scores" wx:else>
+      <view class="empty-icon-wrap">
+        <icon name="trophy" color="#8E8E93" size="48rpx"/>
+      </view>
       <text class="empty-text">暂无考试成绩记录</text>
-      <text class="empty-sub">点击"添加成绩"记录您的雅思成绩</text>
+      <text class="empty-sub">点击「添加成绩」记录你的雅思模考成绩</text>
     </view>
   </view>
 
   <!-- 管理员菜单 -->
   <view class="menu-list" wx:if="{{isAdmin}}">
     <view class="menu-item admin-menu" bindtap="goToScheduleManage">
-      <view class="menu-icon">
-        <image src="{{iconCalendar}}" mode="aspectFit" style="width: 48rpx; height: 48rpx;"/>
+      <view class="menu-icon-wrap">
+        <icon name="calendar" color="#12B7A8" size="32rpx"/>
       </view>
       <text class="menu-label">排课管理</text>
       <text class="menu-arrow admin-badge">管理员</text>
     </view>
   </view>
 
-  <!-- 菜单项 -->
+  <!-- 菜单项：无边框列表项，左侧图标，右侧 chevron -->
   <view class="menu-list">
     <view class="menu-item" bindtap="goToAssessmentResult">
-      <view class="menu-icon">
-        <image src="{{iconTarget}}" mode="aspectFit" style="width: 48rpx; height: 48rpx;"/>
+      <view class="menu-icon-wrap">
+        <icon name="target" color="#12B7A8" size="32rpx"/>
       </view>
       <text class="menu-label">测评结果</text>
-      <text class="menu-arrow">›</text>
+      <view class="menu-arrow-wrap">
+        <icon name="chevron-right" color="#8E8E93" size="28rpx"/>
+      </view>
     </view>
 
     <view class="menu-item" bindtap="goToLearningReport">
-      <view class="menu-icon">
-        <image src="{{iconChart}}" mode="aspectFit" style="width: 48rpx; height: 48rpx;"/>
+      <view class="menu-icon-wrap">
+        <icon name="chart" color="#12B7A8" size="32rpx"/>
       </view>
       <text class="menu-label">学习报告</text>
-      <text class="menu-arrow">›</text>
+      <view class="menu-arrow-wrap">
+        <icon name="chevron-right" color="#8E8E93" size="28rpx"/>
+      </view>
     </view>
 
     <view class="menu-item" bindtap="goToAssessment">
-      <view class="menu-icon">
-        <image src="{{iconRefresh}}" mode="aspectFit" style="width: 48rpx; height: 48rpx;"/>
+      <view class="menu-icon-wrap">
+        <icon name="reset" color="#12B7A8" size="32rpx"/>
       </view>
       <text class="menu-label">重新测评</text>
-      <text class="menu-arrow">›</text>
+      <view class="menu-arrow-wrap">
+        <icon name="chevron-right" color="#8E8E93" size="28rpx"/>
+      </view>
     </view>
   </view>
 
@@ -224,29 +225,31 @@ module.exports = {
         <text class="modal-title">{{selectedDate}} 打卡记录</text>
         <text class="modal-subtitle">共 {{selectedDateCheckins.length}} 次打卡</text>
       </view>
-      
+
       <scroll-view class="checkin-detail-list" scroll-y>
         <block wx:if="{{selectedDateCheckins.length > 0}}">
           <view class="checkin-detail-item" wx:for="{{selectedDateCheckins}}" wx:key="id">
             <view class="detail-time">
-              <image class="time-icon" src="{{iconCalendar}}" mode="aspectFit"/>
+              <icon name="clock" color="#8E8E93" size="20rpx"/>
               <text class="time-text">{{item.time}}</text>
             </view>
             <view class="detail-content">
               <view class="detail-types">
                 <text class="detail-type-tag" wx:for="{{item.types}}" wx:for-item="type" wx:key="index" style="background-color: {{type.color}};">{{type.label}}</text>
-                <text class="detail-duration-tag" wx:if="{{item.duration > 0}}">⏱ {{item.duration}} 分钟</text>
+                <text class="detail-duration-tag" wx:if="{{item.duration > 0}}">{{item.duration}} 分钟</text>
               </view>
               <text class="detail-text" wx:if="{{item.content}}">{{item.content}}</text>
             </view>
           </view>
         </block>
         <view class="checkin-detail-empty" wx:else>
-          <image class="empty-icon-img" src="{{iconDocument}}" mode="aspectFit"/>
+          <view class="empty-icon-wrap">
+            <icon name="calendar" color="#8E8E93" size="48rpx"/>
+          </view>
           <text class="empty-text">该日期暂无打卡记录</text>
         </view>
       </scroll-view>
-      
+
       <view class="modal-buttons">
         <view class="modal-btn confirm" bindtap="hideCheckinDetail">
           <text>关闭</text>
@@ -263,13 +266,12 @@ module.exports = {
         <text class="modal-title">今日打卡</text>
         <text class="modal-subtitle">记录今天的学习进度</text>
       </view>
-      
-      <!-- 打卡类型选择 -->
+
       <view class="form-group">
         <text class="form-label">打卡类型（可多选）</text>
         <view class="checkin-type-grid">
-          <view class="checkin-type-item {{item.selected ? 'selected' : ''}}" 
-                wx:for="{{checkinTypeList}}" 
+          <view class="checkin-type-item {{item.selected ? 'selected' : ''}}"
+                wx:for="{{checkinTypeList}}"
                 wx:key="id"
                 data-id="{{item.id}}"
                 bindtap="toggleCheckinType">
@@ -278,8 +280,7 @@ module.exports = {
           </view>
         </view>
       </view>
-      
-      <!-- 时长记录 -->
+
       <view class="form-group">
         <text class="form-label">学习时长（分钟）</text>
         <input class="checkin-duration-input"
@@ -289,17 +290,16 @@ module.exports = {
                bindinput="onCheckinDurationInput"/>
       </view>
 
-      <!-- 备注输入 -->
       <view class="form-group">
         <text class="form-label">备注内容</text>
-        <textarea class="checkin-textarea" 
-                  placeholder="记录今天的学习心得..."
+        <textarea class="checkin-textarea"
+                  placeholder="记录今天的学习心得"
                   value="{{checkinContent}}"
                   bindinput="onCheckinContentInput"
                   maxlength="200"/>
         <text class="textarea-count">{{checkinContent.length}}/200</text>
       </view>
-      
+
       <view class="modal-buttons">
         <view class="modal-btn cancel" bindtap="hideCheckinForm">
           <text>取消</text>
@@ -311,7 +311,7 @@ module.exports = {
     </view>
   </view>
 
-  <!-- 编辑资料弹窗（一键登录后在此完善头像昵称） -->
+  <!-- 编辑资料弹窗 -->
   <view class="modal-overlay" wx:if="{{showEditProfile}}">
     <view class="modal-mask" bindtap="hideEditProfile"></view>
     <view class="modal-content">
@@ -320,18 +320,16 @@ module.exports = {
         <text class="modal-subtitle">设置头像和昵称</text>
       </view>
 
-      <!-- 头像选择（微信官方头像填写能力） -->
       <view class="form-group edit-avatar-group">
         <button class="edit-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onEditChooseAvatar">
-          <image class="edit-avatar-img" src="{{editAvatarUrl || avatarUrl || defaultAvatarUrl || iconUser}}" mode="aspectFill"/>
+          <image class="edit-avatar-img" src="{{editAvatarUrl || avatarUrl || defaultAvatarUrl}}" mode="aspectFill"/>
           <view class="edit-avatar-badge">
-            <text>✎</text>
+            <icon name="pen" color="#FFFFFF" size="20rpx"/>
           </view>
         </button>
         <text class="edit-avatar-hint">点击更换头像</text>
       </view>
 
-      <!-- 昵称输入（微信官方昵称填写能力，自动联想微信昵称） -->
       <view class="form-group">
         <text class="form-label">昵称</text>
         <input
@@ -348,7 +346,7 @@ module.exports = {
           <text>取消</text>
         </view>
         <view class="modal-btn confirm {{savingProfile ? 'disabled' : ''}}" bindtap="saveProfile">
-          <text>{{savingProfile ? '保存中...' : '保存'}}</text>
+          <text>{{savingProfile ? '保存中' : '保存'}}</text>
         </view>
       </view>
     </view>
@@ -362,76 +360,76 @@ module.exports = {
         <text class="modal-title">添加考试成绩</text>
         <text class="modal-subtitle">记录你的雅思模考成绩</text>
       </view>
-      
-      <!-- 日期选择 -->
+
       <view class="form-group">
         <text class="form-label">考试日期</text>
         <picker mode="date" value="{{newScore.date}}" start="2020-01-01" end="{{maxDate}}" bindchange="onDateChange">
           <view class="date-picker {{newScore.date ? 'date-picker-active' : ''}}">
-            <image class="date-icon-img" src="{{iconCalendar}}" mode="aspectFit"/>
+            <icon name="calendar" color="#8E8E93" size="22rpx"/>
             <text class="date-text">{{newScore.date ? newScore.date : '请选择考试日期'}}</text>
-            <text class="date-arrow">›</text>
+            <view class="date-arrow-wrap">
+              <icon name="chevron-right" color="#8E8E93" size="22rpx"/>
+            </view>
           </view>
         </picker>
       </view>
-      
-      <!-- 分数输入 -->
+
       <view class="form-group">
         <text class="form-label">各项分数 (0-9分)</text>
         <view class="score-inputs">
           <view class="score-input-item">
-            <view class="score-icon listening">
-              <image src="{{iconHeadphones}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+            <view class="score-icon-wrap listening">
+              <icon name="headphones" color="#12B7A8" size="24rpx"/>
             </view>
-            <input 
-              class="score-input" 
-              type="digit" 
-              placeholder="0.0" 
+            <input
+              class="score-input"
+              type="digit"
+              placeholder="0.0"
               value="{{newScore.listening}}"
               bindinput="onScoreInput"
               data-type="listening"
             />
             <text class="score-name">听力</text>
           </view>
-          
+
           <view class="score-input-item">
-            <view class="score-icon speaking">
-              <image src="{{iconMic}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+            <view class="score-icon-wrap speaking">
+              <icon name="mic" color="#12B7A8" size="24rpx"/>
             </view>
-            <input 
-              class="score-input" 
-              type="digit" 
-              placeholder="0.0" 
+            <input
+              class="score-input"
+              type="digit"
+              placeholder="0.0"
               value="{{newScore.speaking}}"
               bindinput="onScoreInput"
               data-type="speaking"
             />
             <text class="score-name">口语</text>
           </view>
-          
+
           <view class="score-input-item">
-            <view class="score-icon reading">
-              <image src="{{iconBook}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+            <view class="score-icon-wrap reading">
+              <icon name="book" color="#12B7A8" size="24rpx"/>
             </view>
-            <input 
-              class="score-input" 
-              type="digit" 
-              placeholder="0.0" 
+            <input
+              class="score-input"
+              type="digit"
+              placeholder="0.0"
               value="{{newScore.reading}}"
               bindinput="onScoreInput"
               data-type="reading"
             />
             <text class="score-name">阅读</text>
           </view>
-          
+
           <view class="score-input-item">
-            <view class="score-icon writing">
-              <image src="{{iconPen}}" mode="aspectFit" style="width: 36rpx; height: 36rpx;" />
+            <view class="score-icon-wrap writing">
+              <icon name="pen" color="#12B7A8" size="24rpx"/>
             </view>
-            <input 
-              class="score-input" 
-              type="digit" 
-              placeholder="0.0" 
+            <input
+              class="score-input"
+              type="digit"
+              placeholder="0.0"
               value="{{newScore.writing}}"
               bindinput="onScoreInput"
               data-type="writing"
@@ -440,22 +438,21 @@ module.exports = {
           </view>
         </view>
       </view>
-      
-      <!-- 总分输入 -->
+
       <view class="form-group">
         <text class="form-label">总分 (0-9分)</text>
         <view class="total-input-wrap">
-          <input 
-            class="total-input" 
-            type="digit" 
-            placeholder="请输入总分" 
+          <input
+            class="total-input"
+            type="digit"
+            placeholder="请输入总分"
             value="{{newScore.total}}"
             bindinput="onScoreInput"
             data-type="total"
           />
         </view>
       </view>
-      
+
       <view class="modal-buttons">
         <view class="modal-btn cancel" bindtap="hideAddScoreModal">
           <text>取消</text>
@@ -469,7 +466,7 @@ module.exports = {
 
 </view>
 
-<!-- 番茄时钟组件（固定浮层，在 page 外部挂载以避免被 scroll-view 裁切） -->
+<!-- 番茄时钟组件（固定浮层） -->
 <pomodoro
   visible="{{showPomodoro}}"
   homeworkOptions="{{pomodoroHomeworkOptions}}"

@@ -2,35 +2,36 @@
 <view class="page">
   <!-- 顶部问候 -->
   <view class="header">
-    <image class="user-avatar" src="{{userAvatar || defaultAvatarUrl || iconUser}}" mode="aspectFill" />
+    <image class="user-avatar" src="{{userAvatar || defaultAvatarUrl}}" mode="aspectFill" />
     <view class="header-text">
-      <text class="greeting">你好，{{userName}}</text>
+      <text class="greeting">{{userName}}，你好</text>
       <text class="date-text">{{currentDate}}</text>
     </view>
   </view>
 
-  <!-- 每日鼓励寄语 -->
-  <view class="daily-quote-banner" wx:if="{{dailyQuote}}">
-    <view class="daily-quote-shine"></view>
-    <text class="daily-quote-mark">“</text>
+  <!-- 每日寄语：白色卡片 + 左侧薄荷绿竖线 -->
+  <view class="daily-quote" wx:if="{{dailyQuote}}">
+    <view class="daily-quote-bar"></view>
     <text class="daily-quote-text">{{dailyQuote}}</text>
-    <text class="daily-quote-spark">✨</text>
   </view>
 
-  <!-- 今日任务卡片 -->
+  <!-- 今日任务卡片：白色卡片 + eyebrow -->
   <view class="section-card task-card">
     <view class="card-header">
-      <view>
+      <view class="card-header-text">
         <text class="eyebrow">TODAY</text>
         <text class="card-title">今日学习任务</text>
       </view>
-      <image class="card-icon" src="{{iconBook}}" mode="aspectFit"/>
+      <view class="card-icon-wrap">
+        <icon name="book" color="#12B7A8" size="36rpx"/>
+      </view>
     </view>
     <view class="task-info">
       <view class="task-item">
         <text class="task-value">{{todayCourses}}</text>
         <text class="task-label">今日课程</text>
       </view>
+      <view class="task-divider"></view>
       <view class="task-item">
         <text class="task-value">{{submittedHomework}}/{{totalHomework}}</text>
         <text class="task-label">作业进度</text>
@@ -38,30 +39,28 @@
     </view>
     <view class="task-button" bindtap="goToCourses">
       <text>去学习</text>
-      <text class="arrow">→</text>
+      <icon name="arrow-right" color="#FFFFFF" size="28rpx"/>
     </view>
   </view>
 
-  <!-- 能力概览 -->
-  <view class="ability-section">
-    <view class="ability-grid">
-      <view class="ability-item">
-        <view class="ability-icon">
-          <image class="icon" src="{{iconCalendar}}" mode="aspectFit"/>
-        </view>
-        <view class="ability-text">
-          <text class="ability-value">{{studyDays}}</text>
-          <text class="ability-label">学习天数</text>
-        </view>
+  <!-- 能力概览：无边框浅灰块 -->
+  <view class="ability-grid">
+    <view class="ability-item">
+      <view class="ability-icon-wrap">
+        <icon name="calendar" color="#12B7A8" size="32rpx"/>
       </view>
-      <view class="ability-item">
-        <view class="ability-icon">
-          <image class="icon" src="{{iconFire}}" mode="aspectFit"/>
-        </view>
-        <view class="ability-text">
-          <text class="ability-value">{{streakDays}}</text>
-          <text class="ability-label">连续打卡</text>
-        </view>
+      <view class="ability-text">
+        <text class="ability-value">{{studyDays}}</text>
+        <text class="ability-label">学习天数</text>
+      </view>
+    </view>
+    <view class="ability-item">
+      <view class="ability-icon-wrap">
+        <icon name="flame" color="#12B7A8" size="32rpx"/>
+      </view>
+      <view class="ability-text">
+        <text class="ability-value">{{streakDays}}</text>
+        <text class="ability-label">连续打卡</text>
       </view>
     </view>
   </view>
@@ -69,11 +68,11 @@
   <!-- 听说读写打卡 -->
   <view class="section-card checkin-section">
     <view class="card-header">
-      <view>
-        <text class="eyebrow">DAILY CHECK-IN</text>
-        <text class="card-title">今天打卡了吗？</text>
+      <view class="card-header-text">
+        <text class="eyebrow eyebrow-brand">DAILY CHECK-IN</text>
+        <text class="card-title">今日打卡</text>
       </view>
-      <text class="checkin-section-sub">点一下，记录你的进步</text>
+      <text class="checkin-section-sub">选择科目记录学习进度</text>
     </view>
     <view class="checkin-module-grid">
       <view class="checkin-module-item {{item.checkedToday ? 'checked' : ''}}"
@@ -82,9 +81,8 @@
             data-id="{{item.id}}"
             data-label="{{item.label}}"
             bindtap="onTapCheckinModule">
-        <view class="checkin-module-icon-wrap" style="background-color: {{item.bgColor}};">
-          <image class="checkin-module-icon" src="{{item.icon}}" mode="aspectFit"/>
-          <view class="checkin-module-badge" wx:if="{{item.checkedToday}}">✓</view>
+        <view class="checkin-module-icon-wrap">
+          <icon name="{{item.iconName}}" color="{{item.checkedToday ? '#12B7A8' : '#8E8E93'}}" size="40rpx"/>
         </view>
         <text class="checkin-module-label">{{item.label}}</text>
         <text class="checkin-module-status">{{item.checkedToday ? '已打卡' : '去打卡'}}</text>
@@ -98,7 +96,7 @@
     <view class="checkin-input-card">
       <view class="checkin-input-header">
         <view class="checkin-input-icon-wrap">
-          <image class="checkin-input-icon" src="{{checkinInputIcon}}" mode="aspectFit"/>
+          <icon name="{{checkinInputIconName}}" color="#12B7A8" size="44rpx"/>
         </view>
         <view class="checkin-input-titles">
           <text class="checkin-input-title">{{checkinInputLabel}}打卡</text>
@@ -107,7 +105,7 @@
       </view>
 
       <textarea class="checkin-input-textarea"
-                placeholder="今天学了什么？有什么收获～"
+                placeholder="今天学了什么？有什么收获"
                 placeholder-class="checkin-input-placeholder"
                 value="{{checkinInputContent}}"
                 bindinput="onCheckinInputContent"
@@ -120,31 +118,21 @@
           <text>取消</text>
         </view>
         <view class="checkin-input-btn confirm {{checkinSubmitting ? 'disabled' : ''}}" bindtap="onConfirmCheckin">
-          <text>{{checkinSubmitting ? '打卡中...' : '完成打卡'}}</text>
+          <text>{{checkinSubmitting ? '打卡中' : '完成打卡'}}</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 打卡激励动效弹窗 -->
+  <!-- 打卡成功弹窗：薄荷绿对勾 + 轻微缩放入场 -->
   <view class="celebration-overlay" wx:if="{{showCelebration}}">
     <view class="celebration-mask" bindtap="hideCelebration"></view>
     <view class="celebration-card">
-      <!-- 庆祝光效/贴纸 -->
-      <view class="celebration-burst">
-        <view class="burst-dot dot-1"></view>
-        <view class="burst-dot dot-2"></view>
-        <view class="burst-dot dot-3"></view>
-        <view class="burst-dot dot-4"></view>
-        <view class="burst-dot dot-5"></view>
-        <view class="burst-dot dot-6"></view>
-        <view class="celebration-icon-wrap">
-          <image class="celebration-icon" src="{{celebrationIcon}}" mode="aspectFit"/>
-          <view class="celebration-check">✓</view>
-        </view>
+      <view class="celebration-icon-wrap">
+        <icon name="check-circle" color="#12B7A8" size="120rpx"/>
       </view>
 
-      <text class="celebration-title">{{celebrationLabel}}打卡成功！</text>
+      <text class="celebration-title">{{celebrationLabel}}打卡成功</text>
       <text class="celebration-message">{{celebrationMessage}}</text>
 
       <view class="celebration-actions">

@@ -1,7 +1,5 @@
 // pages/learning-report/learning-report.js
 const cloudDB = require('../../utils/cloudDB');
-const cloudStorage = require('../../utils/cloudStorage');
-const { CLOUD_IMAGES } = require('../../config/images');
 const { formatDate } = require('../../utils/dateUtil');
 
 Page({
@@ -18,58 +16,15 @@ Page({
     examScoresReverse: [],
     // 听说读写四项打卡次数统计
     subjectCheckinStats: [
-      { id: 'listening', label: '听力', icon: '', count: 0 },
-      { id: 'speaking', label: '口语', icon: '', count: 0 },
-      { id: 'reading', label: '阅读', icon: '', count: 0 },
-      { id: 'writing', label: '写作', icon: '', count: 0 },
+      { id: 'listening', label: '听力', iconName: 'headphones', count: 0 },
+      { id: 'speaking', label: '口语', iconName: 'mic', count: 0 },
+      { id: 'reading', label: '阅读', iconName: 'book', count: 0 },
+      { id: 'writing', label: '写作', iconName: 'pen', count: 0 },
     ],
-    iconHeadphones: '',
-    iconBook: '',
-    iconPen: '',
-    iconMic: '',
-    iconChart: '',
-    iconCalendar: '',
-    iconCheck: '',
-    iconTarget: '',
-    iconDocument: '',
-    iconFire: '',
   },
 
   async onLoad() {
-    await this.loadIcons();
     this.loadLearningData();
-  },
-
-  async loadIcons() {
-    try {
-      const fileIDs = [
-        CLOUD_IMAGES.iconHeadphones,
-        CLOUD_IMAGES.iconBook,
-        CLOUD_IMAGES.iconPen,
-        CLOUD_IMAGES.iconMic,
-        CLOUD_IMAGES.iconChart,
-        CLOUD_IMAGES.iconCalendar,
-        CLOUD_IMAGES.iconCheck,
-        CLOUD_IMAGES.iconTarget,
-        CLOUD_IMAGES.iconDocument,
-        CLOUD_IMAGES.iconFire,
-      ];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      this.setData({
-        iconHeadphones: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
-        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
-        iconPen: urlMap[CLOUD_IMAGES.iconPen] || '',
-        iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
-        iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
-        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
-        iconCheck: urlMap[CLOUD_IMAGES.iconCheck] || '',
-        iconTarget: urlMap[CLOUD_IMAGES.iconTarget] || '',
-        iconDocument: urlMap[CLOUD_IMAGES.iconDocument] || '',
-        iconFire: urlMap[CLOUD_IMAGES.iconFire] || '',
-      });
-    } catch (e) {
-      console.error('[学习报告] 加载图标失败', e);
-    }
   },
 
   onReady() {
@@ -150,15 +105,15 @@ Page({
           
           // 绘制背景
           const gradient = ctx.createLinearGradient(0, 0, 0, height);
-          gradient.addColorStop(0, '#F8F4FF');
+          gradient.addColorStop(0, '#F5F5F7');
           gradient.addColorStop(1, '#FFFFFF');
           ctx.fillStyle = gradient;
           ctx.fillRect(0, 0, width, height);
-          
-          // 绘制顶部装饰
+
+          // 绘制顶部装饰：薄荷绿
           const headerGradient = ctx.createLinearGradient(0, 0, width, 200);
-          headerGradient.addColorStop(0, '#6C5CE7');
-          headerGradient.addColorStop(1, '#A29BFE');
+          headerGradient.addColorStop(0, '#12B7A8');
+          headerGradient.addColorStop(1, '#0E8C81');
           ctx.fillStyle = headerGradient;
           ctx.fillRect(0, 0, width, 280);
           
@@ -184,57 +139,57 @@ Page({
           // 绘制总分（如果有）
           let currentY = 260;
           if (latestScore) {
-            ctx.fillStyle = '#4A4A4A';
+            ctx.fillStyle = '#1D1D1F';
             ctx.font = '28px sans-serif';
             ctx.textAlign = 'left';
             ctx.fillText('最新成绩', 70, currentY);
-            
+
             currentY += 80;
-            ctx.fillStyle = '#FFC107';
+            ctx.fillStyle = '#12B7A8';
             ctx.font = 'bold 120px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(latestScore.total.toFixed(1), width / 2, currentY);
-            
+
             currentY += 40;
-            ctx.fillStyle = '#9A97AA';
+            ctx.fillStyle = '#8E8E93';
             ctx.font = '28px sans-serif';
             ctx.fillText('总分', width / 2, currentY);
-            
-            // 绘制四科分数
+
+            // 绘制四科分数：单色化
             currentY += 80;
             const subjects = [
-              { name: '听力', score: latestScore.listening, color: '#4CAF50' },
-              { name: '阅读', score: latestScore.reading, color: '#2196F3' },
-              { name: '写作', score: latestScore.writing, color: '#FF9800' },
-              { name: '口语', score: latestScore.speaking, color: '#E91E63' }
+              { name: '听力', score: latestScore.listening },
+              { name: '阅读', score: latestScore.reading },
+              { name: '写作', score: latestScore.writing },
+              { name: '口语', score: latestScore.speaking }
             ];
-            
+
             const startX = 80;
             const gap = 160;
             subjects.forEach((sub, index) => {
               const x = startX + gap * index;
-              
+
               // 科目名
-              ctx.fillStyle = '#9A97AA';
+              ctx.fillStyle = '#8E8E93';
               ctx.font = '22px sans-serif';
               ctx.textAlign = 'center';
               ctx.fillText(sub.name, x + 30, currentY + 20);
-              
+
               // 分数
-              ctx.fillStyle = sub.color;
+              ctx.fillStyle = '#1D1D1F';
               ctx.font = 'bold 36px sans-serif';
               ctx.fillText((sub.score || 0).toFixed(1), x + 30, currentY + 85);
             });
-            
+
             currentY += 140;
           }
           
           // 绘制学习数据
-          ctx.fillStyle = '#4A4A4A';
+          ctx.fillStyle = '#1D1D1F';
           ctx.font = '28px sans-serif';
           ctx.textAlign = 'left';
           ctx.fillText('学习数据', 70, currentY);
-          
+
           currentY += 80;
           const stats = [
             { label: '学习时长', value: (studyData.totalHours || 0) + 'h' },
@@ -242,71 +197,71 @@ Page({
             { label: '掌握词汇', value: (studyData.vocabLearned || 0) + '个' },
             { label: '完成课程', value: (studyData.completedCourses || 0) + '节' }
           ];
-          
+
           // 两行显示
           const row1 = stats.slice(0, 2);
           const row2 = stats.slice(2, 4);
-          
+
           [row1, row2].forEach((row, rowIndex) => {
             const y = currentY + rowIndex * 140;
             row.forEach((stat, index) => {
               const x = 80 + index * 330;
-              
+
               // 背景卡片
-              ctx.fillStyle = '#F8F4FF';
+              ctx.fillStyle = '#F2F2F7';
               this.roundRect(ctx, x, y - 50, 300, 120, 20);
               ctx.fill();
-              
+
               // 数值
-              ctx.fillStyle = '#6C5CE7';
+              ctx.fillStyle = '#12B7A8';
               ctx.font = 'bold 40px sans-serif';
               ctx.textAlign = 'left';
               ctx.fillText(stat.value, x + 30, y + 10);
-              
+
               // 标签
-              ctx.fillStyle = '#9A97AA';
+              ctx.fillStyle = '#8E8E93';
               ctx.font = '22px sans-serif';
               ctx.fillText(stat.label, x + 30, y + 45);
             });
           });
-          
+
           currentY += 320;
-          
+
           // 绘制成绩趋势图（如果有数据）
           if (examScoresReverse.length > 1) {
-            ctx.fillStyle = '#4A4A4A';
+            ctx.fillStyle = '#1D1D1F';
             ctx.font = '28px sans-serif';
             ctx.textAlign = 'left';
             ctx.fillText('成绩趋势', 70, currentY);
-            
+
             // 绘制趋势图
             currentY += 40;
             this.drawTrendOnCanvas(ctx, examScoresReverse, 70, currentY, 610, 200);
-            
+
             currentY += 240;
           }
-          
+
           // 绘制底部二维码区域
-          ctx.fillStyle = '#F8F4FF';
+          ctx.fillStyle = '#F2F2F7';
           this.roundRect(ctx, 70, currentY, 610, 140, 20);
           ctx.fill();
-          
+
           // 绘制小程序码占位
-          ctx.fillStyle = '#E8E8E8';
+          ctx.fillStyle = '#E5E5EA';
           this.roundRect(ctx, 100, currentY + 20, 100, 100, 10);
           ctx.fill();
-          
-          ctx.strokeStyle = '#9A97AA';
+
+          ctx.strokeStyle = '#8E8E93';
           ctx.lineWidth = 4;
           ctx.strokeRect(124, currentY + 44, 52, 52);
-          
+
           // 扫码提示
-          ctx.fillStyle = '#4A4A4A';
+          ctx.fillStyle = '#1D1D1F';
           ctx.font = '28px sans-serif';
           ctx.textAlign = 'left';
           ctx.fillText('扫码查看完整报告', 230, currentY + 60);
           
-          ctx.fillStyle = '#9A97AA';
+          ctx.fillStyle = '#8E8E93';
           ctx.font = '22px sans-serif';
           ctx.fillText('加入雅思学习平台，一起进步', 230, currentY + 95);
           
@@ -357,25 +312,25 @@ Page({
     const maxScore = 9;
     
     // 绘制背景
-    ctx.fillStyle = '#FFF8E7';
+    ctx.fillStyle = '#F2F2F7';
     this.roundRect(ctx, x, y, width, height, 15);
     ctx.fill();
-    
+
     // 计算数据点
     const points = examScores.map((item, index) => {
       const px = x + padding.left + (examScores.length === 1 ? chartWidth / 2 : (chartWidth / (examScores.length - 1)) * index);
       const py = y + padding.top + chartHeight - (item.total / maxScore) * chartHeight;
       return { x: px, y: py, score: item.total };
     });
-    
+
     // 绘制折线
     if (points.length > 1) {
       ctx.beginPath();
-      ctx.strokeStyle = '#FFC107';
+      ctx.strokeStyle = '#12B7A8';
       ctx.lineWidth = 4;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
-      
+
       points.forEach((p, i) => {
         if (i === 0) {
           ctx.moveTo(p.x, p.y);
@@ -385,24 +340,24 @@ Page({
       });
       ctx.stroke();
     }
-    
+
     // 绘制数据点
     points.forEach(p => {
       ctx.beginPath();
       ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
       ctx.fillStyle = '#FFFFFF';
       ctx.fill();
-      ctx.strokeStyle = '#FFC107';
+      ctx.strokeStyle = '#12B7A8';
       ctx.lineWidth = 3;
       ctx.stroke();
-      
+
       ctx.beginPath();
       ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#FFC107';
+      ctx.fillStyle = '#12B7A8';
       ctx.fill();
-      
+
       // 显示分数
-      ctx.fillStyle = '#4A4A4A';
+      ctx.fillStyle = '#1D1D1F';
       ctx.font = 'bold 20px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(p.score.toFixed(1), p.x, p.y - 15);
@@ -545,24 +500,12 @@ Page({
         }
       }
 
-      // 绑定对应科目图标（图标已在 loadIcons 中提前加载）
-      const iconMap = {
-        listening: this.data.iconHeadphones,
-        speaking: this.data.iconMic,
-        reading: this.data.iconBook,
-        writing: this.data.iconPen,
-      };
-      const subjectCheckinStatsWithIcon = subjectCheckinStats.map(item => ({
-        ...item,
-        icon: iconMap[item.id] || '',
-      }));
-
       this.setData({
         studyData,
         trendData,
         examScores,
         examScoresReverse,
-        subjectCheckinStats: subjectCheckinStatsWithIcon,
+        subjectCheckinStats,
         currentDateRange: this.getCurrentRange(),
       }, () => {
         // 数据加载完成后绘制科目趋势图
@@ -577,7 +520,7 @@ Page({
   /**
    * 统计听说读写四项各自的打卡次数
    * @param {Array} checkins - checkins 集合记录，每条含 types: ['listening', 'speaking', ...]
-   * @returns {Array} [{ id, label, icon, count }]
+   * @returns {Array} [{ id, label, iconName, count }]
    */
   calcSubjectCheckinStats(checkins) {
     const counters = { listening: 0, speaking: 0, reading: 0, writing: 0 };
@@ -591,11 +534,12 @@ Page({
     });
 
     const labels = { listening: '听力', speaking: '口语', reading: '阅读', writing: '写作' };
+    const iconNames = { listening: 'headphones', speaking: 'mic', reading: 'book', writing: 'pen' };
 
     return Object.keys(counters).map(id => ({
       id,
       label: labels[id],
-      icon: '',
+      iconName: iconNames[id],
       count: counters[id],
     }));
   },
@@ -628,11 +572,11 @@ Page({
     const examScores = this.data.examScoresReverse;
     if (!examScores || examScores.length === 0) return;
 
-    // 绘制各科目趋势图
-    this.drawMiniChart('listeningCanvas', examScores, 'listening', '#4CAF50');
-    this.drawMiniChart('readingCanvas', examScores, 'reading', '#2196F3');
-    this.drawMiniChart('writingCanvas', examScores, 'writing', '#FF9800');
-    this.drawMiniChart('speakingCanvas', examScores, 'speaking', '#E91E63');
+    // 绘制各科目趋势图：折线颜色统一为薄荷绿 #12B7A8
+    this.drawMiniChart('listeningCanvas', examScores, 'listening', '#12B7A8');
+    this.drawMiniChart('readingCanvas', examScores, 'reading', '#12B7A8');
+    this.drawMiniChart('writingCanvas', examScores, 'writing', '#12B7A8');
+    this.drawMiniChart('speakingCanvas', examScores, 'speaking', '#12B7A8');
     
     // 绘制总成绩趋势图
     this.drawTotalChart();
@@ -665,7 +609,7 @@ Page({
         const scores = examScores.map(exam => exam[subjectKey] || 0).filter(s => s > 0);
         if (scores.length === 0) {
           // 无数据显示提示
-          ctx.fillStyle = '#9A97AA';
+          ctx.fillStyle = '#8E8E93';
           ctx.font = '12px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -778,11 +722,11 @@ Page({
         // 清空画布
         ctx.clearRect(0, 0, width, height);
 
-        // 绘制网格线
-        ctx.strokeStyle = '#E8E8E8';
+        // 绘制网格线：极浅 #F2F2F7
+        ctx.strokeStyle = '#F2F2F7';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
-        
+
         // 横向网格线（5条，对应分数 0, 2, 4, 6, 8）
         for (let i = 0; i <= 4; i++) {
           const y = padding.top + (chartHeight / 4) * i;
@@ -794,7 +738,7 @@ Page({
         ctx.setLineDash([]);
 
         // 绘制Y轴标签
-        ctx.fillStyle = '#9A97AA';
+        ctx.fillStyle = '#8E8E93';
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
@@ -816,10 +760,10 @@ Page({
 
         // 绘制折线（带渐变填充）
         if (points.length > 0) {
-          // 创建渐变
+          // 创建渐变：薄荷绿衍生色
           const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
-          gradient.addColorStop(0, 'rgba(255, 193, 7, 0.4)');
-          gradient.addColorStop(1, 'rgba(255, 193, 7, 0.05)');
+          gradient.addColorStop(0, 'rgba(18, 183, 168, 0.4)');
+          gradient.addColorStop(1, 'rgba(18, 183, 168, 0.05)');
 
           // 填充区域
           ctx.beginPath();
@@ -832,7 +776,7 @@ Page({
 
           // 绘制折线
           ctx.beginPath();
-          ctx.strokeStyle = '#FFC107';
+          ctx.strokeStyle = '#12B7A8';
           ctx.lineWidth = 3;
           ctx.lineJoin = 'round';
           ctx.lineCap = 'round';
@@ -854,18 +798,18 @@ Page({
           ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
           ctx.fillStyle = '#FFFFFF';
           ctx.fill();
-          ctx.strokeStyle = '#FFC107';
+          ctx.strokeStyle = '#12B7A8';
           ctx.lineWidth = 2;
           ctx.stroke();
 
           // 内圈
           ctx.beginPath();
           ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-          ctx.fillStyle = '#FFC107';
+          ctx.fillStyle = '#12B7A8';
           ctx.fill();
 
           // 显示分数
-          ctx.fillStyle = '#4A4A4A';
+          ctx.fillStyle = '#1D1D1F';
           ctx.font = 'bold 11px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';

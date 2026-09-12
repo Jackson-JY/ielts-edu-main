@@ -9,7 +9,7 @@
 
   <!-- 加载失败 -->
   <view class="phase-error" wx:elif="{{phase === 'error'}}">
-    <text class="error-icon">⚠️</text>
+    <icon name="close" color="#FF3B30" size="64rpx"/>
     <text class="error-text">{{errorMsg}}</text>
     <button class="btn-primary" bindtap="onRetry">重新开始</button>
   </view>
@@ -51,8 +51,8 @@
           data-index="{{index}}">
           <view class="option-badge">{{optionLetters[index]}}</view>
           <text class="option-text">{{item}}</text>
-          <text class="option-mark" wx:if="{{showFeedback && index === correctIdx}}">✓</text>
-          <text class="option-mark mark-wrong" wx:if="{{showFeedback && index === selectedIdx && !feedbackCorrect}}">✗</text>
+          <icon wx:if="{{showFeedback && index === correctIdx}}" name="check" color="#12B7A8" size="32rpx" class="option-mark"/>
+          <icon wx:if="{{showFeedback && index === selectedIdx && !feedbackCorrect}}" name="close" color="#FF3B30" size="32rpx" class="option-mark"/>
         </view>
       </view>
     </view>
@@ -64,8 +64,10 @@
       <!-- 总分卡片 -->
       <view class="result-hero">
         <text class="result-label">词汇量估值</text>
-        <text class="result-vocab">{{result.vocabEstimate}}</text>
-        <text class="result-unit">词</text>
+        <view class="result-num-row">
+          <text class="result-vocab">{{result.vocabEstimate}}</text>
+          <text class="result-unit">词</text>
+        </view>
         <view class="cefr-badge">{{result.cefrLevel}}</view>
         <text class="cefr-desc">{{result.cefrDesc}}</text>
       </view>

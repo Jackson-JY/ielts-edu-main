@@ -194,7 +194,7 @@ Page({
       if (res.success) {
         this.setData({ todayChecked: true });
         await Promise.all([this.generateCalendarDays(), this.loadStats(), this.loadFeed()]);
-        wx.showToast({ title: '打卡成功！', icon: 'success' });
+        wx.showToast({ title: '打卡成功', icon: 'success' });
       } else {
         wx.showToast({ title: '打卡失败', icon: 'none' });
       }
@@ -205,6 +205,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: '我已坚持打卡，一起来学习吧！', path: '/pages/checkin/checkin' };
+    return { title: '我已坚持打卡，一起来学习', path: '/pages/checkin/checkin' };
   },
 });

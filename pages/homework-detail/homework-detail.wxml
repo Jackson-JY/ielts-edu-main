@@ -1,13 +1,13 @@
 <!--pages/homework-detail/homework-detail.wxml - 作业详情页-->
 <view class="page">
   <!-- 返回按钮 -->
-  <view class="back-btn" bindtap="goBack">
-    <text class="back-icon">‹</text>
+  <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+    <icon name="chevron-left" color="#1D1D1F" size="36rpx"/>
   </view>
 
   <!-- 加载中 -->
   <view class="loading-container" wx:if="{{loading}}">
-    <text class="loading-text">加载中...</text>
+    <text class="loading-text">加载中</text>
   </view>
 
   <!-- 作业详情 -->
@@ -71,7 +71,7 @@
 
     <!-- 更新按钮 -->
     <view class="action-section">
-      <button class="complete-btn" bindtap="updateHomeworkStatus">
+      <button class="complete-btn" bindtap="updateHomeworkStatus" hover-class="btn-press">
         <text>保存更新</text>
       </button>
     </view>

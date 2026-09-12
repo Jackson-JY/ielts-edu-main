@@ -4,7 +4,7 @@
 .pomodoro-mask {
   position: fixed;
   left: 0; top: 0; right: 0; bottom: 0;
-  background: rgba(23, 33, 43, 0.45);
+  background: rgba(0, 0, 0, 0.32);
   z-index: 900;
 }
 
@@ -16,8 +16,7 @@
   background: #FFFFFF;
   border-radius: 32rpx 32rpx 0 0;
   padding: 0 36rpx 60rpx;
-  box-shadow: 0 -12rpx 48rpx rgba(23, 33, 43, 0.16);
-  animation: drawer-slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: drawer-slide-up 0.25s ease-out;
 }
 
 @keyframes drawer-slide-up {
@@ -36,7 +35,7 @@
   width: 80rpx;
   height: 8rpx;
   border-radius: 999rpx;
-  background: #E4E9EF;
+  background: #E5E5EA;
 }
 
 /* ─── 标题栏 ─── */
@@ -47,26 +46,31 @@
   padding: 16rpx 0 8rpx;
 }
 
+.drawer-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
 .drawer-title {
   font-size: 32rpx;
-  font-weight: 800;
-  color: #17212B;
+  font-weight: 700;
+  color: #1D1D1F;
+  letter-spacing: -0.01em;
 }
 
 .close-btn {
   width: 56rpx;
   height: 56rpx;
   border-radius: 50%;
-  background: #F2F5F8;
+  background: #F2F2F7;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.close-icon {
-  font-size: 32rpx;
-  color: #7A8794;
-  line-height: 1;
+.close-btn:active {
+  filter: brightness(0.92);
 }
 
 /* ====================== 圆环计时区 ====================== */
@@ -91,6 +95,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #F2F2F7;
 }
 
 .ring-fill {
@@ -114,20 +119,19 @@
   align-items: center;
   justify-content: center;
   gap: 6rpx;
-  box-shadow: 0 4rpx 20rpx rgba(23, 33, 43, 0.06);
 }
 
 .timer-digits {
-  font-size: 60rpx;
-  font-weight: 800;
-  color: #17212B;
-  letter-spacing: 2rpx;
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #1D1D1F;
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
 .timer-phase {
   font-size: 24rpx;
-  color: #7A8794;
+  color: #6E6E73;
   font-weight: 500;
 }
 
@@ -137,56 +141,47 @@
   margin-top: 4rpx;
 }
 
-.round-tomato {
-  font-size: 24rpx;
-}
-
 /* ====================== 操作按钮行 ====================== */
 .ctrl-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24rpx;
+  gap: 20rpx;
   margin-bottom: 24rpx;
 }
 
 .ctrl-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
+  height: 88rpx;
+  border-radius: 999rpx;
+  box-sizing: border-box;
 }
 
 .ctrl-btn:active {
-  transform: scale(0.94);
+  filter: brightness(0.92);
 }
 
-/* 主按钮（圆形大按钮） */
+/* 主按钮（大胶囊形） */
 .ctrl-primary {
-  width: 128rpx;
-  height: 128rpx;
-  border-radius: 50%;
+  padding: 0 40rpx;
   background: #12B7A8;
-  box-shadow: 0 12rpx 32rpx rgba(18, 183, 168, 0.30);
+  color: #FFFFFF;
 }
 
-.ctrl-primary.ctrl-running {
-  background: #17212B;
-  box-shadow: 0 12rpx 32rpx rgba(23, 33, 43, 0.20);
-}
-
+/* 休息态主按钮：系统绿 */
 .ctrl-primary.ctrl-rest {
-  background: #6FB7FF;
-  box-shadow: 0 12rpx 32rpx rgba(111, 183, 255, 0.30);
+  background: #34C759;
 }
 
-/* 次级按钮（小圆） */
+/* 次级按钮（胶囊） */
 .ctrl-secondary {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 50%;
-  background: #F2F5F8;
+  padding: 0 24rpx;
+  background: #F2F2F7;
+  color: #12B7A8;
 }
 
 .ctrl-disabled {
@@ -197,31 +192,16 @@
   visibility: hidden;
 }
 
-.ctrl-icon {
-  width: 36rpx;
-  height: 36rpx;
-}
-
-.ctrl-icon-lg {
-  width: 48rpx;
-  height: 48rpx;
-}
-
-.ctrl-icon-emoji {
-  font-size: 40rpx;
-  line-height: 1;
-}
-
 .ctrl-label {
-  font-size: 22rpx;
-  color: #64717F;
+  font-size: 26rpx;
+  color: #12B7A8;
   font-weight: 600;
 }
 
 .ctrl-label-primary {
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #FFFFFF;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* ====================== 时长配置 ====================== */
@@ -230,8 +210,8 @@
   gap: 32rpx;
   margin-bottom: 24rpx;
   padding: 20rpx 24rpx;
-  background: #F6F8FB;
-  border-radius: 20rpx;
+  background: #F5F5F7;
+  border-radius: 24rpx;
 }
 
 .config-group {
@@ -242,7 +222,7 @@
 
 .config-label {
   font-size: 22rpx;
-  color: #7A8794;
+  color: #6E6E73;
   font-weight: 600;
 }
 
@@ -253,12 +233,11 @@
 }
 
 .config-chip {
-  height: 52rpx;
+  height: 56rpx;
   padding: 0 22rpx;
   border-radius: 999rpx;
-  background: #FFFFFF;
-  border: 1rpx solid rgba(23, 33, 43, 0.08);
-  color: #64717F;
+  background: #F2F2F7;
+  color: #6E6E73;
   font-size: 22rpx;
   font-weight: 600;
   display: flex;
@@ -269,9 +248,12 @@
   flex-shrink: 0;       /* 不被 flex 容器压缩宽度 */
 }
 
+.config-chip:active {
+  filter: brightness(0.92);
+}
+
 .config-chip.selected {
   background: #12B7A8;
-  border-color: transparent;
   color: #FFFFFF;
 }
 
@@ -283,7 +265,7 @@
 .link-label {
   display: block;
   font-size: 24rpx;
-  color: #7A8794;
+  color: #6E6E73;
   font-weight: 600;
   margin-bottom: 12rpx;
 }
@@ -294,9 +276,12 @@
   justify-content: space-between;
   gap: 12rpx;
   padding: 18rpx 20rpx;
-  background: rgba(18, 183, 168, 0.08);
-  border-radius: 16rpx;
-  border: 1rpx solid rgba(18, 183, 168, 0.20);
+  background: #F2F2F7;
+  border-radius: 24rpx;
+}
+
+.link-card:active {
+  filter: brightness(0.96);
 }
 
 .link-card-inner {
@@ -312,14 +297,14 @@
   font-size: 20rpx;
   font-weight: 700;
   color: #12B7A8;
-  background: rgba(18, 183, 168, 0.14);
+  background: #E6F7F5;
   border-radius: 999rpx;
   padding: 4rpx 14rpx;
 }
 
 .link-content {
   font-size: 24rpx;
-  color: #17212B;
+  color: #1D1D1F;
   font-weight: 500;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -331,13 +316,13 @@
   flex-shrink: 0;
   width: 44rpx;
   height: 44rpx;
-  border-radius: 50%;
-  background: rgba(23, 33, 43, 0.08);
-  color: #7A8794;
-  font-size: 28rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.link-clear:active {
+  filter: brightness(0.92);
 }
 
 .link-empty {
@@ -345,29 +330,26 @@
   align-items: center;
   justify-content: space-between;
   padding: 18rpx 20rpx;
-  background: #F6F8FB;
-  border-radius: 16rpx;
-  border: 1rpx dashed rgba(23, 33, 43, 0.12);
+  background: #F2F2F7;
+  border-radius: 24rpx;
+}
+
+.link-empty:active {
+  filter: brightness(0.96);
 }
 
 .link-empty-text {
   font-size: 24rpx;
-  color: #9AA5B1;
+  color: #8E8E93;
 }
 
-.link-arrow {
-  font-size: 32rpx;
-  color: #C4CDD6;
-}
-
-/* ─── 作业选择下拉 ─── */
+/* ─── 作业选择面板（Action Sheet 风格）─── */
 .homework-picker {
   max-height: 300rpx;
   overflow-y: auto;
-  border-radius: 16rpx;
+  border-radius: 32rpx 32rpx 0 0;
   background: #FFFFFF;
-  border: 1rpx solid rgba(23, 33, 43, 0.08);
-  box-shadow: 0 8rpx 24rpx rgba(23, 33, 43, 0.08);
+  border: 1rpx solid #E5E5EA;
   margin-bottom: 16rpx;
 }
 
@@ -376,7 +358,7 @@
   align-items: center;
   gap: 12rpx;
   padding: 20rpx 24rpx;
-  border-bottom: 1rpx solid rgba(23, 33, 43, 0.05);
+  border-bottom: 1rpx solid #E5E5EA;
 }
 
 .picker-item:last-child {
@@ -384,7 +366,7 @@
 }
 
 .picker-item:active {
-  background: #F6F8FB;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .picker-subject {
@@ -392,14 +374,14 @@
   font-size: 20rpx;
   font-weight: 700;
   color: #12B7A8;
-  background: rgba(18, 183, 168, 0.10);
+  background: #E6F7F5;
   border-radius: 999rpx;
   padding: 4rpx 12rpx;
 }
 
 .picker-content {
   font-size: 24rpx;
-  color: #17212B;
+  color: #1D1D1F;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -407,7 +389,7 @@
 }
 
 .picker-free .picker-content {
-  color: #7A8794;
+  color: #6E6E73;
 }
 
 /* ─── 分组标题 ─── */
@@ -415,13 +397,14 @@
   padding: 14rpx 24rpx 6rpx;
   font-size: 20rpx;
   font-weight: 700;
-  color: #9AA5B1;
+  color: #8E8E93;
   letter-spacing: 1rpx;
 }
 
+/* 任务标签：中性灰，与作业薄荷绿区分 */
 .picker-subject-task {
-  color: #6FB7FF;
-  background: rgba(111, 183, 255, 0.12);
+  color: #6E6E73;
+  background: #F2F2F7;
 }
 
 /* ─── 新建任务 ─── */
@@ -436,23 +419,23 @@
 
 .new-task-form {
   padding: 16rpx 24rpx 20rpx;
-  border-bottom: 1rpx solid rgba(23, 33, 43, 0.05);
+  border-bottom: 1rpx solid #E5E5EA;
 }
 
 .new-task-input {
   width: 100%;
   min-height: 72rpx;
   padding: 16rpx;
-  border-radius: 14rpx;
-  background: #F6F8FB;
+  border-radius: 16rpx;
+  background: #F2F2F7;
   font-size: 26rpx;
-  color: #17212B;
+  color: #1D1D1F;
   box-sizing: border-box;
   margin-bottom: 12rpx;
 }
 
 .new-task-ph {
-  color: #B5BEC8;
+  color: #8E8E93;
 }
 
 .new-task-row {
@@ -464,23 +447,23 @@
 .new-task-time {
   flex: 1;
   min-width: 0;
-  height: 68rpx;
+  height: 72rpx;
   padding: 0 18rpx;
-  border-radius: 14rpx;
-  background: #F6F8FB;
+  border-radius: 999rpx;
+  background: #F2F2F7;
   font-size: 25rpx;
-  color: #17212B;
+  color: #1D1D1F;
   box-sizing: border-box;
 }
 
 .new-task-cancel {
   flex-shrink: 0;
   padding: 0 24rpx;
-  height: 68rpx;
-  line-height: 68rpx;
-  border-radius: 14rpx;
-  background: #F2F5F8;
-  color: #64717F;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 999rpx;
+  background: #F2F2F7;
+  color: #6E6E73;
   font-size: 25rpx;
   font-weight: 600;
 }
@@ -488,23 +471,27 @@
 .new-task-confirm {
   flex-shrink: 0;
   padding: 0 24rpx;
-  height: 68rpx;
-  line-height: 68rpx;
-  border-radius: 14rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 999rpx;
   background: #12B7A8;
   color: #FFFFFF;
   font-size: 25rpx;
   font-weight: 700;
 }
 
+.new-task-confirm:active {
+  filter: brightness(0.92);
+}
+
 .new-task-confirm.disabled {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 /* ====================== 统计区（今日 + 累计）====================== */
 .stats-block {
-  background: #F6F8FB;
-  border-radius: 20rpx;
+  background: #F5F5F7;
+  border-radius: 24rpx;
   margin-top: 8rpx;
   overflow: hidden;
 }
@@ -525,29 +512,29 @@
   gap: 5rpx;
 }
 
-/* 今日数字：品牌绿色 */
+/* 今日数字：品牌色 */
 .stat-value {
   font-size: 34rpx;
-  font-weight: 800;
+  font-weight: 700;
   color: #12B7A8;
   line-height: 1;
 }
 
 /* 累计数字：低对比度灰，区分今日 */
 .stat-value-total {
-  color: #9AA5B1;
+  color: #8E8E93;
   font-size: 28rpx;
 }
 
 .stat-label {
   font-size: 20rpx;
-  color: #7A8794;
+  color: #6E6E73;
 }
 
 /* 今日/累计两行之间的横向分隔线 */
 .stats-h-divider {
   height: 1rpx;
-  background: rgba(23, 33, 43, 0.06);
+  background: #E5E5EA;
   margin: 0 24rpx;
 }
 
@@ -555,6 +542,6 @@
 .stat-divider {
   width: 1rpx;
   height: 44rpx;
-  background: rgba(23, 33, 43, 0.08);
+  background: #E5E5EA;
   margin: 0 16rpx;
 }

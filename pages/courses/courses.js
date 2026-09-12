@@ -1,8 +1,18 @@
 // pages/courses/courses.js
 const { formatDate } = require('../../utils/dateUtil');
 const cloudDB = require('../../utils/cloudDB');
-const cloudStorage = require('../../utils/cloudStorage');
-const { CLOUD_IMAGES } = require('../../config/images');
+
+// 科目 -> SVG 图标 name 映射（用于 <icon name="..." />）
+const SUBJECT_ICON_MAP = {
+  '听力': 'headphones',
+  '口语': 'mic',
+  'speaking': 'mic',
+  'listening': 'headphones',
+  '阅读': 'book',
+  'reading': 'book',
+  '写作': 'pen',
+  'writing': 'pen',
+};
 
 Page({
   data: {
@@ -19,12 +29,6 @@ Page({
     selectedDateText: '',
     isLoading: false,
     courses: [],
-    // 课程类型图标
-    iconSpeaking: '',
-    iconListening: '',
-    iconReading: '',
-    iconWriting: '',
-    iconBook: '',
     // 是否为管理员
     isAdmin: false,
     // 学生名称映射（管理员：_id -> 昵称）
@@ -47,45 +51,14 @@ Page({
 
   onLoad() {
     this.initDate();
-    this.loadImageUrls();
     this.checkAdminAndLoad();
   },
 
   /**
-   * 加载云存储图片临时 URL
+   * 按 subject 获取 SVG 图标 name
    */
-  async loadImageUrls() {
-    try {
-      const fileIDs = [
-        CLOUD_IMAGES.iconMic,
-        CLOUD_IMAGES.iconHeadphones,
-        CLOUD_IMAGES.iconBook,
-        CLOUD_IMAGES.iconPen,
-      ];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      this.setData({
-        iconSpeaking: urlMap[CLOUD_IMAGES.iconMic] || '',
-        iconListening: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
-        iconReading: urlMap[CLOUD_IMAGES.iconBook] || '',
-        iconWriting: urlMap[CLOUD_IMAGES.iconPen] || '',
-        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
-      });
-    } catch (e) {
-      console.error('[课程页] 加载图片 URL 失败', e);
-    }
-  },
-
-  /**
-   * 获取课程类型图标
-   */
-  getCourseTypeIcon(type) {
-    const typeMap = {
-      'speaking': this.data.iconSpeaking,
-      'listening': this.data.iconListening,
-      'reading': this.data.iconReading,
-      'writing': this.data.iconWriting,
-    };
-    return typeMap[type] || '';
+  getSubjectIconName(subject) {
+    return SUBJECT_ICON_MAP[subject] || 'book';
   },
 
   onShow() {
@@ -273,6 +246,8 @@ Page({
         studentName: isAdmin
           ? (this.data.studentNameMap[course.studentId] || '')
           : (this.data.currentUserName || ''),
+        // 添加 SVG 图标 name（基于 subject）
+        iconName: this.getSubjectIconName(course.subject),
       }));
       this.setData({ courses }, () => {
         this.filterCourses();

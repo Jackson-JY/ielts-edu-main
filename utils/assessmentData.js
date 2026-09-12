@@ -7,6 +7,8 @@
  * - 第三步 产出题：写作 2 题 + 口语 2 题
  */
 
+const { CLOUD_IMAGES } = require('../config/images');
+
 // 自评分数档位说明（0-5）
 const SCORE_LABELS = [
   '完全不符合',
@@ -119,7 +121,7 @@ const SPEAKING_PRODUCTION = {
     requirement: '1 分钟准备，2 分钟作答',
     prepareSeconds: 60,
     answerSeconds: 120,
-    image: '/images/assessment-speaking-picture.jpg',
+    image: CLOUD_IMAGES.speakingPicture,
     hints: ['good environment', 'pet-friendly park', 'enjoyable and relaxing', 'for social'],
   },
   task2: {

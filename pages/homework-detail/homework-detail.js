@@ -1,67 +1,19 @@
 // pages/homework-detail/homework-detail.js - 作业详情页
 const cloudDB = require('../../utils/cloudDB');
-const cloudStorage = require('../../utils/cloudStorage');
-const { CLOUD_IMAGES } = require('../../config/images');
 
 Page({
   data: {
     homework: null,
     loading: true,
-    // 科目图标
-    iconListening: '',
-    iconSpeaking: '',
-    iconReading: '',
-    iconWriting: '',
-    iconBook: '',
-    iconCalendar: '',
-    iconChart: '',
-    iconDocument: '',
-    iconCheck: '',
-    iconFire: '',
   },
 
   async onLoad(options) {
-    await this.loadIcons();
     const { id } = options;
     if (id) {
       await this.loadHomeworkDetail(id);
     } else {
       wx.showToast({ title: '作业ID无效', icon: 'none' });
       wx.navigateBack();
-    }
-  },
-
-  /**
-   * 加载云存储图标
-   */
-  async loadIcons() {
-    try {
-      const fileIDs = [
-        CLOUD_IMAGES.iconHeadphones,
-        CLOUD_IMAGES.iconMic,
-        CLOUD_IMAGES.iconBook,
-        CLOUD_IMAGES.iconPen,
-        CLOUD_IMAGES.iconCalendar,
-        CLOUD_IMAGES.iconChart,
-        CLOUD_IMAGES.iconDocument,
-        CLOUD_IMAGES.iconCheck,
-        CLOUD_IMAGES.iconFire,
-      ];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-      this.setData({
-        iconListening: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
-        iconSpeaking: urlMap[CLOUD_IMAGES.iconMic] || '',
-        iconReading: urlMap[CLOUD_IMAGES.iconBook] || '',
-        iconWriting: urlMap[CLOUD_IMAGES.iconPen] || '',
-        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
-        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
-        iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
-        iconDocument: urlMap[CLOUD_IMAGES.iconDocument] || '',
-        iconCheck: urlMap[CLOUD_IMAGES.iconCheck] || '',
-        iconFire: urlMap[CLOUD_IMAGES.iconFire] || '',
-      });
-    } catch (e) {
-      console.error('[作业详情] 加载图标失败', e);
     }
   },
 
@@ -110,7 +62,6 @@ Page({
       subject: subject,
       subjectLabel: this.getSubjectLabel(subject),
       subjectColor: this.getSubjectColor(subject),
-      subjectIcon: this.getSubjectIcon(subject),
       description: description,
       status: status,
       isCompleted: status === 'completed' || hw.submitted === true,
@@ -152,25 +103,12 @@ Page({
    */
   getSubjectColor(subject) {
     const colorMap = {
-      '听力': '#A7FBF5',
-      '阅读': '#FFD4B8',
-      '写作': '#FFE8F0',
-      '口语': '#E8D4F8',
+      '听力': '#E6F7F5',
+      '阅读': '#FFF1E5',
+      '写作': '#FFE5EC',
+      '口语': '#F0E6FA',
     };
-    return colorMap[subject] || '#D4E8FF';
-  },
-
-  /**
-   * 获取科目对应的图标
-   */
-  getSubjectIcon(subject) {
-    const iconMap = {
-      '听力': this.data.iconListening,
-      '阅读': this.data.iconReading,
-      '写作': this.data.iconWriting,
-      '口语': this.data.iconSpeaking,
-    };
-    return iconMap[subject] || this.data.iconBook;
+    return colorMap[subject] || '#E5E5EA';
   },
 
   async updateHomeworkStatus() {
@@ -185,17 +123,17 @@ Page({
         completion: parseInt(homework.completion) || 0,
         timeSpent: parseInt(homework.timeSpent) || 0,
       };
-      
+
       if (homework.completion >= 100) {
         updateData.completedAt = db.serverDate();
         updateData.submittedAt = db.serverDate();
       }
-      
+
       await db.collection('homework').doc(homework.id).update({
         data: updateData
       });
 
-      wx.showToast({ title: '作业状态已更新！', icon: 'success' });
+      wx.showToast({ title: '作业状态已更新', icon: 'success' });
       this.setData({
         'homework.status': updateData.status,
         'homework.isCompleted': updateData.submitted,

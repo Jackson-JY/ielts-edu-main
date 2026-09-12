@@ -1,14 +1,12 @@
 // pages/homework/homework.js - 作业页面逻辑
 const cloudDB = require('../../utils/cloudDB');
-const cloudStorage = require('../../utils/cloudStorage');
-const { CLOUD_IMAGES } = require('../../config/images');
 
-// 听说读写四个模块的基础展示信息（图标在 loadIcons 中异步补全）
+// 听说读写四个模块的基础展示信息（图标改用 SVG icon 组件，无需异步加载）
 const SUBJECT_MODULES_BASE = [
-  { id: 'listening', label: '听力', bgColor: 'rgba(18, 183, 168, 0.12)' },
-  { id: 'speaking', label: '口语', bgColor: 'rgba(23, 33, 43, 0.08)' },
-  { id: 'reading', label: '阅读', bgColor: 'rgba(18, 183, 168, 0.20)' },
-  { id: 'writing', label: '写作', bgColor: 'rgba(122, 135, 148, 0.14)' },
+  { id: 'listening', label: '听力', iconName: 'headphones' },
+  { id: 'speaking', label: '口语', iconName: 'mic' },
+  { id: 'reading', label: '阅读', iconName: 'book' },
+  { id: 'writing', label: '写作', iconName: 'pen' },
 ];
 
 // 科目中文名/英文 key 统一映射到模块 id
@@ -29,18 +27,12 @@ Page({
     allHomework: [],
 
     // 听说读写模块宫格
-    subjectModules: [],
+    subjectModules: SUBJECT_MODULES_BASE.map(m => ({ ...m, total: 0, completed: 0 })),
     // 当前展开查看的模块 id（空字符串表示展示模块宫格）
     activeSubject: '',
     activeSubjectLabel: '',
     activeSubjectItems: [],
 
-    // 科目图标
-    iconListening: '',
-    iconSpeaking: '',
-    iconReading: '',
-    iconWriting: '',
-    iconBook: '',
     // 是否为管理员
     isAdmin: false,
     // 学生名称映射（管理员：_openid -> 昵称）
@@ -61,14 +53,11 @@ Page({
     pomodoroHomeworkId: '',
     pomodoroHomeworkContent: '',
     pomodoroHomeworkSubject: '',
-    // 传递给组件的作业选项列表（当前模块下所有未完成的作业）
     pomodoroHomeworkOptions: [],
-    // 传递给组件的任务选项列表（当前用户全部未完成任务）
     pomodoroTaskOptions: [],
   },
 
   async onLoad() {
-    this.loadIcons();
     this.checkAdminAndLoad();
   },
 
@@ -120,55 +109,6 @@ Page({
       }
     } catch (e) {
       console.error('加载学生名称映射失败', e);
-    }
-  },
-
-  /**
-   * 加载云存储图标，并补全听说读写模块宫格的图标
-   */
-  async loadIcons() {
-    try {
-      const fileIDs = [
-        CLOUD_IMAGES.iconHeadphones,
-        CLOUD_IMAGES.iconMic,
-        CLOUD_IMAGES.iconBook,
-        CLOUD_IMAGES.iconPen,
-      ];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
-
-      const iconListening = urlMap[CLOUD_IMAGES.iconHeadphones] || '';
-      const iconSpeaking = urlMap[CLOUD_IMAGES.iconMic] || '';
-      const iconReading = urlMap[CLOUD_IMAGES.iconBook] || '';
-      const iconWriting = urlMap[CLOUD_IMAGES.iconPen] || '';
-
-      const moduleIconMap = {
-        listening: iconListening,
-        speaking: iconSpeaking,
-        reading: iconReading,
-        writing: iconWriting,
-      };
-      const subjectModules = SUBJECT_MODULES_BASE.map(m => ({
-        ...m,
-        icon: moduleIconMap[m.id] || '',
-        total: 0,
-        completed: 0,
-      }));
-
-      this.setData({
-        iconListening,
-        iconSpeaking,
-        iconReading,
-        iconWriting,
-        iconBook: iconReading,
-        subjectModules,
-      });
-
-      // 图标就绪后，若已有作业数据则重新统计一次（保证宫格图标展示正确）
-      if (this.data.allHomework.length > 0) {
-        this.refreshSubjectModules(this.data.allHomework);
-      }
-    } catch (e) {
-      console.error('[作业页] 加载图标失败', e);
     }
   },
 
@@ -463,7 +403,7 @@ Page({
 
       if (res.success) {
         wx.showToast({
-          title: nextCompleted ? '已完成打卡 ✅' : '已取消完成标记',
+          title: nextCompleted ? '已完成打卡' : '已取消完成标记',
           icon: 'none',
         });
         await this.loadAllHomework();

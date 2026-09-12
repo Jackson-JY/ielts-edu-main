@@ -66,12 +66,12 @@
               <view class="processing-dot"></view>
               <view class="processing-dot"></view>
             </view>
-            <text wx:else class="mic-text">{{shadowingAnswer ? 'OK' : 'REC'}}</text>
+            <icon wx:else name="{{shadowingAnswer ? 'check' : 'mic'}}" color="#FFFFFF" size="56rpx"/>
           </view>
           <view class="recording-info">
             <text class="recording-time">{{recordingTimeText}}</text>
             <text class="recording-status">
-              {{isRecording ? '朗读中...' : isProcessing ? '保存中...' : soeLoading ? '评测发音中...' : shadowingAnswer ? '录音完成，可重录' : '点击开始朗读'}}
+              {{isRecording ? '朗读中' : isProcessing ? '保存中' : soeLoading ? '评测中' : shadowingAnswer ? '录音完成' : '点击朗读'}}
             </text>
           </view>
         </view>
@@ -82,7 +82,7 @@
           class="btn btn-primary {{isRecording || isProcessing || soeLoading || !shadowingAnswer ? 'disabled' : ''}}"
           disabled="{{isRecording || isProcessing || soeLoading || !shadowingAnswer}}"
           bindtap="finishShadowing">
-          进入口语产出
+          进入口语测试
         </button>
       </view>
     </view>
@@ -94,7 +94,7 @@
       <!-- 题目切换 -->
       <view class="header">
         <view class="header-top">
-          <text class="title">口语产出</text>
+          <text class="title">口语测试</text>
           <view class="progress-badge">第 {{currentTaskIndex + 1}} / 2 题</view>
         </view>
         <view class="part-tabs">
@@ -115,7 +115,7 @@
           </view>
 
           <view class="picture-card">
-            <image class="picture-img" src="{{task1.image}}" mode="widthFix"/>
+            <image wx:if="{{task1.image}}" class="picture-img" src="{{task1.image}}" mode="widthFix"/>
             <text class="question-title">{{task1.prompt}}</text>
             <text class="time-hint">{{task1.requirement}}</text>
             <view class="hint-tags">
@@ -144,12 +144,12 @@
               <view class="processing-dot"></view>
               <view class="processing-dot"></view>
             </view>
-            <text wx:else class="mic-text">{{productionAnswers[currentTaskIndex] ? 'OK' : 'REC'}}</text>
+            <icon wx:else name="{{productionAnswers[currentTaskIndex] ? 'check' : 'mic'}}" color="#FFFFFF" size="56rpx"/>
           </view>
           <view class="recording-info">
             <text class="recording-time">{{recordingTimeText}}</text>
             <text class="recording-status">
-              {{isRecording ? '答题中...' : isProcessing ? '保存中...' : productionAnswers[currentTaskIndex] ? '录音完成，可重录' : '点击开始答题'}}
+              {{isRecording ? '答题中' : isProcessing ? '保存中' : productionAnswers[currentTaskIndex] ? '录音完成' : '点击答题'}}
             </text>
           </view>
         </view>
@@ -161,7 +161,7 @@
           class="btn btn-primary {{isRecording || isProcessing || !productionAnswers[currentTaskIndex] ? 'disabled' : ''}}"
           disabled="{{isRecording || isProcessing || !productionAnswers[currentTaskIndex]}}"
           bindtap="handleNext">
-          {{currentTaskIndex === 0 ? '进入下一题' : '完成口语测评'}}
+          {{currentTaskIndex === 0 ? '下一题' : '完成测试'}}
         </button>
       </view>
     </view>

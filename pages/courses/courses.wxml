@@ -5,39 +5,39 @@
     <text class="title">课程安排</text>
   </view>
 
-  <!-- 视图切换按钮 -->
+  <!-- 视图切换：胶囊形 Segmented Control -->
   <view class="view-mode-switch">
-    <view 
-      class="mode-btn {{viewMode === 'day' ? 'active' : ''}}" 
-      bindtap="switchViewMode" 
+    <view
+      class="mode-btn {{viewMode === 'day' ? 'active' : ''}}"
+      bindtap="switchViewMode"
       data-mode="day"
     >
       <text>日</text>
     </view>
-    <view 
-      class="mode-btn {{viewMode === 'week' ? 'active' : ''}}" 
-      bindtap="switchViewMode" 
+    <view
+      class="mode-btn {{viewMode === 'week' ? 'active' : ''}}"
+      bindtap="switchViewMode"
       data-mode="week"
     >
       <text>周</text>
     </view>
-    <view 
-      class="mode-btn {{viewMode === 'month' ? 'active' : ''}}" 
-      bindtap="switchViewMode" 
+    <view
+      class="mode-btn {{viewMode === 'month' ? 'active' : ''}}"
+      bindtap="switchViewMode"
       data-mode="month"
     >
       <text>月</text>
     </view>
   </view>
 
-  <!-- 日期导航 -->
+  <!-- 日期导航：chevron 图标 + 加粗居中文字 -->
   <view class="date-nav">
     <view class="nav-btn" bindtap="changeDate" data-direction="-1">
-      <text class="arrow">‹</text>
+      <icon name="chevron-left" color="#1D1D1F" size="36rpx"/>
     </view>
     <text class="date-text">{{dateRangeText}}</text>
     <view class="nav-btn" bindtap="changeDate" data-direction="1">
-      <text class="arrow">›</text>
+      <icon name="chevron-right" color="#1D1D1F" size="36rpx"/>
     </view>
   </view>
 
@@ -52,10 +52,15 @@
                 <text class="course-start">{{item.startTime}}</text>
                 <text class="course-end">{{item.endTime}}</text>
               </view>
-              <image class="course-type-icon" src="{{item.subject === '听力' ? iconListening : item.subject === '口语' ? iconSpeaking : item.subject === '阅读' ? iconReading : item.subject === '写作' ? iconWriting : iconBook}}" mode="aspectFit"/>
+              <view class="course-type-icon-wrap">
+                <icon name="{{item.iconName || 'book'}}" color="#12B7A8" size="32rpx"/>
+              </view>
               <view class="course-info">
                 <text class="course-name">{{item.title}}</text>
-                <text class="course-student" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
+                <view class="course-student" wx:if="{{item.studentName}}">
+                  <icon name="user" color="#12B7A8" size="22rpx"/>
+                  <text class="course-student-text">{{item.studentName}}</text>
+                </view>
                 <view class="course-meta">
                   <text class="meta-item">{{item.date}}</text>
                   <text class="meta-item">{{item.duration}}</text>
@@ -65,14 +70,17 @@
                 </view>
                 <text class="course-desc" wx:if="{{item.description}}">{{item.description}}</text>
               </view>
-              <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
-              <view class="expand-icon" wx:else>∨</view>
+              <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">
+                <icon name="chevron-up" color="#8E8E93" size="32rpx"/>
+              </view>
+              <view class="expand-icon" wx:else>
+                <icon name="chevron-down" color="#8E8E93" size="32rpx"/>
+              </view>
             </view>
-            
+
             <!-- 展开的作业区域 -->
             <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
               <view class="homework-form">
-                <!-- 多条作业项：左=作业内容，右=预估完成时间(分钟) -->
                 <view class="hw-items-header">
                   <text class="hw-col-content">作业内容</text>
                   <text class="hw-col-time">预估完成(分钟)</text>
@@ -85,11 +93,14 @@
                          value="{{hw.estimatedTime}}" bindinput="onHomeworkItemTimeInput"
                          data-id="{{item._id}}" data-index="{{hwIndex}}" />
                   <view class="hw-item-del" wx:if="{{homework[item._id].items.length > 1}}"
-                        catchtap="removeHomeworkItem" data-id="{{item._id}}" data-index="{{hwIndex}}">×</view>
+                        catchtap="removeHomeworkItem" data-id="{{item._id}}" data-index="{{hwIndex}}">
+                    <icon name="close" color="#8E8E93" size="24rpx"/>
+                  </view>
                 </view>
 
                 <view class="hw-add-row" bindtap="addHomeworkItem" data-id="{{item._id}}">
-                  <text>＋ 继续添加作业项</text>
+                  <icon name="plus" color="#12B7A8" size="24rpx"/>
+                  <text>继续添加作业项</text>
                 </view>
 
                 <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
@@ -100,9 +111,12 @@
           </view>
         </block>
       </block>
-      
-      <!-- 无课程时的提示 -->
+
+      <!-- 空状态 -->
       <view class="empty-state" wx:else>
+        <view class="empty-icon-wrap">
+          <icon name="calendar" color="#8E8E93" size="48rpx"/>
+        </view>
         <text class="empty-text">暂无课程安排</text>
       </view>
     </scroll-view>
@@ -112,7 +126,7 @@
   <view class="week-view" wx:if="{{viewMode === 'week'}}">
     <view class="week-grid">
       <block wx:for="{{weekDays}}" wx:key="index">
-        <view 
+        <view
           class="week-day {{selectedDay === item.day ? 'selected' : ''}} {{item.isToday ? 'today' : ''}}"
           bindtap="selectDay"
           data-day="{{item.day}}"
@@ -124,8 +138,7 @@
         </view>
       </block>
     </view>
-    
-    <!-- 选中日期的课程列表 -->
+
     <view class="selected-day-courses" wx:if="{{selectedDay && filteredCourses.length > 0}}">
       <text class="section-subtitle">{{selectedDateText}}课程</text>
       <block wx:for="{{filteredCourses}}" wx:key="_id">
@@ -135,10 +148,15 @@
               <text class="course-start">{{item.startTime}}</text>
               <text class="course-end">{{item.endTime}}</text>
             </view>
-            <image class="course-type-icon" src="{{item.subject === '听力' ? iconListening : item.subject === '口语' ? iconSpeaking : item.subject === '阅读' ? iconReading : item.subject === '写作' ? iconWriting : iconBook}}" mode="aspectFit"/>
+            <view class="course-type-icon-wrap">
+              <icon name="{{item.iconName || 'book'}}" color="#12B7A8" size="32rpx"/>
+            </view>
             <view class="course-info">
               <text class="course-name">{{item.title}}</text>
-              <text class="course-student" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
+              <view class="course-student" wx:if="{{item.studentName}}">
+                <icon name="user" color="#12B7A8" size="22rpx"/>
+                <text class="course-student-text">{{item.studentName}}</text>
+              </view>
               <view class="course-meta">
                 <text class="meta-item">{{item.date}}</text>
                 <text class="meta-item">{{item.duration}}</text>
@@ -148,36 +166,11 @@
               </view>
               <text class="course-desc" wx:if="{{item.description}}">{{item.description}}</text>
             </view>
-            <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
-            <view class="expand-icon" wx:else>∨</view>
-          </view>
-          
-          <!-- 展开的作业区域 -->
-          <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
-            <view class="homework-form">
-              <!-- 多条作业项：左=作业内容，右=预估完成时间(分钟) -->
-              <view class="hw-items-header">
-                <text class="hw-col-content">作业内容</text>
-                <text class="hw-col-time">预估完成(分钟)</text>
-              </view>
-              <view class="hw-item-row" wx:for="{{homework[item._id].items}}" wx:for-item="hw" wx:for-index="hwIndex" wx:key="hwIndex">
-                <input class="hw-item-content" placeholder="请输入作业内容"
-                       value="{{hw.content}}" bindinput="onHomeworkItemContentInput"
-                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
-                <input class="hw-item-time" type="number" placeholder="分钟"
-                       value="{{hw.estimatedTime}}" bindinput="onHomeworkItemTimeInput"
-                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
-                <view class="hw-item-del" wx:if="{{homework[item._id].items.length > 1}}"
-                      catchtap="removeHomeworkItem" data-id="{{item._id}}" data-index="{{hwIndex}}">×</view>
-              </view>
-
-              <view class="hw-add-row" bindtap="addHomeworkItem" data-id="{{item._id}}">
-                <text>＋ 继续添加作业项</text>
-              </view>
-
-              <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
-                <text>保存作业</text>
-              </view>
+            <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">
+              <icon name="chevron-up" color="#8E8E93" size="32rpx"/>
+            </view>
+            <view class="expand-icon" wx:else>
+              <icon name="chevron-down" color="#8E8E93" size="32rpx"/>
             </view>
           </view>
         </view>
@@ -193,7 +186,7 @@
       </view>
       <view class="month-days">
         <block wx:for="{{monthDays}}" wx:key="index">
-          <view 
+          <view
             class="month-day {{item.day ? '' : 'empty'}} {{selectedDay === item.day ? 'selected' : ''}} {{item.isToday ? 'today' : ''}} {{item.courseCount > 0 ? 'has-courses' : ''}}"
             bindtap="selectDay"
             data-day="{{item.day}}"
@@ -207,17 +200,21 @@
         </block>
       </view>
     </view>
-    
-    <!-- 选中日期的课程列表 -->
+
     <view class="selected-day-courses" wx:if="{{selectedDay && filteredCourses.length > 0}}">
       <text class="section-subtitle">{{selectedDateText}}课程</text>
       <block wx:for="{{filteredCourses}}" wx:key="_id">
         <view class="course-card">
           <view class="course-header" bindtap="toggleExpand" data-id="{{item._id}}">
-            <image class="course-type-icon" src="{{item.subject === '听力' ? iconListening : item.subject === '口语' ? iconSpeaking : item.subject === '阅读' ? iconReading : item.subject === '写作' ? iconWriting : iconBook}}" mode="aspectFit"/>
+            <view class="course-type-icon-wrap">
+              <icon name="{{item.iconName || 'book'}}" color="#12B7A8" size="32rpx"/>
+            </view>
             <view class="course-info">
               <text class="course-name">{{item.title}}</text>
-              <text class="course-student" wx:if="{{item.studentName}}">👤 {{item.studentName}}</text>
+              <view class="course-student" wx:if="{{item.studentName}}">
+                <icon name="user" color="#12B7A8" size="22rpx"/>
+                <text class="course-student-text">{{item.studentName}}</text>
+              </view>
               <view class="course-meta">
                 <text class="meta-item">{{item.date}} {{item.startTime}}-{{item.endTime}}</text>
                 <text class="meta-item">{{item.duration}}</text>
@@ -227,36 +224,11 @@
               </view>
               <text class="course-desc" wx:if="{{item.description}}">{{item.description}}</text>
             </view>
-            <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">∧</view>
-            <view class="expand-icon" wx:else>∨</view>
-          </view>
-          
-          <!-- 展开的作业区域 -->
-          <view class="homework-section" wx:if="{{expandedCourse === item._id}}">
-            <view class="homework-form">
-              <!-- 多条作业项：左=作业内容，右=预估完成时间(分钟) -->
-              <view class="hw-items-header">
-                <text class="hw-col-content">作业内容</text>
-                <text class="hw-col-time">预估完成(分钟)</text>
-              </view>
-              <view class="hw-item-row" wx:for="{{homework[item._id].items}}" wx:for-item="hw" wx:for-index="hwIndex" wx:key="hwIndex">
-                <input class="hw-item-content" placeholder="请输入作业内容"
-                       value="{{hw.content}}" bindinput="onHomeworkItemContentInput"
-                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
-                <input class="hw-item-time" type="number" placeholder="分钟"
-                       value="{{hw.estimatedTime}}" bindinput="onHomeworkItemTimeInput"
-                       data-id="{{item._id}}" data-index="{{hwIndex}}" />
-                <view class="hw-item-del" wx:if="{{homework[item._id].items.length > 1}}"
-                      catchtap="removeHomeworkItem" data-id="{{item._id}}" data-index="{{hwIndex}}">×</view>
-              </view>
-
-              <view class="hw-add-row" bindtap="addHomeworkItem" data-id="{{item._id}}">
-                <text>＋ 继续添加作业项</text>
-              </view>
-
-              <view class="save-button" bindtap="saveHomework" data-id="{{item._id}}">
-                <text>保存作业</text>
-              </view>
+            <view class="expand-icon" wx:if="{{expandedCourse === item._id}}">
+              <icon name="chevron-up" color="#8E8E93" size="32rpx"/>
+            </view>
+            <view class="expand-icon" wx:else>
+              <icon name="chevron-down" color="#8E8E93" size="32rpx"/>
             </view>
           </view>
         </view>
@@ -264,12 +236,10 @@
     </view>
   </view>
 
-  <!-- 自定义成功提示（风格统一） -->
+  <!-- 成功提示：薄荷绿对勾 -->
   <view class="success-toast-overlay" wx:if="{{showSuccessToast}}">
     <view class="success-toast-card">
-      <view class="success-toast-check">
-        <text class="success-toast-check-icon">✓</text>
-      </view>
+      <icon name="check-circle" color="#12B7A8" size="96rpx"/>
       <text class="success-toast-text">{{successToastText}}</text>
     </view>
   </view>

@@ -28,23 +28,11 @@ Page({
     isAdmin: false,
     avatarUrl: '',
     defaultAvatarUrl: '',
-    iconUser: '',
     // 编辑个人资料弹窗（延迟完善：一键登录后在这里设置头像昵称）
     showEditProfile: false,
     editNickName: '',
     editAvatarUrl: '',      // 本地临时文件路径；为空表示不更换头像
     savingProfile: false,
-    // 云存储图标（使用临时 URL）
-    iconTarget: '',
-    iconChart: '',
-    iconRefresh: '',
-    iconSettings: '',
-    // 添加成绩弹窗图标
-    iconCalendar: '',
-    iconHeadphones: '',
-    iconMic: '',
-    iconBook: '',
-    iconPen: '',
     // 日期选择限制
     maxDate: '',
     // 打卡统计
@@ -61,11 +49,11 @@ Page({
     dayLabels: ['日', '一', '二', '三', '四', '五', '六'],
     calendarDays: [],
     checkinTypes: [
-      { id: 'listening', label: '听力', color: '#A7FBF5' },
-      { id: 'speaking',  label: '口语', color: '#E8D4F8' },
-      { id: 'reading',   label: '阅读', color: '#FFD4B8' },
-      { id: 'writing',   label: '写作', color: '#FFE8F0' },
-      { id: 'homework',  label: '作业', color: '#D4E8FF' },
+      { id: 'listening', label: '听力', color: '#80DED5' },
+      { id: 'speaking',  label: '口语', color: '#12B7A8' },
+      { id: 'reading',   label: '阅读', color: '#0E8C81' },
+      { id: 'writing',   label: '写作', color: '#4DD4C4' },
+      { id: 'homework',  label: '作业', color: '#B3E6E1' },
     ],
     // 打卡明细弹窗
     showCheckinDetail: false,
@@ -74,11 +62,11 @@ Page({
     // 打卡表单弹窗
     showCheckinForm: false,
     checkinTypeList: [
-      { id: 'listening', label: '听力', color: '#A7FBF5', selected: false },
-      { id: 'speaking',  label: '口语', color: '#E8D4F8', selected: false },
-      { id: 'reading',   label: '阅读', color: '#FFD4B8', selected: false },
-      { id: 'writing',   label: '写作', color: '#FFE8F0', selected: false },
-      { id: 'homework',  label: '作业', color: '#D4E8FF', selected: false },
+      { id: 'listening', label: '听力', color: '#80DED5', selected: false },
+      { id: 'speaking',  label: '口语', color: '#12B7A8', selected: false },
+      { id: 'reading',   label: '阅读', color: '#0E8C81', selected: false },
+      { id: 'writing',   label: '写作', color: '#4DD4C4', selected: false },
+      { id: 'homework',  label: '作业', color: '#B3E6E1', selected: false },
     ],
     checkinContent: '',
     // 打卡时长（分钟）
@@ -97,7 +85,7 @@ Page({
 
   onLoad() {
     this.initMaxDate();
-    this.loadImageUrls();
+    this.loadDefaultAvatar();
     this.checkLoginAndLoad();
     this.updateMonthLabel();
     this.initCalendar();
@@ -124,37 +112,16 @@ Page({
   },
 
   /**
-   * 加载云存储图片临时 URL
+   * 加载默认头像的云存储临时 URL（图标已迁移至全局 icon 组件，无需再加载）
    */
-  async loadImageUrls() {
+  async loadDefaultAvatar() {
     try {
-      const fileIDs = [
-        CLOUD_IMAGES.defaultAvatar,
-        CLOUD_IMAGES.iconUser,
-        CLOUD_IMAGES.iconTarget,
-        CLOUD_IMAGES.iconChart,
-        CLOUD_IMAGES.iconRefresh,
-        CLOUD_IMAGES.iconCalendar,
-        CLOUD_IMAGES.iconHeadphones,
-        CLOUD_IMAGES.iconMic,
-        CLOUD_IMAGES.iconBook,
-        CLOUD_IMAGES.iconPen,
-      ];
-      const urlMap = await cloudStorage.getTempUrls(fileIDs);
+      const urlMap = await cloudStorage.getTempUrls([CLOUD_IMAGES.defaultAvatar]);
       this.setData({
         defaultAvatarUrl: urlMap[CLOUD_IMAGES.defaultAvatar] || '',
-        iconUser: urlMap[CLOUD_IMAGES.iconUser] || '',
-        iconTarget: urlMap[CLOUD_IMAGES.iconTarget] || '',
-        iconChart: urlMap[CLOUD_IMAGES.iconChart] || '',
-        iconRefresh: urlMap[CLOUD_IMAGES.iconRefresh] || '',
-        iconCalendar: urlMap[CLOUD_IMAGES.iconCalendar] || '',
-        iconHeadphones: urlMap[CLOUD_IMAGES.iconHeadphones] || '',
-        iconMic: urlMap[CLOUD_IMAGES.iconMic] || '',
-        iconBook: urlMap[CLOUD_IMAGES.iconBook] || '',
-        iconPen: urlMap[CLOUD_IMAGES.iconPen] || '',
       });
     } catch (e) {
-      // 加载图片 URL 失败
+      // 加载默认头像 URL 失败
     }
   },
 
@@ -399,7 +366,7 @@ Page({
         ctx.clearRect(0, 0, width, height);
 
         // 绘制网格线
-        ctx.strokeStyle = '#E8E8E8';
+        ctx.strokeStyle = '#E5E5EA';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
         
@@ -414,7 +381,7 @@ Page({
         ctx.setLineDash([]);
 
         // 绘制Y轴标签
-        ctx.fillStyle = '#9A97AA';
+        ctx.fillStyle = '#8E8E93';
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
@@ -438,8 +405,8 @@ Page({
         if (points.length > 0) {
           // 创建渐变
           const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
-          gradient.addColorStop(0, 'rgba(240, 216, 250, 0.4)');
-          gradient.addColorStop(1, 'rgba(240, 216, 250, 0.05)');
+          gradient.addColorStop(0, 'rgba(18, 183, 168, 0.20)');
+          gradient.addColorStop(1, 'rgba(18, 183, 168, 0.02)');
 
           // 填充区域
           ctx.beginPath();
@@ -452,11 +419,11 @@ Page({
 
           // 绘制折线
           ctx.beginPath();
-          ctx.strokeStyle = '#D4A5E8';
+          ctx.strokeStyle = '#12B7A8';
           ctx.lineWidth = 2;
           ctx.lineJoin = 'round';
           ctx.lineCap = 'round';
-          
+
           points.forEach((p, i) => {
             if (i === 0) {
               ctx.moveTo(p.x, p.y);
@@ -474,14 +441,14 @@ Page({
           ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
           ctx.fillStyle = '#FFFFFF';
           ctx.fill();
-          ctx.strokeStyle = '#D4A5E8';
+          ctx.strokeStyle = '#12B7A8';
           ctx.lineWidth = 2;
           ctx.stroke();
 
           // 内圈
           ctx.beginPath();
           ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = '#D4A5E8';
+          ctx.fillStyle = '#12B7A8';
           ctx.fill();
         });
       });
@@ -734,7 +701,8 @@ Page({
         day: d,
         isEmpty: false,
         date: dateStr,
-        heatColor: this.getHeatColor(count),
+        // 今日无打卡时用 #E6F7F5 高亮；有打卡按热力色阶
+        heatColor: isToday && !hasCheckin ? '#E6F7F5' : this.getHeatColor(count),
         heatCount: count,
         hasCheckin,
         isToday,
@@ -745,12 +713,13 @@ Page({
     this.setData({ calendarDays: days });
   },
 
+  /** 热力图色阶：薄荷绿系，与图例 #F2F2F7 → #E6F7F5 → #80DED5 → #12B7A8 → #0E8C81 对齐 */
   getHeatColor(count) {
-    if (count === 0) return '#FFF9F5';
-    if (count === 1) return 'rgba(167,251,245,0.2)';
-    if (count === 2) return 'rgba(167,251,245,0.5)';
-    if (count === 3) return 'rgba(167,251,245,0.75)';
-    return '#A7FBF5';
+    if (count === 0) return '#F2F2F7';
+    if (count === 1) return '#E6F7F5';
+    if (count === 2) return '#80DED5';
+    if (count === 3) return '#12B7A8';
+    return '#0E8C81';
   },
 
   onTapCalendarCell(e) {
@@ -778,7 +747,7 @@ Page({
         
         // 将类型ID转换为完整类型对象
         const types = (item.types || []).map(typeId => {
-          return this.data.checkinTypes.find(t => t.id === typeId) || { id: typeId, label: typeId, color: '#A7FBF5' };
+          return this.data.checkinTypes.find(t => t.id === typeId) || { id: typeId, label: typeId, color: '#80DED5' };
         });
         
         return {
@@ -870,7 +839,7 @@ Page({
       const res = await cloudDB.addMy('checkins', checkinRecord);
       
       if (res.success) {
-        wx.showToast({ title: '打卡成功！', icon: 'success' });
+        wx.showToast({ title: '打卡成功', icon: 'success' });
         this.hideCheckinForm();
         // 刷新数据
         this.loadCheckinStats();
