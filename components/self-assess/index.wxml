@@ -17,20 +17,34 @@
     <text class="sa-index">第 {{current + 1}} 条</text>
     <text class="sa-statement">{{items[current]}}</text>
 
-    <!-- 0-5 打分 -->
-    <view class="sa-scores">
-      <view
-        class="sa-score-btn {{ratings[current] === item ? 'sa-score-active' : ''}}"
-        wx:for="{{scores}}"
-        wx:for-item="item"
-        wx:key="*this"
-        bindtap="selectScore"
-        data-score="{{item}}">
-        <text class="sa-score-num">{{item}}</text>
+    <!-- 0-5 滑动条打分 -->
+    <view class="sa-slider-wrap">
+      <view class="sa-slider-current">
+        <text class="sa-slider-num">{{ratings[current] !== null ? ratings[current] : '--'}}</text>
+        <text class="sa-slider-desc" wx:if="{{ratings[current] !== null}}">{{scoreLabels[ratings[current]]}}</text>
+        <text class="sa-slider-desc sa-score-placeholder" wx:else>滑动打分</text>
+      </view>
+      <view class="sa-slider-row">
+        <text class="sa-slider-end-label">0</text>
+        <slider
+          class="sa-slider"
+          min="0"
+          max="5"
+          step="1"
+          value="{{ratings[current] !== null ? ratings[current] : 0}}"
+          show-value="{{false}}"
+          block-size="28"
+          block-color="#12B7A8"
+          activeColor="#A7FBF5"
+          backgroundColor="#ECE8F4"
+          bindchange="onSliderChange"
+          bindchanging="onSliderChanging" />
+        <text class="sa-slider-end-label">5</text>
+      </view>
+      <view class="sa-slider-ticks">
+        <text class="sa-tick" wx:for="{{scores}}" wx:for-item="item" wx:key="*this">{{item}}</text>
       </view>
     </view>
-    <text class="sa-score-label" wx:if="{{ratings[current] !== null}}">{{scoreLabels[ratings[current]]}}</text>
-    <text class="sa-score-label sa-score-placeholder" wx:else>点击分数打分</text>
   </view>
 
   <!-- 底部操作 -->

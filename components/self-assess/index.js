@@ -33,8 +33,8 @@ Component({
   },
 
   methods: {
-    selectScore(e) {
-      const score = Number(e.currentTarget.dataset.score);
+    onSliderChange(e) {
+      const score = e.detail.value;
       const { current, ratings, total } = this.data;
       if (current >= total) return;
 
@@ -46,7 +46,18 @@ Component({
       if (current < total - 1) {
         setTimeout(() => {
           this.setData({ current: this.data.current + 1 });
-        }, 250);
+        }, 400);
+      }
+    },
+
+    onSliderChanging(e) {
+      // 实时预览分数
+      const score = e.detail.value;
+      const { current, ratings } = this.data;
+      if (ratings[current] !== score) {
+        const next = [...ratings];
+        next[current] = score;
+        this.setData({ ratings: next });
       }
     },
 

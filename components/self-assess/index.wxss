@@ -84,44 +84,67 @@
   align-items: center;
 }
 
-/* 打分 */
-.sa-scores {
-  display: flex;
-  gap: 16rpx;
+/* 滑动条打分 */
+.sa-slider-wrap {
   width: 100%;
-  justify-content: center;
-}
-
-.sa-score-btn {
-  width: 84rpx;
-  height: 84rpx;
-  border-radius: 28rpx;
-  background: #F6F8FB;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  border: 2rpx solid transparent;
+  gap: 24rpx;
 }
 
-.sa-score-num {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #7A8794;
+.sa-slider-current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
 }
 
-.sa-score-active {
-  background: #A7FBF5;
-  border-color: #12B7A8;
-}
-
-.sa-score-active .sa-score-num {
+.sa-slider-num {
+  font-size: 72rpx;
+  font-weight: 700;
   color: #0E8C80;
+  line-height: 1.2;
 }
 
-.sa-score-label {
+.sa-slider-desc {
   font-size: 26rpx;
   color: #12B7A8;
   font-weight: 600;
+}
+
+.sa-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  width: 100%;
+  padding: 0 8rpx;
+}
+
+.sa-slider {
+  flex: 1;
+}
+
+.sa-slider-end-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #9A97AA;
+  min-width: 32rpx;
+  text-align: center;
+}
+
+.sa-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 8rpx;
+}
+
+.sa-tick {
+  font-size: 22rpx;
+  color: #B8BFC9;
+  width: 32rpx;
+  text-align: center;
 }
 
 .sa-score-placeholder {
