@@ -1,0 +1,9 @@
+{
+  "name": "assessmentGrant",
+  "version": "1.0.0",
+  "description": "测评授权管理（管理员）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

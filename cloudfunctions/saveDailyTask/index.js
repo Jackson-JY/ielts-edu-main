@@ -38,6 +38,24 @@ async function authenticate(event) {
 
 const VALID_SUBJECTS = ['listening', 'reading', 'writing', 'speaking'];
 
+/** 写管理员操作审计日志 */
+async function logAudit(auth, action, detail) {
+  try {
+    await db.collection('admin_audit_logs').add({
+      data: {
+        adminId: auth.userId || '',
+        adminName: auth.nickName || '管理员',
+        module: 'checkin',
+        action,
+        detail: detail || '',
+        createdAt: new Date(),
+      },
+    });
+  } catch (e) {
+    console.error('[saveDailyTask] 写审计日志失败', e);
+  }
+}
+
 exports.main = async (event) => {
   event = normalizeEvent(event);
   try {
@@ -75,6 +93,7 @@ exports.main = async (event) => {
       await db.collection('daily_tasks').doc(docId).update({
         data: { items: cleanItems, totalMinutes, updatedBy: auth.userId, updatedAt: now },
       });
+      await logAudit(auth, 'checkin.save', `更新打卡任务：${date}（${cleanItems.length} 项）`);
       return { success: true, message: '已更新', taskId: docId };
     }
 
@@ -89,6 +108,7 @@ exports.main = async (event) => {
         updatedAt: now,
       },
     });
+    await logAudit(auth, 'checkin.save', `发布打卡任务：${date}（${cleanItems.length} 项）`);
     return { success: true, message: '已发布', taskId: addRes._id };
   } catch (e) {
     console.error('[saveDailyTask] 失败', e);

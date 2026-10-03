@@ -35,6 +35,46 @@ page {
   line-height: 1.5;
 }
 
+/* 授权状态条 */
+.grant-banner {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 28rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+}
+
+.grant-banner.grant-ok {
+  background: rgba(18, 183, 168, 0.10);
+  color: #0B8378;
+}
+
+.grant-banner.grant-no {
+  background: rgba(255, 159, 10, 0.12);
+  color: #B26A00;
+}
+
+.grant-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.grant-ok .grant-dot {
+  background: #12B7A8;
+}
+
+.grant-no .grant-dot {
+  background: #FF9F0A;
+}
+
+.grant-text {
+  line-height: 1.4;
+}
+
 /* 模块列表 */
 .modules-list {
   display: flex;

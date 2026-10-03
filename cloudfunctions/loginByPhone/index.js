@@ -25,6 +25,7 @@ const USER_DATA_COLLECTIONS = [
   'assessment_results',
   'vocab_test_sessions',
   'pomodoro_sessions',
+  'assessment_grants', // 测评授权按 _openid 校验，换绑时需迁移，否则授权失联
 ];
 
 /**
@@ -55,6 +56,22 @@ async function migrateUserData(oldOpenid, newOpenid) {
   }
   console.log('[loginByPhone] 历史数据迁移完成', JSON.stringify(migrated));
   return migrated;
+}
+
+/** 用户访问日志（按 openid+type+天 去重） */
+async function logAccess(openid, type, detail) {
+  try {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const exist = await db.collection('access_logs').where({ openid, type, day }).limit(1).get();
+    if (exist.data && exist.data.length) return;
+    await db.collection('access_logs').add({
+      data: { openid, type, day, detail: detail || '', createdAt: now },
+    });
+  } catch (e) {
+    console.error('[loginByPhone] 写访问日志失败', e);
+  }
 }
 
 exports.main = async (event) => {
@@ -138,6 +155,8 @@ exports.main = async (event) => {
       console.error('[loginByPhone] 更新登录统计失败', e);
     }
 
+    await logAccess(openid, 'login', '老用户登录');
+
     return {
       success: true,
       isNewUser: false,
@@ -179,6 +198,8 @@ exports.main = async (event) => {
         ...(wxContext.UNIONID ? { unionid: wxContext.UNIONID } : {}),
       },
     });
+
+    await logAccess(openid, 'login', '新用户注册');
 
     return {
       success: true,

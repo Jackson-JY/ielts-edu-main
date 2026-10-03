@@ -76,6 +76,7 @@ Page({
     if (this.data.submitting) return;
     this.setData({ submitting: true });
 
+    let finalizeRes = null;
     const res = await flow.submitWithGuard('提交中...', async () => {
       // 写作产出数据
       await assessmentStore.saveSection({
@@ -87,14 +88,33 @@ Page({
           },
         },
       });
-      // 完整测评：写作是最后一个模块，标记整份测评完成
+      // 完整测评：写作是最后一个模块，标记整份测评完成（服务端扣次）
       if (this.data.mode === 'full') {
-        await assessmentStore.finalize();
+        finalizeRes = await assessmentStore.finalize();
       }
     });
 
     this.setData({ submitting: false });
     if (res === flow.SKIPPED) return;
+
+    // 完成但未扣次（授权暂停/过期/次数用尽/服务不可用）：明确告知后再跳转
+    if (finalizeRes && finalizeRes.ok && !finalizeRes.charged) {
+      const text = finalizeRes.reason === 'NO_QUOTA'
+        ? '测评已完成，但授权次数已用尽，本次未计入'
+        : finalizeRes.reason === 'EXPIRED'
+          ? '测评已完成，但授权已过期，本次未计入'
+          : finalizeRes.reason === 'REVOKED'
+            ? '测评已完成，但授权已暂停，本次未计入'
+            : '测评已完成，本次未计入授权次数';
+      wx.showModal({
+        title: '提示',
+        content: text,
+        showCancel: false,
+        confirmText: '查看报告',
+        success: () => flow.finishModule('writing', this.data.mode, '写作测评完成'),
+      });
+      return;
+    }
 
     // 完整测评 → 结果页；单项 → 回首页
     flow.finishModule('writing', this.data.mode, '写作测评完成');

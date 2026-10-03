@@ -319,14 +319,42 @@ async function handleResult(openid, event) {
 }
 
 // ==================== 入口 ====================
+/** 测评授权校验（服务端硬卡点）：未授权/吊销/过期/无余量 → 拒绝开始 */
+async function checkAssessmentGrant(openid) {
+  try {
+    const res = await db.collection('assessment_grants').where({ _openid: openid }).limit(1).get();
+    const grant = res.data && res.data[0];
+    if (!grant) return { authorized: false, reason: 'NO_GRANT' };
+    if (grant.status === 'revoked') return { authorized: false, reason: 'REVOKED' };
+    if (grant.expireAt && new Date(grant.expireAt) < new Date()) return { authorized: false, reason: 'EXPIRED' };
+    const remaining = (Number(grant.totalQuota) || 0) - (Number(grant.usedCount) || 0);
+    if (remaining <= 0) return { authorized: false, reason: 'NO_QUOTA' };
+    return { authorized: true };
+  } catch (e) {
+    // 授权集合不可用时按未授权处理（fail-closed）
+    console.error('[vocabCatTest] 授权校验失败', e);
+    return { authorized: false, reason: 'CHECK_FAILED' };
+  }
+}
+
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
   const action = event.action;
 
   try {
     switch (action) {
-      case 'start':
+      case 'start': {
+        const grant = await checkAssessmentGrant(OPENID);
+        if (!grant.authorized) {
+          return {
+            success: false,
+            error: 'GRANT_REQUIRED',
+            reason: grant.reason,
+            message: '测评功能需老师授权后使用，请联系管理员开通',
+          };
+        }
         return await handleStart(OPENID, event);
+      }
       case 'answer':
         return await handleAnswer(OPENID, event);
       case 'result':

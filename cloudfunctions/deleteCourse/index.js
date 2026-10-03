@@ -28,7 +28,9 @@ async function authenticate(event) {
     if (token) {
       const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
       const session = res.data && res.data[0];
-      if (session && session.expireAt && new Date(session.expireAt) > new Date()) return { ok: true };
+      if (session && session.expireAt && new Date(session.expireAt) > new Date()) {
+        return { ok: true, userId: session.userId, nickName: session.nickName };
+      }
       return { ok: false, authError: true };
     }
 
@@ -36,12 +38,33 @@ async function authenticate(event) {
     const openid = wxContext.OPENID;
     if (!openid) return { ok: false, authError: true };
 
-    const res = await db.collection('users').where({ _openid: openid }).get();
-    if (res.data && res.data.length > 0 && res.data[0].isAdmin === true) return { ok: true };
+    const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
+    const user = res.data && res.data[0];
+    if (user && user.isAdmin === true) {
+      return { ok: true, userId: user._id, nickName: user.nickName };
+    }
     return { ok: false };
   } catch (e) {
     console.error('验证管理员失败', e);
     return { ok: false };
+  }
+}
+
+/** 写管理员操作审计日志 */
+async function logAudit(auth, action, detail) {
+  try {
+    await db.collection('admin_audit_logs').add({
+      data: {
+        adminId: auth.userId || '',
+        adminName: auth.nickName || '管理员',
+        module: 'course',
+        action,
+        detail: detail || '',
+        createdAt: new Date(),
+      },
+    });
+  } catch (e) {
+    console.error('[deleteCourse] 写审计日志失败', e);
   }
 }
 
@@ -93,7 +116,11 @@ exports.main = async (event, context) => {
   }
 
   try {
-    return await deleteCourseById(id);
+    const result = await deleteCourseById(id);
+    if (result && result.success) {
+      await logAudit(auth, 'course.delete', `删除课程：${id}`);
+    }
+    return result;
   } catch (e) {
     console.error('云函数执行失败', e);
     return {

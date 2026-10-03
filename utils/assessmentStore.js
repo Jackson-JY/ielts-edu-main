@@ -87,15 +87,23 @@ async function saveSelfAssess(skill, ratings) {
   });
 }
 
-/** 标记整份测评完成（完整测评最后一个模块调用） */
+/**
+ * 标记整份测评完成（完整测评最后一个模块调用）。
+ * 完成动作统一走云函数 assessmentAccess：服务端标记 completed + 授权扣次。
+ * 云函数不可用时回退为客户端直写 completed（学生数据不丢，仅本次未扣次）。
+ * @returns {Promise<{ok: boolean, charged: boolean, reason: string}>}
+ */
 async function finalize() {
   const record = await getActiveRecord();
-  if (!record) return true;
-  const res = await cloudDB.update(COLLECTION, record._id, {
+  if (!record) return { ok: true, charged: false, reason: '' };
+  const access = require('./assessmentAccess');
+  const res = await access.complete(record._id);
+  if (res.ok) return { ok: true, charged: res.charged, reason: res.reason };
+  const fallback = await cloudDB.update(COLLECTION, record._id, {
     status: 'completed',
     completeTime: new Date(),
   });
-  return res.success;
+  return { ok: fallback.success, charged: false, reason: fallback.success ? 'SERVER_UNAVAILABLE' : '' };
 }
 
 /** 获取最新一条测评结果（含已完成，仅限本次能力模型测评的记录） */

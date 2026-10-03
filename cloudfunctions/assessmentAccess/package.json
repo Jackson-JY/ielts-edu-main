@@ -1,0 +1,9 @@
+{
+  "name": "assessmentAccess",
+  "version": "1.0.0",
+  "description": "测评授权校验与扣次（学生端）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

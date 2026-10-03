@@ -7,6 +7,12 @@
       <text class="subtitle">选择任意一项进行测评，或完成完整测评</text>
     </view>
 
+    <!-- 授权状态条 -->
+    <view class="grant-banner {{grantAuthorized ? 'grant-ok' : 'grant-no'}}" wx:if="{{!grantChecking}}">
+      <view class="grant-dot"></view>
+      <text class="grant-text">{{grantBadge}}</text>
+    </view>
+
     <!-- 测评模块列表（可点击选择） -->
     <view class="modules-list">
       <view

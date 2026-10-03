@@ -73,6 +73,24 @@ function generateRecurring(base, recurring) {
   return list;
 }
 
+/** 写管理员操作审计日志 */
+async function logAudit(auth, action, detail) {
+  try {
+    await db.collection('admin_audit_logs').add({
+      data: {
+        adminId: auth.userId || '',
+        adminName: auth.nickName || '管理员',
+        module: 'course',
+        action,
+        detail: detail || '',
+        createdAt: new Date(),
+      },
+    });
+  } catch (e) {
+    console.error('[saveCourse] 写审计日志失败', e);
+  }
+}
+
 exports.main = async (event) => {
   event = normalizeEvent(event);
   try {
@@ -95,6 +113,7 @@ exports.main = async (event) => {
     if (action === 'update') {
       if (!courseId) return { success: false, error: '缺少 courseId' };
       await db.collection('courses').doc(courseId).update({ data: record });
+      await logAudit(auth, 'course.update', `更新课程：${course.date} ${course.startTime}-${course.endTime}`);
       return { success: true, message: '已更新' };
     }
 
@@ -120,6 +139,7 @@ exports.main = async (event) => {
             )
           );
         }
+        await logAudit(auth, 'course.add', `循环排课：${course.date} 起 ${list.length} 节`);
         return { success: true, message: `已创建 ${list.length} 节课程` };
       }
 
@@ -132,6 +152,7 @@ exports.main = async (event) => {
           createdBy: auth.userId,
         },
       });
+      await logAudit(auth, 'course.add', `新增课程：${course.date} ${course.startTime}-${course.endTime}`);
       return { success: true, message: '已创建' };
     }
 

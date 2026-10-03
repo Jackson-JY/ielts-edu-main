@@ -4,6 +4,7 @@
 const TIME_LIMIT = 15; // 单题限时（秒），与云函数 CAT_CONFIG.TIME_LIMIT_MS 保持一致
 const { VOCAB_CEFR_DESCS } = require('../../../utils/assessmentData');
 const assessmentStore = require('../../../utils/assessmentStore');
+const assessmentAccess = require('../../../utils/assessmentAccess');
 const flow = require('../../../utils/assessmentFlow');
 
 Page({
@@ -54,6 +55,14 @@ Page({
     try {
       const res = await this.callVocab({ action: 'start', mode: this.data.mode });
       if (!res.success) {
+        // 服务端授权卡点：词汇测试需老师授权后使用
+        if (res.error === 'GRANT_REQUIRED') {
+          this.setData({
+            phase: 'error',
+            errorMsg: assessmentAccess.reasonText(res.reason),
+          });
+          return;
+        }
         this.setError(res.error || '无法开始测试');
         return;
       }
