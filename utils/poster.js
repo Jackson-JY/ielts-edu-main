@@ -42,11 +42,36 @@ const SUBJECT_FALLBACK = {
   all: '#3A4A6B',
 };
 
-// 云存储路径前缀
-const CLOUD_PREFIX = 'cloud://cloud1-d7g66xvli7bb6bcc6';
+// 云存储环境 ID（完整 fileID 需带 bucket 段）
+const CLOUD_ENV_ID = 'cloud1-d7g66xvli7bb6bcc6';
+const CLOUD_BUCKET = '636c-cloud1-d7g66xvli7bb6bcc6-1428001663';
 // 背景图随包本地发布，零网络依赖（见 images/poster/*.jpg）
 const BG_LOCAL = (subject) => `/images/poster/${subject}.jpg`;
-const QRCODE_PATH = `${CLOUD_PREFIX}/poster/qrcode/checkin.png`;
+const QRCODE_FILEID = `cloud://${CLOUD_ENV_ID}.${CLOUD_BUCKET}/poster/qrcode/checkin.png`;
+
+/**
+ * 获取小程序码（优先 data URI，零下载环节；失败降级 fileID 下载）
+ * 返回可直接喂给 canvas createImage 的 src，失败返回 null
+ */
+async function fetchQrcodeSrc() {
+  // 主链路：云函数直接返回 base64（码已缓存在云端，管理端身份读，无 ACL/时效问题）
+  try {
+    const res = await withTimeout(
+      wx.cloud.callFunction({ name: 'getCheckinQrcode', data: {} }),
+      10000,
+      '小程序码获取'
+    );
+    const result = res && res.result;
+    if (result && result.success && result.base64) {
+      return `data:image/png;base64,${result.base64}`;
+    }
+    console.warn('[poster] 云函数返回异常', result && result.error);
+  } catch (e) {
+    console.warn('[poster] 调用 getCheckinQrcode 失败，降级 fileID 下载', e);
+  }
+  // 降级：直接用完整 fileID 下载
+  return downloadImage(QRCODE_FILEID);
+}
 
 /**
  * 带超时的 Promise 包装（任何阶段卡住都能抛出，避免永久 loading）
@@ -235,9 +260,9 @@ async function generatePoster(opts) {
   const { subject, streakDays, date, canvasId, componentContext } = opts;
   console.log('[poster] 开始生成', { subject, streakDays, date, canvasId });
 
-  // 1. 背景图走本地包（无需下载）；小程序码云下载与节点查询并行（缺失/失败返回 null）
+  // 1. 背景图走本地包（无需下载）；小程序码走云函数 base64 与节点查询并行（失败返回 null）
   const bgSrc = BG_LOCAL(subject);
-  const qrPromise = downloadImage(QRCODE_PATH);
+  const qrPromise = fetchQrcodeSrc();
 
   // 2. 获取 Canvas 2D 节点（带一次“未布局完成”重试）
   const queryNode = () => new Promise((resolve) => {
