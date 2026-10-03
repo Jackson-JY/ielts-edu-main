@@ -1,11 +1,30 @@
 {
   "envId": "cloud1-d7g66xvli7bb6bcc6",
   "functions": [
-    {
-      "name": "soeEvaluate",
-      "timeout": 60,
-      "runtime": "Nodejs20.19",
-      "memorySize": 256
-    }
+    { "name": "soeEvaluate", "timeout": 60, "runtime": "Nodejs20.19", "memorySize": 256 },
+    { "name": "asrSpeechToText", "timeout": 60, "runtime": "Nodejs20.19", "memorySize": 512 },
+    { "name": "aiGenerateReport", "timeout": 60, "runtime": "Nodejs20.19", "memorySize": 256 },
+    { "name": "vocabCatTest", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getOpenId", "timeout": 10, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "loginByPhone", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "adminLogin", "timeout": 5, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "adminVerify", "timeout": 5, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "adminAssessment", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "adminStats", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getAllHomework", "timeout": 10, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getAllUsers", "timeout": 10, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getCourses", "timeout": 10, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getPomodoroStats", "timeout": 10, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "saveCourse", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "deleteCourse", "timeout": 5, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "initAdmin", "timeout": 10, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "initDatabase", "timeout": 30, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "migrateHomework", "timeout": 60, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "saveDailyTask", "timeout": 15, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getDailyTasks", "timeout": 15, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getCheckinQrcode", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "submitCheckin", "timeout": 15, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "getMyCheckinStats", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "migrateCheckin", "timeout": 60, "runtime": "Nodejs16.13", "memorySize": 512 }
   ]
 }

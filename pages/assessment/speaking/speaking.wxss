@@ -501,3 +501,62 @@ page {
   text-align: center;
   line-height: 1.5;
 }
+
+/* ============ ASR 转写结果卡片 ============ */
+.transcript-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 28rpx 32rpx;
+  margin-top: 24rpx;
+  border: 1rpx solid #E5E5EA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.transcript-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.transcript-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1D1D1F;
+}
+
+.transcript-status {
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 16rpx;
+  border-radius: 999px;
+}
+
+.transcript-status.processing {
+  color: #0E8C81;
+  background: #E6F7F5;
+}
+
+.transcript-status.done {
+  color: #0E8C81;
+  background: #E6F7F5;
+}
+
+.transcript-status.failed {
+  color: #FF3B30;
+  background: #FFEBEA;
+}
+
+.transcript-text {
+  display: block;
+  font-size: 28rpx;
+  color: #1D1D1F;
+  line-height: 1.6;
+}
+
+.transcript-empty {
+  display: block;
+  font-size: 26rpx;
+  color: #8E8E93;
+  line-height: 1.5;
+}

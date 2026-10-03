@@ -423,7 +423,7 @@ Page({
       const [userRes, checkinRes, courseRes, examRes] = await Promise.all([
         cloudDB.getMy('users'),
         cloudDB.getMy('checkins'),
-        cloudDB.getMy('courses', (q) => q.where({ status: '已完成' })),
+        cloudDB.getMy('courses', (q) => q.where({ status: '已完成' }).limit(200)),
         cloudDB.getMy('exam_scores'),
       ]);
 

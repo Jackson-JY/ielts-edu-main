@@ -662,7 +662,7 @@ Page({
       checkinRes = await cloudDB.getMy('checkins', (q) =>
         q.where({
           date: db.command.gte(monthStart).and(db.command.lte(monthEnd)),
-        }).orderBy('date', 'asc')
+        }).orderBy('date', 'asc').limit(500)
       );
       if (checkinRes.success && checkinRes.data.length > 0) {
         checkinRes.data.forEach(c => {
@@ -734,7 +734,7 @@ Page({
   async loadCheckinDetail(date) {
     try {
       const checkinRes = await cloudDB.getMy('checkins', (q) =>
-        q.where({ date }).orderBy('createdAt', 'desc')
+        q.where({ date }).orderBy('createdAt', 'desc').limit(100)
       );
       
       const checkins = checkinRes.success && checkinRes.data ? checkinRes.data : [];
@@ -865,7 +865,7 @@ Page({
     // 拉取未完成的作业 + 任务，分别供番茄组件内选择关联
     try {
       const allRes = await cloudDB.getMy('homework', (q) =>
-        q.orderBy('_createTime', 'desc')
+        q.orderBy('_createTime', 'desc').limit(200)
       );
       const pending = (allRes.success ? allRes.data : [])
         .filter(hw => hw.status !== 'completed' && hw.submitted !== true);

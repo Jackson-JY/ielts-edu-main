@@ -1,6 +1,9 @@
 const TEMP_URL_CACHE_KEY = 'cloudTempUrlCache';
 const TEMP_URL_TTL = 50 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 200; // 缓存条目上限，防止 wx.storage 无限膨胀
 let memoryCache = null;
+// in-flight 去重：同一 fileID 的并发请求复用同一个 Promise
+const inflightRequests = new Map();
 
 const canUseStorage = () => typeof wx !== 'undefined' && wx.getStorageSync && wx.setStorageSync;
 
@@ -43,6 +46,24 @@ const cacheUrl = (fileID, url) => {
     url,
     expiresAt: Date.now() + TEMP_URL_TTL,
   };
+
+  // 容量淘汰：超过上限时清除最早过期的条目
+  const keys = Object.keys(cache);
+  if (keys.length > CACHE_MAX_ENTRIES) {
+    const now = Date.now();
+    // 先清已过期的
+    let toRemove = keys.filter((k) => cache[k].expiresAt <= now);
+    // 若仍超限，按过期时间排序移除最早的
+    if (keys.length - toRemove.length > CACHE_MAX_ENTRIES) {
+      const remaining = keys
+        .filter((k) => !toRemove.includes(k))
+        .sort((a, b) => cache[a].expiresAt - cache[b].expiresAt);
+      const excess = remaining.slice(0, keys.length - toRemove.length - CACHE_MAX_ENTRIES);
+      toRemove = toRemove.concat(excess);
+    }
+    toRemove.forEach((k) => delete cache[k]);
+  }
+
   saveCache(cache);
 };
 
@@ -65,21 +86,33 @@ const getTempUrl = async (fileID) => {
 
   const cachedUrl = getCachedUrl(fileID);
   if (cachedUrl) return cachedUrl;
-  
-  try {
-    const res = await wx.cloud.getTempFileURL({
-      fileList: [fileID],
-    });
-    if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
-      const tempUrl = res.fileList[0].tempFileURL;
-      cacheUrl(fileID, tempUrl);
-      return tempUrl;
-    }
-    return fileID;
-  } catch (e) {
-    console.error('[getTempUrl] 获取临时链接失败', e);
-    return fileID;
+
+  // in-flight 去重：同一 fileID 的并发请求复用同一个 Promise，避免首屏重复请求
+  if (inflightRequests.has(fileID)) {
+    return inflightRequests.get(fileID);
   }
+
+  const promise = (async () => {
+    try {
+      const res = await wx.cloud.getTempFileURL({
+        fileList: [fileID],
+      });
+      if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
+        const tempUrl = res.fileList[0].tempFileURL;
+        cacheUrl(fileID, tempUrl);
+        return tempUrl;
+      }
+      return fileID;
+    } catch (e) {
+      console.error('[getTempUrl] 获取临时链接失败', e);
+      return fileID;
+    } finally {
+      inflightRequests.delete(fileID);
+    }
+  })();
+
+  inflightRequests.set(fileID, promise);
+  return promise;
 };
 
 /**

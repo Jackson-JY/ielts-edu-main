@@ -1,0 +1,9 @@
+{
+  "name": "migrateCheckin",
+  "version": "1.0.0",
+  "description": "迁移旧 checkins 集合到 checkin_records（按 openid+date 聚合）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

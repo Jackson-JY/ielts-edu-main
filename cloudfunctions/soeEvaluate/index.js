@@ -140,6 +140,12 @@ function callSoeWebSocket(audioBuffer, appId, secretId, secretKey, refText) {
 }
 
 // ======================== 工具函数 ========================
+// 百分制分数收敛到 [0,100]，防止浮点漂移或接口异常导致越界
+function clampPercent(v) {
+  const n = Number(v) || 0;
+  return Math.max(0, Math.min(100, n));
+}
+
 function normalizeEvent(event) {
   if (event && typeof event === 'object' && event.body) {
     try {
@@ -183,20 +189,21 @@ exports.main = async (event) => {
     // 2. 调用新版 SOE WebSocket 接口
     const result = await callSoeWebSocket(audioBuffer, appId, secretId, secretKey, refText);
 
-    // 3. 提取评分结果并转为百分制
-    // SOE 原始分：PronAccuracy 0-10，PronFluency 0-1，PronCompletion 0-1，SuggestedScore 0-10
-    // 单词级 PronAccuracy 已经是 0-100 范围
+    // 3. 提取评分结果并统一为百分制（0-100）
+    // 新版 SOE WebSocket 实测原始范围（2026-09 真机录音验证）：
+    //   PronAccuracy 0-100（百分制，与单词级一致）、SuggestedScore 0-100
+    //   PronFluency 0-1（比例）、PronCompletion 0-1（比例）
+    // 注意：PronAccuracy/SuggestedScore 不可再 ×10，否则会出现 800+ 爆分
     const words = (result.Words || []).map((w) => ({
       word: w.Word,
       pronAccuracy: Math.round(w.PronAccuracy ?? 0),
       matchTag: w.MatchTag,
     }));
 
-    // 转为百分制并四舍五入
-    const pronAccuracy = Math.round((result.PronAccuracy ?? 0) * 10);
-    const pronFluency = Math.round((result.PronFluency ?? 0) * 100);
-    const pronCompletion = Math.round((result.PronCompletion ?? 0) * 100);
-    const suggestedScore = Math.round((result.SuggestedScore ?? 0) * 10);
+    const pronAccuracy = clampPercent(Math.round(result.PronAccuracy ?? 0));
+    const pronFluency = clampPercent(Math.round((result.PronFluency ?? 0) * 100));
+    const pronCompletion = clampPercent(Math.round((result.PronCompletion ?? 0) * 100));
+    const suggestedScore = clampPercent(Math.round(result.SuggestedScore ?? 0));
 
     return {
       success: true,

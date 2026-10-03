@@ -66,6 +66,24 @@ function groupCount(list, key) {
   return m;
 }
 
+/**
+ * 分页拉取全量数据，避免单次 limit(1000) 静默截断
+ * @param {Function} buildQuery - 返回 collection/where 查询对象的函数
+ * @param {number} maxPages - 安全上限，默认 50 页 × 100 = 5000 条
+ * @returns {Promise<Array>}
+ */
+async function fetchAll(buildQuery, maxPages = 50) {
+  const PAGE = 100;
+  let all = [];
+  for (let i = 0; i < maxPages; i++) {
+    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
+    const page = res.data || [];
+    all = all.concat(page);
+    if (page.length < PAGE) break;
+  }
+  return all;
+}
+
 exports.main = async (event) => {
   event = normalizeEvent(event);
   try {
@@ -80,17 +98,12 @@ exports.main = async (event) => {
 
     // ---------- 总览 ----------
     if (action === 'overview') {
-      const [usersRes, checkinsRes, homeworkRes, examRes] = await Promise.all([
-        db.collection('users').limit(1000).get(),
-        db.collection('checkins').limit(1000).get(),
-        db.collection('homework').limit(1000).get(),
-        db.collection('exam_scores').limit(1000).get(),
+      const [users, checkins, homework, exams] = await Promise.all([
+        fetchAll(() => db.collection('users')),
+        fetchAll(() => db.collection('checkins')),
+        fetchAll(() => db.collection('homework')),
+        fetchAll(() => db.collection('exam_scores')),
       ]);
-
-      const users = usersRes.data || [];
-      const checkins = checkinsRes.data || [];
-      const homework = homeworkRes.data || [];
-      const exams = examRes.data || [];
 
       const students = users.filter((u) => u.isAdmin !== true);
 
@@ -154,10 +167,10 @@ exports.main = async (event) => {
       const openid = user && user._openid;
       if (!openid) return { success: false, error: '用户无 openid' };
 
-      const [checkinsRes, homeworkRes, examRes] = await Promise.all([
-        db.collection('checkins').where({ _openid: openid }).limit(1000).get(),
-        db.collection('homework').where({ _openid: openid }).limit(1000).get(),
-        db.collection('exam_scores').where({ _openid: openid }).limit(1000).get(),
+      const [checkins, homework, exams] = await Promise.all([
+        fetchAll(() => db.collection('checkins').where({ _openid: openid })),
+        fetchAll(() => db.collection('homework').where({ _openid: openid })),
+        fetchAll(() => db.collection('exam_scores').where({ _openid: openid })),
       ]);
 
       const dateMap = {};
@@ -166,17 +179,17 @@ exports.main = async (event) => {
         dateMap[d] = dateMap[d] || { date: d, checkins: 0, homework: 0, exams: 0 };
       };
 
-      checkinsRes.data.forEach((c) => {
+      checkins.forEach((c) => {
         const d = dateKey(c.date);
         touch(d);
         if (d) dateMap[d].checkins += 1;
       });
-      homeworkRes.data.forEach((h) => {
+      homework.forEach((h) => {
         const d = dateKey(h.date) || dateKey(h._createTime) || dateKey(h._updateTime);
         touch(d);
         if (d) dateMap[d].homework += 1;
       });
-      examRes.data.forEach((e) => {
+      exams.forEach((e) => {
         const d = dateKey(e.date);
         touch(d);
         if (d) dateMap[d].exams += 1;
@@ -184,6 +197,166 @@ exports.main = async (event) => {
 
       const trend = Object.values(dateMap).sort((a, b) => (a.date < b.date ? -1 : 1));
       return { success: true, trend };
+    }
+
+    // ---------- 打卡周榜 ----------
+    if (action === 'checkinWeekly') {
+      const { weekStart, weekEnd } = event;
+      if (!weekStart || !weekEnd) return { success: false, error: '缺少周起止日期' };
+
+      const [users, pomodoroRes] = await Promise.all([
+        fetchAll(() => db.collection('users')),
+        fetchAll(() =>
+          db.collection('pomodoro_sessions').where({
+            date: db.command.gte(weekStart).and(db.command.lte(weekEnd)),
+          })
+        ),
+      ]);
+
+      // 尝试拉 checkin_records（集合可能尚未创建）
+      let checkinRecords = [];
+      try {
+        checkinRecords = await fetchAll(() =>
+          db.collection('checkin_records').where({
+            date: db.command.gte(weekStart).and(db.command.lte(weekEnd)),
+          })
+        );
+      } catch (e) {
+        // 集合不存在，按空处理
+      }
+
+      // 尝试拉全量 checkin_records 算连续天数（需取历史数据）
+      let allCheckinRecords = [];
+      try {
+        allCheckinRecords = await fetchAll(() => db.collection('checkin_records'));
+      } catch (e) {
+        // ignore
+      }
+
+      const students = users.filter((u) => u.isAdmin !== true);
+
+      // 按学生聚合打卡记录
+      const checkinByOpenid = {};
+      checkinRecords.forEach((r) => {
+        const k = r._openid;
+        if (!k) return;
+        checkinByOpenid[k] = checkinByOpenid[k] || [];
+        checkinByOpenid[k].push(r);
+      });
+
+      // 全量打卡记录用于算连续天数
+      const allCheckinByOpenid = {};
+      allCheckinRecords.forEach((r) => {
+        const k = r._openid;
+        if (!k) return;
+        allCheckinByOpenid[k] = allCheckinByOpenid[k] || [];
+        allCheckinByOpenid[k].push(r);
+      });
+
+      // 按学生聚合番茄钟
+      const pomoByOpenid = {};
+      pomodoroRes.forEach((p) => {
+        const k = p._openid;
+        if (!k) return;
+        pomoByOpenid[k] = pomoByOpenid[k] || [];
+        pomoByOpenid[k].push(p);
+      });
+
+      // 计算连续天数（从 weekEnd 往前数，当天没打不算断）
+      function calcStreak(records, endDate) {
+        if (!records || records.length === 0) return 0;
+        const dates = new Set(
+          records
+            .filter((r) => r.completedCount >= 1 || r.allDone || (r.items && r.items.some((it) => it.done)))
+            .map((r) => dateKey(r.date))
+        );
+        let streak = 0;
+        const d = new Date(endDate);
+        // 如果当天没有打卡，从昨天开始数
+        const endStr = fmtDate(d);
+        if (!dates.has(endStr)) {
+          d.setDate(d.getDate() - 1);
+        }
+        while (true) {
+          const ds = fmtDate(d);
+          if (dates.has(ds)) {
+            streak++;
+            d.setDate(d.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+        return streak;
+      }
+
+      // 按天聚合学习时长（番茄钟 + 手填，取 max）
+      function calcStudyMinutes(pomoList, checkinList) {
+        const pomoByDate = {};
+        (pomoList || []).forEach((p) => {
+          const d = dateKey(p.date) || dateKey(p.startedAt);
+          if (!d) return;
+          pomoByDate[d] = (pomoByDate[d] || 0) + (p.totalFocusMinutes || 0);
+        });
+        const manualByDate = {};
+        (checkinList || []).forEach((r) => {
+          const d = dateKey(r.date);
+          if (!d) return;
+          let dayManual = 0;
+          (r.items || []).forEach((it) => {
+            if (it.done && it.actualMinutes) dayManual += it.actualMinutes;
+          });
+          manualByDate[d] = (manualByDate[d] || 0) + dayManual;
+        });
+        // 每天 max(pomodoro, manual)，然后求和
+        const allDates = new Set([...Object.keys(pomoByDate), ...Object.keys(manualByDate)]);
+        let total = 0;
+        allDates.forEach((d) => {
+          total += Math.max(pomoByDate[d] || 0, manualByDate[d] || 0);
+        });
+        return total;
+      }
+
+      const rows = students.map((u) => {
+        const openid = u._openid;
+        const weekCheckins = checkinByOpenid[openid] || [];
+        const allCheckins = allCheckinByOpenid[openid] || [];
+        const pomoList = pomoByOpenid[openid] || [];
+
+        // 本周打卡天数（完成 >= 1 项即算）
+        const checkinDays = new Set(
+          weekCheckins
+            .filter((r) => (r.completedCount >= 1) || r.allDone || (r.items && r.items.some((it) => it.done)))
+            .map((r) => dateKey(r.date))
+        ).size;
+
+        // 本周完成总项数
+        const completedItems = weekCheckins.reduce((sum, r) => {
+          return sum + (r.completedCount || (r.items ? r.items.filter((it) => it.done).length : 0));
+        }, 0);
+
+        // 学习时长（分钟）
+        const studyMinutes = calcStudyMinutes(pomoList, weekCheckins);
+
+        // 连续天数
+        const streak = calcStreak(allCheckins, weekEnd);
+
+        return {
+          _id: u._id,
+          _openid: openid,
+          nickName: u.nickName || '未命名',
+          avatarUrl: u.avatarUrl || '',
+          checkinDays,
+          completedItems,
+          studyMinutes,
+          studyHours: Math.round((studyMinutes / 60) * 10) / 10,
+          streak,
+        };
+      });
+
+      // 按打卡天数降序，再按学习时长降序
+      rows.sort((a, b) => b.checkinDays - a.checkinDays || b.studyMinutes - a.studyMinutes);
+
+      return { success: true, weekStart, weekEnd, rows };
     }
 
     return { success: false, error: '未知操作' };

@@ -1,7 +1,7 @@
 {
   "name": "asrSpeechToText",
   "version": "1.0.0",
-  "description": "ASR 语音转文字云函数 - 模拟模式",
+  "description": "ASR 语音转文字云函数 - 腾讯云一句话/录音文件识别",
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "latest"

@@ -1,10 +1,15 @@
 // 云函数：aiGenerateReport —— AI 智能测评报告
-// 入参：{ studentId }
+// 入参：
+//   { studentId }            有缓存直接返回缓存，无缓存则调用 AI 生成并落库
+//   { studentId, force:true } 忽略缓存，强制重新生成并覆盖旧缓存
+//   { studentId, cacheOnly:true } 只查询缓存，不触发 AI（用于进入页面时回显）
 // 鉴权：token（Web）或 openid+isAdmin（小程序）
 // 返回：
 //   part1: 能力图谱表格（科目 / 分数 / 平均问题指数 / 主要问题）+ 词汇量
 //   part2: 大模型生成的结构化分析报告
+//   cached: 是否来自缓存；generatedAt: 报告生成时间
 const cloud = require('wx-server-sdk');
+const crypto = require('crypto');
 
 // AI 生成可能耗时较长，设置 60 秒超时
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV, timeout: 60000 });
@@ -72,6 +77,22 @@ const ASSESSMENT_ITEMS = {
 
 const SKILL_NAMES = { listening: '听力', reading: '阅读', writing: '写作', speaking: '口语' };
 const SKILL_KEYS = ['listening', 'reading', 'writing', 'speaking'];
+
+// ============ 可选课程清单（与机构实际在售课程保持一致，AI 只能从中组合推荐） ============
+const COURSE_CATALOG = [
+  { name: '听力＋阅读月度课程', fit: '听力或阅读等输入型科目薄弱，需要按月份系统训练、打基础' },
+  { name: '口语月度课程', fit: '口语流利度/发音/展开能力弱，需要按月系统学习方法并持续开口练习' },
+  { name: '写作月度课程', fit: '写作语法、审题、论证或小作文数据处理弱，需要按月系统训练' },
+  { name: '全科月度会员课程', fit: '听说读写多科均需提升，希望均衡系统学习，适合中长期跟进' },
+  { name: '口语批改➕模考', fit: '口语有一定基础，需要专业反馈和全真模考查漏，适合考前冲刺' },
+  { name: '写作10篇大小作文精批', fit: '写作有一定基础，需要逐篇精批反馈、针对性纠正错误' },
+  { name: '雅思保分对赌课程', fit: '有明确目标分数和出分期限，需要结果保障、以终为始备考' },
+  { name: '雅思一对一全科陪跑', fit: '基础薄弱、多科问题严重或需要全程定制督学与陪伴式辅导' },
+];
+
+// Prompt 版本：报告结构/课程清单/数据字段调整时递增，使旧缓存自动失效
+// v2：修复口语转写字段名（transcript → transcribedText），仅送产出题
+const PROMPT_VERSION = 'course-plan-v2';
 
 // AI 模型配置（按优先级尝试，前一个失败则自动降级）
 // 需在云开发控制台「AI → 生文模型」中开启对应模型
@@ -174,22 +195,36 @@ async function generateAnalysis(payload) {
     throw new Error('当前 wx-server-sdk 版本不支持 cloud.ai()，请升级至 3.0.5-beta.1 或更高版本');
   }
 
+  // 单模型超时：避免某个模型卡住拖垮整个 60s 函数超时
+  const MODEL_TIMEOUT_MS = 15000;
+  const withTimeout = (promise, ms, label) =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`模型 ${label} 超时(${ms}ms)`)), ms)
+      ),
+    ]);
+
   for (const modelName of AI_MODELS) {
     try {
       const ai = cloud.ai();
       const model = ai.createModel('cloudbase');
-      const res = await model.generateText({
-        model: modelName,
-        messages: [
-          {
-            role: 'system',
-            content:
-              '你是一位资深雅思学习规划师。请根据学生的测评数据，生成一份专业、具体、可执行的学习分析报告。报告语言为中文。请严格按照指定的 JSON 格式输出，不要输出 JSON 之外的任何内容。',
-          },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.7,
-      });
+      const res = await withTimeout(
+        model.generateText({
+          model: modelName,
+          messages: [
+            {
+              role: 'system',
+              content:
+                '你是一位资深雅思学习规划师。请根据学生的测评数据，生成一份专业、具体、可执行的学习分析报告。报告语言为中文。请严格按照指定的 JSON 格式输出，不要输出 JSON 之外的任何内容。',
+            },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.7,
+        }),
+        MODEL_TIMEOUT_MS,
+        modelName
+      );
 
       const text = res && res.text;
       const parsed = extractJSON(text);
@@ -229,9 +264,11 @@ function buildPrompt(payload) {
   const speakingText =
     speaking && speaking.length
       ? speaking
-          .map((item, idx) => `第${idx + 1}题：${item.question || ''}\n学生回答转写：${item.transcript || '无转写文本'}${item.duration != null ? `（时长 ${item.duration}秒）` : ''}`)
+          .map((item, idx) => `第${idx + 1}题：${item.question || ''}\n学生回答转写：${item.transcribedText || '无转写文本'}${item.duration != null ? `（时长 ${item.duration}秒）` : ''}`)
           .join('\n\n')
       : '暂无口语产出数据';
+
+  const courseLines = COURSE_CATALOG.map((c, i) => `${i + 1}. ${c.name}（适用：${c.fit}）`).join('\n');
 
   return `
 ${vocabText}
@@ -245,23 +282,33 @@ ${writingText}
 【口语产出】
 ${speakingText}
 
+【可选课程清单】（推荐课程只能从以下课程中选择，课程名称必须与清单完全一致；不需要全部选择，按测评结果择优组合）
+${courseLines}
+
 请基于以上数据，生成如下结构的 JSON 报告：
 {
   "summary": "一段话概述学生当前英语基础（是否全面薄弱、基础是否具备但关键能力未自动化等），80-120字",
   "characteristics": "指出学生最大的特点和最需要重点关注的 2-3 个关键能力问题，60-100字",
   "improvementPath": "核心提分路径，用箭头连接输入端→输出端→考试端的关键提升点，例如：输入端：词汇/长难句/同义替换 → 输出端：语法自动化/Part2展开 → 考试端：限时训练/套题复盘",
-  "learningPath": [
-    { "title": "学习路径1标题", "desc": "这条路径解决什么问题" },
-    { "title": "学习路径2标题", "desc": "这条路径解决什么问题" },
-    { "title": "学习路径3标题", "desc": "这条路径解决什么问题" },
-    { "title": "学习路径4标题", "desc": "这条路径解决什么问题" }
-  ],
+  "coursePlan": {
+    "shortTerm": [
+      { "course": "课程名称，必须与可选课程清单完全一致", "reason": "结合该生具体测评数据说明为什么短期优先选这门课，30-60字" }
+    ],
+    "longTerm": [
+      { "course": "课程名称，必须与可选课程清单完全一致", "reason": "结合该生目标与基础说明为什么长期规划选这门课，30-60字" }
+    ]
+  },
   "trainingLogic": "整体训练逻辑，例如：先补基础 → 再学方法 → 持续输出 → 阶段检测 → 针对性修正"
 }
 
 要求：
 1. summary、characteristics 要基于真实数据，不要泛泛而谈
-2. learningPath 给出 4 条具体可执行的学习路径，每条 20-40 字描述
+2. coursePlan 是整体学习路径建议，必须根据该生测评数据从可选课程清单中组合推荐：
+   - shortTerm（短期，约1个月内，集中解决最紧迫、问题指数最高的短板）：选 1-2 门，最多不超过 3 门
+   - longTerm（长期，约2-3个月，系统提升、全科均衡或出分保障）：选 1-2 门，最多不超过 3 门
+   - 同一门课程不要在短期和长期中重复出现；不要推荐与该生薄弱项无关的课程
+   - 选择逻辑示例：输入型科目（听力/阅读）问题突出优先「听力＋阅读月度课程」；口语问题突出可选「口语月度课程」，有基础后再配「口语批改➕模考」；写作问题突出可选「写作月度课程」，有基础后配「写作10篇大小作文精批」；多科普遍薄弱适合「全科月度会员课程」打底，基础很差或需要全程督学可选「雅思一对一全科陪跑」；有明确出分期限与目标分可在长期加入「雅思保分对赌课程」
+   - 每门课的 reason 必须引用该生的具体数据（如某科问题指数、词汇量、写作/口语产出表现），说明选课依据，不要写空泛套话
 3. 所有内容用中文
 4. 只输出 JSON，不要其他文字
 `;
@@ -277,7 +324,7 @@ exports.main = async (event) => {
         : { success: false, error: '无权操作，仅管理员可操作' };
     }
 
-    const { studentId } = event || {};
+    const { studentId, force = false, cacheOnly = false } = event || {};
     if (!studentId) return { success: false, error: '缺少 studentId' };
 
     // 查询学生
@@ -296,6 +343,38 @@ exports.main = async (event) => {
     const record = assessRes.data && assessRes.data[0];
     const vocabSession = vocabRes.data && vocabRes.data[0];
     const speakingRecord = speakRes.data && speakRes.data[0];
+
+    // ============ 缓存：基于源数据指纹，源数据变更后自动失效 ============
+    const fingerprint = crypto
+      .createHash('sha1')
+      .update(JSON.stringify({
+        promptVersion: PROMPT_VERSION,
+        assessment: record ? { id: record._id, updatedAt: record._updateTime || null } : null,
+        vocab: vocabSession ? { id: vocabSession._id, completedAt: vocabSession.completedAt || null } : null,
+        speaking: speakingRecord ? { id: speakingRecord._id, updatedAt: speakingRecord.lastUpdateTime || null } : null,
+      }))
+      .digest('hex');
+
+    const cacheCol = db.collection('ai_reports');
+    const cacheRes = await cacheCol.where({ studentId }).limit(1).get();
+    const cacheDoc = cacheRes.data && cacheRes.data[0];
+
+    // 命中有效缓存（非强制重生成）
+    if (!force && cacheDoc && cacheDoc.fingerprint === fingerprint && cacheDoc.part2) {
+      return {
+        success: true,
+        cached: true,
+        generatedAt: cacheDoc.updatedAt || cacheDoc._createTime || null,
+        part1: cacheDoc.part1,
+        part2: cacheDoc.part2,
+        model: cacheDoc.model,
+      };
+    }
+
+    // 仅查询缓存：未命中时不触发 AI
+    if (cacheOnly) {
+      return { success: true, cached: false };
+    }
 
     // 词汇量
     let vocab = record && record.vocab;
@@ -332,11 +411,43 @@ exports.main = async (event) => {
 
     // ============ Part 2：AI 生成分析报告 ============
     const writing = record && record.production && record.production.writing ? record.production.writing : null;
-    const speaking = speakingRecord ? speakingRecord.answers || [] : [];
+    // 只送产出题（自由作答，存有转写文本 transcribedText）；跟读题仅有发音评分、无转写，送入只会浪费 token
+    const speaking = speakingRecord
+      ? (speakingRecord.answers || []).filter((a) => a && a.part === 'production')
+      : [];
 
     const part2Result = await generateAnalysis({ vocab, skills, writing, speaking });
 
-    return { success: true, part1, part2: part2Result.data, model: part2Result.model };
+    // ============ 落库保存（按学生覆盖，指纹用于下次校验是否过期） ============
+    const now = new Date();
+    const cacheData = {
+      studentId,
+      openid,
+      fingerprint,
+      part1,
+      part2: part2Result.data,
+      model: part2Result.model,
+      updatedAt: now,
+    };
+    try {
+      if (cacheDoc && cacheDoc._id) {
+        await cacheCol.doc(cacheDoc._id).update({ data: cacheData });
+      } else {
+        await cacheCol.add({ data: cacheData });
+      }
+    } catch (cacheErr) {
+      // 落库失败不影响本次报告返回，仅记录日志
+      console.warn('[aiGenerateReport] 报告缓存落库失败：', cacheErr.message);
+    }
+
+    return {
+      success: true,
+      cached: false,
+      generatedAt: now,
+      part1,
+      part2: part2Result.data,
+      model: part2Result.model,
+    };
   } catch (e) {
     console.error('[aiGenerateReport] 失败', e);
     return { success: false, error: e.message || '生成报告失败' };

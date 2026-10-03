@@ -153,6 +153,19 @@
             </text>
           </view>
         </view>
+
+        <!-- ASR 转写结果 -->
+        <view class="transcript-card" wx:if="{{productionAnswers[currentTaskIndex]}}">
+          <view class="transcript-header">
+            <text class="transcript-title">识别文本</text>
+            <text wx:if="{{productionAnswers[currentTaskIndex].asrStatus === 'processing'}}" class="transcript-status processing">转文字中…</text>
+            <text wx:elif="{{productionAnswers[currentTaskIndex].asrStatus === 'failed'}}" class="transcript-status failed">识别失败</text>
+            <text wx:elif="{{productionAnswers[currentTaskIndex].asrStatus === 'completed'}}" class="transcript-status done">已完成</text>
+          </view>
+          <text wx:if="{{productionAnswers[currentTaskIndex].transcribedText}}" class="transcript-text">{{productionAnswers[currentTaskIndex].transcribedText}}</text>
+          <text wx:elif="{{productionAnswers[currentTaskIndex].asrStatus === 'failed'}}" class="transcript-empty">转写未成功，录音已保存，可继续答题</text>
+          <text wx:elif="{{productionAnswers[currentTaskIndex].asrStatus === 'processing'}}" class="transcript-empty">正在识别你刚才的回答…</text>
+        </view>
       </scroll-view>
 
       <!-- 底部操作 -->

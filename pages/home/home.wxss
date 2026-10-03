@@ -187,6 +187,74 @@
   filter: brightness(0.92);
 }
 
+/* ==================== 能力测评入口：薄荷绿浅底卡片 ==================== */
+.assessment-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 24rpx;
+  background: #E6F7F5;
+  border-radius: 24rpx;
+  transition: filter 0.18s ease;
+}
+
+.assessment-entry:active {
+  filter: brightness(0.96);
+}
+
+.assessment-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.assessment-entry-icon-wrap {
+  width: 80rpx;
+  height: 80rpx;
+  flex-shrink: 0;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assessment-entry-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+
+.assessment-entry-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1D1D1F;
+}
+
+.assessment-entry-sub {
+  font-size: 22rpx;
+  color: #0E8C81;
+}
+
+.assessment-entry-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999px;
+  background: #12B7A8;
+  color: #FFFFFF;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
 /* ==================== 能力概览：无边框浅灰块 ==================== */
 .ability-grid {
   display: grid;
@@ -242,63 +310,330 @@
   color: #6E6E73;
 }
 
-/* ==================== 听说读写打卡模块 ==================== */
-.checkin-section-sub {
-  font-size: 22rpx;
-  color: #8E8E93;
+/* ==================== 今日打卡任务列表 ==================== */
+.checkin-progress {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #12B7A8;
   flex-shrink: 0;
   padding-top: 4rpx;
 }
 
-.checkin-module-grid {
-  margin-top: 20rpx;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16rpx;
+.task-empty {
+  padding: 40rpx 0 24rpx;
+  display: flex;
+  justify-content: center;
 }
 
-.checkin-module-item {
+.task-empty-text {
+  font-size: 28rpx;
+  color: #8E8E93;
+}
+
+.task-list {
+  margin-top: 8rpx;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8rpx;
-  padding: 20rpx 0 16rpx;
+}
+
+.task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 24rpx 20rpx;
   border-radius: 20rpx;
-  background: #F2F2F7;
+  background: #FFFFFF;
   transition: background-color 0.18s ease;
 }
 
-.checkin-module-item:active {
-  background: #E5E5EA;
+.task-row:active {
+  background: #F2F2F7;
 }
 
-.checkin-module-item.checked {
-  background: #E6F7F5;
+.task-row.done {
+  opacity: 0.55;
 }
 
-.checkin-module-icon-wrap {
-  width: 56rpx;
-  height: 56rpx;
+.task-check {
+  flex-shrink: 0;
+  padding-top: 4rpx;
+}
+
+.task-check-dot {
+  width: 36rpx;
+  height: 36rpx;
   border-radius: 50%;
+  border: 3rpx solid #D1D1D6;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.task-check-dot.done {
+  background: #12B7A8;
+  border-color: #12B7A8;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.checkin-module-label {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #1D1D1F;
+.task-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
 }
 
-.checkin-module-status {
-  font-size: 20rpx;
+.task-row-top {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.task-subject-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.task-content {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #1D1D1F;
+  line-height: 1.45;
+}
+
+.task-row.done .task-content {
+  text-decoration: line-through;
   color: #8E8E93;
 }
 
-.checkin-module-item.checked .checkin-module-status {
-  color: #0E8C81;
+.task-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding-left: 24rpx;
+}
+
+.task-suggest {
+  font-size: 22rpx;
+  color: #8E8E93;
+}
+
+.task-actual {
+  font-size: 22rpx;
+  color: #12B7A8;
+  font-weight: 600;
+}
+
+/* 实际用时输入 */
+.minutes-input-wrap {
+  width: 100%;
+  margin-bottom: 28rpx;
+}
+
+.minutes-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid #E5E5EA;
+  font-size: 28rpx;
+  color: #1D1D1F;
+  box-sizing: border-box;
+}
+
+/* ==================== 庆祝弹窗海报按钮 ==================== */
+.celebration-btn.poster-btn {
+  background: #E6F7F5;
+  color: #12B7A8;
+}
+
+/* ==================== 海报科目标签弹层 ==================== */
+.poster-sheet-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.poster-sheet-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.poster-sheet {
+  position: relative;
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx 32rpx 60rpx;
+  box-sizing: border-box;
+  animation: sheet-in 0.25s ease-out;
+}
+
+@keyframes sheet-in {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+
+.poster-sheet-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+  margin-bottom: 28rpx;
+  text-align: center;
+}
+
+.poster-subject-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 36rpx;
+  justify-content: center;
+}
+
+.poster-subject-chip {
+  padding: 16rpx 32rpx;
+  border-radius: 999px;
+  background: #F2F2F7;
+  font-size: 26rpx;
+  color: #1D1D1F;
   font-weight: 500;
+  transition: all 0.18s ease;
+}
+
+.poster-subject-chip.active {
+  background: #12B7A8;
+  color: #FFFFFF;
+}
+
+.poster-generate-btn {
+  height: 96rpx;
+  border-radius: 999px;
+  background: #12B7A8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 600;
+  transition: filter 0.18s ease;
+}
+
+.poster-generate-btn:active {
+  filter: brightness(0.92);
+}
+
+.poster-generate-btn.disabled {
+  opacity: 0.5;
+}
+
+.poster-canvas-hide {
+  /* 必须放在视口内并保持“已栅格化”：屏外 -9999px 会导致
+     canvasToTempFilePath 在开发者工具下不回调。近透明 + 最底层即可 */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 750px;
+  height: 1330px;
+  opacity: 0.01;
+  z-index: -100;
+  pointer-events: none;
+}
+
+/* ==================== 海报结果页内预览 ==================== */
+.poster-preview-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.poster-preview-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.poster-preview-card {
+  position: relative;
+  width: 620rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: sheet-in 0.22s ease-out;
+}
+
+.poster-preview-img {
+  width: 560rpx;
+  height: 996rpx;
+  border-radius: 20rpx;
+  background: #1C1C1E;
+  box-shadow: 0 12rpx 48rpx rgba(0, 0, 0, 0.4);
+}
+
+.poster-preview-actions {
+  width: 100%;
+  margin-top: 36rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.poster-preview-btn {
+  height: 88rpx;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.poster-preview-btn.save {
+  background: #12B7A8;
+  color: #FFFFFF;
+}
+
+.poster-preview-btn.save:active {
+  filter: brightness(0.92);
+}
+
+.poster-preview-btn.save.disabled {
+  opacity: 0.6;
+}
+
+.poster-preview-btn.done {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+}
+
+.poster-preview-tip {
+  margin-top: 20rpx;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* ==================== 打卡内容输入弹窗 ==================== */
@@ -374,21 +709,6 @@
 .checkin-input-sub {
   font-size: 24rpx;
   color: #8E8E93;
-}
-
-.checkin-input-textarea {
-  width: 100%;
-  min-height: 160rpx;
-  max-height: 360rpx;
-  padding: 20rpx 24rpx;
-  border-radius: 16rpx;
-  background: #FFFFFF;
-  border: 1rpx solid #E5E5EA;
-  font-size: 28rpx;
-  color: #1D1D1F;
-  line-height: 1.5;
-  box-sizing: border-box;
-  margin-bottom: 28rpx;
 }
 
 .checkin-input-placeholder {
@@ -525,11 +845,6 @@
 .celebration-btn.share-friend {
   background: #12B7A8;
   color: #FFFFFF;
-}
-
-.celebration-btn.share-timeline {
-  background: #F2F2F7;
-  color: #1D1D1F;
 }
 
 .celebration-close {

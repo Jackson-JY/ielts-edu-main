@@ -82,6 +82,21 @@ function bucketOf(v) {
   return '0-2000';
 }
 
+/**
+ * 分页拉取全量数据，避免单次 limit(1000) 静默截断
+ */
+async function fetchAll(buildQuery, maxPages = 50) {
+  const PAGE = 100;
+  let all = [];
+  for (let i = 0; i < maxPages; i++) {
+    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
+    const page = res.data || [];
+    all = all.concat(page);
+    if (page.length < PAGE) break;
+  }
+  return all;
+}
+
 exports.main = async (event) => {
   event = normalizeEvent(event);
   try {
@@ -96,15 +111,13 @@ exports.main = async (event) => {
 
     // ---------- 全体分布 ----------
     if (action === 'list') {
-      const [assessRes, vocabRes, usersRes] = await Promise.all([
-        db.collection('assessment_results').where({ type: 'ability_model' }).limit(1000).get(),
-        db.collection('vocab_test_sessions').limit(1000).get(),
-        db.collection('users').limit(1000).get(),
+      const [assessments, vocabSessionsAll, users] = await Promise.all([
+        fetchAll(() => db.collection('assessment_results').where({ type: 'ability_model' })),
+        fetchAll(() => db.collection('vocab_test_sessions')),
+        fetchAll(() => db.collection('users')),
       ]);
 
-      const assessments = assessRes.data || [];
-      const vocabSessions = (vocabRes.data || []).filter((v) => v.status === 'completed');
-      const users = usersRes.data || [];
+      const vocabSessions = vocabSessionsAll.filter((v) => v.status === 'completed');
 
       // openid → 用户映射
       const userMap = {};

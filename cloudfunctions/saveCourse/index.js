@@ -99,20 +99,26 @@ exports.main = async (event) => {
     }
 
     if (action === 'add') {
-      // 循环排课
+      // 循环排课（分批并行写入，避免串行 N 次往返）
       if (recurring && Array.isArray(recurring.weekdays) && recurring.weekdays.length) {
         const repeatGroupId = `repeat_${Date.now()}`;
         const list = generateRecurring(course, recurring);
-        for (const c of list) {
-          await db.collection('courses').add({
-            data: {
-              ...c,
-              _createTime: now,
-              scheduleMode: '循环',
-              repeatGroupId,
-              createdBy: auth.userId,
-            },
-          });
+        const BATCH = 20; // 每批 20 条，控制在云数据库并发写上限内
+        for (let i = 0; i < list.length; i += BATCH) {
+          const batch = list.slice(i, i + BATCH);
+          await Promise.all(
+            batch.map((c) =>
+              db.collection('courses').add({
+                data: {
+                  ...c,
+                  _createTime: now,
+                  scheduleMode: '循环',
+                  repeatGroupId,
+                  createdBy: auth.userId,
+                },
+              })
+            )
+          );
         }
         return { success: true, message: `已创建 ${list.length} 节课程` };
       }

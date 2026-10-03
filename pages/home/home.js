@@ -4,9 +4,9 @@ const cloudDB = require('../../utils/cloudDB');
 const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
 const { formatDate } = require('../../utils/dateUtil');
-const { calculateStreak } = require('../../utils/checkinUtil');
+const { generatePoster } = require('../../utils/poster');
 
-// 打卡成功后的随机激励文案：克制、鼓励但不夸张
+// 打卡成功后的随机激励文案
 const ENCOURAGE_MESSAGES = [
   '坚持就是胜利，你又往目标迈进了一步。',
   '今天的努力，是未来的底气。',
@@ -16,7 +16,6 @@ const ENCOURAGE_MESSAGES = [
   '相信积累的力量。',
 ];
 
-// 首页问候语下方的鼓励文案：去除 emoji，保持冷静编辑语调
 const DAILY_QUOTES = [
   '今天也要保持专注。',
   '每天进步一点点，时间会给你答案。',
@@ -32,57 +31,70 @@ const DAILY_QUOTES = [
 
 Page({
   data: {
-    userName: "学习者",
-    currentDate: "",
-    dailyQuote: "",
+    userName: '学习者',
+    currentDate: '',
+    dailyQuote: '',
     todayCourses: 0,
     submittedHomework: 0,
     totalHomework: 0,
     studyDays: 0,
     streakDays: 0,
-    // 头像仍走云存储临时 URL
     defaultAvatarUrl: '',
     userAvatar: '',
 
-    // 听说读写打卡模块：图标改用 SVG icon 组件
-    checkinModules: [
-      { id: 'listening', label: '听力', iconName: 'headphones', checkedToday: false },
-      { id: 'speaking', label: '口语', iconName: 'mic', checkedToday: false },
-      { id: 'reading', label: '阅读', iconName: 'book', checkedToday: false },
-      { id: 'writing', label: '写作', iconName: 'pen', checkedToday: false },
-    ],
+    // ===== 今日打卡任务 =====
+    dailyTask: null,           // { _id, date, items:[{id,subject,content,suggestMinutes}], totalMinutes }
+    dailyTaskLoading: false,
+    taskItems: [],             // 合并完成态后的任务项 [{id,subject,content,suggestMinutes,done,actualMinutes}]
+    completedCount: 0,
+    totalItems: 0,
 
-    // 打卡激励动效弹窗
+    // ===== 弹窗 =====
     showCelebration: false,
-    celebrationLabel: '',
     celebrationMessage: '',
-    // 当前打卡科目标签，用于分享文案
-    _shareSubjectLabel: '',
 
-    // 打卡内容输入弹窗
-    showCheckinInput: false,
-    checkinInputId: '',           // 当前待打卡的模块 id
-    checkinInputLabel: '',         // 模块名（听/说/读/写）
-    checkinInputIconName: 'book', // 模块图标 name（用于 <icon>）
-    checkinInputContent: '',      // 用户输入的打卡内容
-    checkinSubmitting: false,     // 提交中（防重复点击）
+    // 实际用时输入弹窗
+    showMinutesInput: false,
+    minutesInputItemId: '',
+    minutesInputContent: '',
+    minutesInputValue: '',
+    minutesSubmitting: false,
+
+    // ===== 海报生成 =====
+    showPosterSheet: false,    // 科目标签切换底部弹层
+    posterSubject: 'all',      // 当前选择的海报科目
+    posterGenerating: false,
+    posterCanvasId: 'posterCanvas',
+
+    // 生成结果页内预览
+    showPosterPreview: false,
+    posterTempPath: '',
+    posterSaving: false,
   },
 
-  async onLoad() {
+  async onLoad(options) {
     this.initDate();
     await this.loadAvatarUrl();
-    this.loadUserData();
 
-    // 开启分享面板中的"转发好友"和"分享到朋友圈"入口
+    // 扫码落地：from=poster 时弹轻提示
+    if (options && options.scene) {
+      try {
+        const scene = decodeURIComponent(options.scene);
+        if (scene.indexOf('from=poster') > -1) {
+          wx.showToast({ title: '欢迎一起打卡', icon: 'none' });
+        }
+      } catch (e) { /* ignore */ }
+    }
+
     wx.showShareMenu({
       withShareTicket: true,
       menus: ['shareAppMessage', 'shareTimeline'],
     });
+
+    this.loadUserData();
+    this.loadDailyTask();
   },
 
-  /**
-   * 仅加载头像临时 URL（其余图标已改用 SVG icon 组件，无需云存储）
-   */
   async loadAvatarUrl() {
     try {
       const urlMap = await cloudStorage.getTempUrls([CLOUD_IMAGES.defaultAvatar]);
@@ -95,14 +107,11 @@ Page({
   },
 
   onShow() {
-    // 首页允许未登录浏览（合规：进入后可先体验功能，不强制登录）
     this.pickDailyQuote();
     this.loadUserData();
+    this.loadDailyTask();
   },
 
-  /**
-   * 操作前确保已登录：未登录则提示前往登录，返回是否已登录
-   */
   ensureLogin() {
     if (app.globalData.isLoggedIn && app.globalData.userInfo) return true;
     wx.showModal({
@@ -117,33 +126,22 @@ Page({
     return false;
   },
 
-  // 随机挑选一条鼓励语展示在问候语下方
   pickDailyQuote() {
     const dailyQuote = DAILY_QUOTES[Math.floor(Math.random() * DAILY_QUOTES.length)];
     this.setData({ dailyQuote });
   },
 
-  // 初始化日期显示
   initDate() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
-    const currentDate = `${year}年${month}月${day}日`;
+    const currentDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
     this.setData({ currentDate });
   },
 
-  /**
-   * 加载用户数据（从云数据库）
-   * @description 从云数据库加载今日课程、作业、用户统计数据
-   */
   async loadUserData() {
     try {
       const userInfo = app.globalData.userInfo;
       if (userInfo) {
-        if (userInfo.nickName) {
-          this.setData({ userName: userInfo.nickName });
-        }
+        if (userInfo.nickName) this.setData({ userName: userInfo.nickName });
         if (userInfo.avatarUrl) {
           const userAvatar = await cloudStorage.getTempUrl(userInfo.avatarUrl);
           this.setData({ userAvatar });
@@ -153,240 +151,312 @@ Page({
       const today = formatDate(new Date());
       const userId = userInfo && userInfo.userId;
 
-      // 并行加载多个数据源
-      const [coursesRes, homeworkRes, userRes, checkinRes] = await Promise.all([
-        // 1. 今日课程：按当前学员 studentId + 今天日期查询
+      const [coursesRes, homeworkRes, userRes] = await Promise.all([
         userId
           ? cloudDB.get('courses', (q) => q.where({ studentId: userId, date: today }))
           : Promise.resolve({ success: true, data: [] }),
-        // 2. 作业进度：当前用户全部作业
         cloudDB.getMy('homework'),
-        // 3. 用户学习数据
         cloudDB.getMy('users'),
-        // 4. 打卡记录（用于计算连续打卡）
-        cloudDB.getMy('checkins'),
       ]);
 
-      // 今日课程数
       const todayCourses = coursesRes.success ? coursesRes.data.length : 0;
-
-      // 作业进度：总数 vs 已完成/已提交
       const totalHomework = homeworkRes.success ? homeworkRes.data.length : 0;
       const submittedHomework = homeworkRes.success
         ? homeworkRes.data.filter(h => h.status === 'completed' || h.status === 'submitted' || h.submitted === true).length
         : 0;
 
-      // 用户学习数据（学习天数）
-      let studyDays = 0, streakDays = 0;
+      let studyDays = 0;
       if (userRes.success && userRes.data.length > 0) {
-        const user = userRes.data[0];
-        studyDays = user.studyDays || 0;
+        studyDays = userRes.data[0].studyDays || 0;
       }
 
-      // 计算连续打卡天数 + 今日各模块打卡状态
-      let todayCheckedTypes = [];
-      if (checkinRes.success && checkinRes.data.length > 0) {
-        const dates = checkinRes.data.map(c => c.date);
-        streakDays = calculateStreak(dates);
+      this.setData({ todayCourses, submittedHomework, totalHomework, studyDays });
+    } catch (e) {
+      console.error('加载用户数据失败', e);
+    }
+  },
 
-        todayCheckedTypes = checkinRes.data
-          .filter(c => c.date === today)
-          .flatMap(c => c.types || []);
+  /**
+   * 加载今日任务 + 当日打卡完成态
+   */
+  async loadDailyTask() {
+    this.setData({ dailyTaskLoading: true });
+    try {
+      const today = formatDate(new Date());
+
+      // 1. 取今日任务
+      const taskRes = await wx.cloud.callFunction({
+        name: 'getDailyTasks',
+        data: { action: 'getByDate', date: today },
+      });
+      const task = taskRes.result && taskRes.result.task;
+      if (!task) {
+        this.setData({
+          dailyTask: null,
+          taskItems: [],
+          completedCount: 0,
+          totalItems: 0,
+          dailyTaskLoading: false,
+        });
+        return;
       }
 
-      const checkinModules = this.data.checkinModules.map(item => ({
-        ...item,
-        checkedToday: todayCheckedTypes.includes(item.id),
+      // 2. 取当日打卡记录（合并完成态）
+      let doneMap = {};
+      try {
+        const recRes = await cloudDB.getMy('checkin_records', (q) => q.where({ date: today }));
+        if (recRes.success && recRes.data.length > 0) {
+          (recRes.data[0].items || []).forEach((it) => {
+            doneMap[it.id] = { done: !!it.done, actualMinutes: it.actualMinutes || 0 };
+          });
+        }
+      } catch (e) { /* 忽略 */ }
+
+      const taskItems = (task.items || []).map((it) => ({
+        id: it.id,
+        subject: it.subject,
+        content: it.content,
+        suggestMinutes: it.suggestMinutes,
+        done: doneMap[it.id] ? doneMap[it.id].done : false,
+        actualMinutes: doneMap[it.id] ? doneMap[it.id].actualMinutes : 0,
       }));
 
+      const completedCount = taskItems.filter((it) => it.done).length;
+
       this.setData({
-        todayCourses,
-        submittedHomework,
-        totalHomework,
-        studyDays,
-        streakDays,
-        checkinModules,
+        dailyTask: task,
+        taskItems,
+        completedCount,
+        totalItems: taskItems.length,
+        dailyTaskLoading: false,
       });
     } catch (e) {
-      console.error("加载用户数据失败", e);
+      console.error('[loadDailyTask] 失败', e);
+      this.setData({ dailyTaskLoading: false });
     }
   },
 
   // 跳转到课程页
   goToCourses() {
-    wx.switchTab({ url: "/pages/courses/courses" });
+    wx.switchTab({ url: '/pages/courses/courses' });
   },
 
-  // 跳转到打卡记录页
-  goToCheckin() {
-    wx.navigateTo({ url: "/pages/checkin/checkin" });
-  },
-
-  // 跳转到学习报告页
-  goToLearningReport() {
-    wx.navigateTo({ url: "/pages/learning-report/learning-report" });
+  goToAssessment() {
+    wx.navigateTo({ url: '/pages/assessment/intro/intro' });
   },
 
   /**
-   * 点击"听/说/读/写"任一模块完成今日打卡
+   * 点击任务行：切换完成态
+   * - 未完成 → 弹实际用时输入（可选）
+   * - 已完成 → 直接取消
    */
-  onTapCheckinModule(e) {
-    const { id, label } = e.currentTarget.dataset;
-    const module = this.data.checkinModules.find(m => m.id === id);
-
-    if (!module) return;
-
-    if (module.checkedToday) {
-      wx.showToast({ title: `今天已完成${label}打卡`, icon: 'none' });
-      return;
-    }
-
-    // 打卡为写操作，需登录；未登录则提示前往登录
+  onTapTaskItem(e) {
     if (!this.ensureLogin()) return;
+    const { id } = e.currentTarget.dataset;
+    const item = this.data.taskItems.find((it) => it.id === id);
+    if (!item) return;
 
-    // 打开自定义打卡内容输入弹窗
-    this.setData({
-      showCheckinInput: true,
-      checkinInputId: id,
-      checkinInputLabel: label,
-      checkinInputIconName: module.iconName,
-      checkinInputContent: '',
-    });
+    if (item.done) {
+      // 已完成 → 取消完成
+      this.submitToggle(id, false, 0);
+    } else {
+      // 未完成 → 弹用时输入
+      this.setData({
+        showMinutesInput: true,
+        minutesInputItemId: id,
+        minutesInputContent: item.content,
+        minutesInputValue: '',
+      });
+    }
   },
 
-  // 打卡内容输入
-  onCheckinInputContent(e) {
-    this.setData({ checkinInputContent: e.detail.value });
+  onMinutesInput(e) {
+    this.setData({ minutesInputValue: e.detail.value });
   },
 
-  // 关闭打卡输入弹窗（点遮罩或取消）
-  closeCheckinInput() {
-    if (this.data.checkinSubmitting) return;
-    this.setData({ showCheckinInput: false, checkinInputContent: '' });
+  closeMinutesInput() {
+    if (this.data.minutesSubmitting) return;
+    this.setData({ showMinutesInput: false });
+  },
+
+  // 确认打卡（可填实际用时，留空则 0）
+  async onConfirmMinutes() {
+    if (this.data.minutesSubmitting) return;
+    const id = this.data.minutesInputItemId;
+    const minutes = parseInt(this.data.minutesInputValue, 10) || 0;
+    this.setData({ minutesSubmitting: true });
+    await this.submitToggle(id, true, minutes);
+    this.setData({ minutesSubmitting: false, showMinutesInput: false });
   },
 
   /**
-   * 确认打卡（内容可留空）
+   * 调用 submitCheckin 切换任务完成态
    */
-  async onConfirmCheckin() {
-    if (this.data.checkinSubmitting) return;
-
-    const id = this.data.checkinInputId;
-    const module = this.data.checkinModules.find(m => m.id === id);
-    if (!module) {
-      this.setData({ showCheckinInput: false });
-      return;
-    }
-
-    const content = (this.data.checkinInputContent || '').trim();
-    this.setData({ checkinSubmitting: true });
+  async submitToggle(itemId, done, actualMinutes) {
+    const task = this.data.dailyTask;
+    if (!task) return;
+    const today = formatDate(new Date());
 
     try {
-      const today = formatDate(new Date());
-      const res = await cloudDB.addMy('checkins', {
-        date: today,
-        types: [id],
-        content,
-        createdAt: new Date(),
+      const res = await wx.cloud.callFunction({
+        name: 'submitCheckin',
+        data: {
+          action: 'toggle',
+          date: today,
+          taskId: task._id,
+          itemId,
+          done,
+          actualMinutes,
+        },
       });
-
-      if (res.success) {
-        // 更新本地模块状态（今日已打卡）
-        const checkinModules = this.data.checkinModules.map(item =>
-          item.id === id ? { ...item, checkedToday: true } : item
-        );
-        this.setData({
-          checkinModules,
-          showCheckinInput: false,
-          checkinInputContent: '',
-          checkinSubmitting: false,
-        });
-
-        // 展示激励动效
-        this.showCelebration(module);
-
-        // 刷新连续打卡天数等统计
-        this.loadUserData();
-      } else {
-        this.setData({ checkinSubmitting: false });
-        wx.showToast({ title: '打卡失败，请重试', icon: 'none' });
+      const result = res.result;
+      if (!result || !result.success) {
+        wx.showToast({ title: '操作失败', icon: 'none' });
+        return;
       }
-    } catch (err) {
-      this.setData({ checkinSubmitting: false });
-      console.error('[首页打卡] 失败', err);
-      wx.showToast({ title: '打卡失败，请重试', icon: 'none' });
+
+      // 乐观更新本地
+      const taskItems = this.data.taskItems.map((it) =>
+        it.id === itemId ? { ...it, done, actualMinutes: done ? actualMinutes : 0 } : it
+      );
+      const completedCount = taskItems.filter((it) => it.done).length;
+      const allDone = completedCount === this.data.totalItems && this.data.totalItems > 0;
+
+      this.setData({ taskItems, completedCount, streakDays: result.streakDays || this.data.streakDays });
+
+      // 全部完成 → 庆祝弹窗
+      if (allDone) {
+        this.showCelebrationAllDone();
+      } else if (done) {
+        // 单项完成轻提示
+        wx.vibrateShort && wx.vibrateShort({ type: 'light' });
+      }
+    } catch (e) {
+      console.error('[submitToggle] 失败', e);
+      wx.showToast({ title: '操作失败', icon: 'none' });
     }
   },
 
   /**
-   * 显示打卡成功弹窗
-   * @param {Object} module - 当前打卡的模块 { id, label }
+   * 全部完成庆祝弹窗（底部两个出口：转发 + 生成海报）
    */
-  showCelebration(module) {
+  showCelebrationAllDone() {
     const message = ENCOURAGE_MESSAGES[Math.floor(Math.random() * ENCOURAGE_MESSAGES.length)];
-
     this.setData({
       showCelebration: true,
-      celebrationLabel: module.label,
       celebrationMessage: message,
-      _shareSubjectLabel: module.label,
     });
-
-    // 轻震动反馈
     wx.vibrateShort && wx.vibrateShort({ type: 'medium' });
   },
 
-  // 关闭激励弹窗
   hideCelebration() {
     this.setData({ showCelebration: false });
   },
 
-  /**
-   * 一键转发给好友
-   */
-  onTapShareToFriend() {
-    // 交由 button[open-type="share"] 触发系统转发面板
-  },
-
-  /**
-   * 分享到朋友圈引导
-   */
-  onTapShareToTimeline() {
-    wx.showModal({
-      title: '分享到朋友圈',
-      content: '点击右上角「···」按钮，选择「分享到朋友圈」即可让好友看到你的学习打卡。',
-      showCancel: false,
-      confirmText: '我知道了',
-    });
-  },
-
-  /**
-   * 转发给好友的分享内容
-   */
+  // ===== 分享 =====
   onShareAppMessage() {
-    const subject = this.data._shareSubjectLabel;
-    if (subject) {
-      return {
-        title: `我刚完成了${subject}打卡，一起来雅思学习吧`,
-        path: '/pages/home/home',
-        imageUrl: this.data.defaultAvatarUrl || '',
-      };
-    }
+    const n = this.data.totalItems;
     return {
-      title: "雅思学习 - 一起来学习吧",
-      path: "/pages/home/home",
+      title: `我完成了今天全部 ${n} 项学习任务，一起来 Deer Edu 打卡`,
+      path: '/pages/home/home',
+      imageUrl: this.data.defaultAvatarUrl || '',
     };
   },
 
-  /**
-   * 转发到朋友圈的分享内容
-   */
   onShareTimeline() {
-    const subject = this.data._shareSubjectLabel;
+    const n = this.data.totalItems;
     return {
-      title: subject ? `我已完成${subject}打卡，雅思学习每天进步一点点` : '雅思学习 - 每天进步一点点',
+      title: `我完成了今天全部 ${n} 项学习任务，一起来 Deer Edu 打卡`,
       query: '',
       imageUrl: this.data.defaultAvatarUrl || '',
     };
+  },
+
+  // ===== 海报生成 =====
+  // 打开科目标签切换弹层
+  openPosterSheet() {
+    // 默认「全科」，可切换为当天包含的科目
+    this.setData({ showPosterSheet: true, posterSubject: 'all' });
+  },
+
+  closePosterSheet() {
+    this.setData({ showPosterSheet: false });
+  },
+
+  onSelectPosterSubject(e) {
+    this.setData({ posterSubject: e.currentTarget.dataset.subject });
+  },
+
+  // 生成海报
+  async generatePoster() {
+    if (this.data.posterGenerating) return;
+    this.setData({ posterGenerating: true });
+    wx.showLoading({ title: '生成中…' });
+
+    try {
+      const res = await generatePoster({
+        subject: this.data.posterSubject,
+        streakDays: this.data.streakDays,
+        date: formatDate(new Date()),
+        canvasId: this.data.posterCanvasId,
+        componentContext: null,
+      });
+
+      wx.hideLoading();
+      this.setData({
+        showPosterSheet: false,
+        posterGenerating: false,
+        posterTempPath: res.tempFilePath,
+        showPosterPreview: true,
+      });
+    } catch (e) {
+      console.error('[generatePoster] 失败', e);
+      wx.hideLoading();
+      this.setData({ posterGenerating: false });
+      const msg = (e && (e.errMsg || e.message)) || '生成失败，请重试';
+      wx.showToast({ title: String(msg).slice(0, 20), icon: 'none', duration: 3000 });
+    }
+  },
+
+  closePosterPreview() {
+    this.setData({ showPosterPreview: false });
+  },
+
+  // 保存海报到相册（页内预览弹层中触发，不跳系统图片查看器）
+  savePosterToAlbum() {
+    const filePath = this.data.posterTempPath;
+    if (!filePath || this.data.posterSaving) return;
+    this.setData({ posterSaving: true });
+
+    wx.saveImageToPhotosAlbum({
+      filePath,
+      success: async () => {
+        this.setData({ posterSaving: false });
+        wx.showToast({ title: '已保存到相册', icon: 'success' });
+        // 回写 posterSavedAt
+        try {
+          await wx.cloud.callFunction({
+            name: 'submitCheckin',
+            data: { action: 'updatePosterSaved', date: formatDate(new Date()) },
+          });
+        } catch (e) { /* ignore */ }
+      },
+      fail: (err) => {
+        this.setData({ posterSaving: false });
+        const msg = (err && err.errMsg) || '';
+        if (msg.indexOf('auth deny') > -1 || msg.indexOf('authorize') > -1) {
+          wx.showModal({
+            title: '需要相册权限',
+            content: '请在设置中开启相册权限后重试',
+            confirmText: '去设置',
+            success: (r) => {
+              if (r.confirm) wx.openSetting();
+            },
+          });
+        } else if (msg.indexOf('cancel') === -1) {
+          wx.showToast({ title: '保存失败', icon: 'none' });
+        }
+      },
+    });
   },
 });

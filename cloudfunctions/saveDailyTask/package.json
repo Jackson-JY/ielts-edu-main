@@ -1,0 +1,9 @@
+{
+  "name": "saveDailyTask",
+  "version": "1.0.0",
+  "description": "每日打卡任务发布（管理员）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

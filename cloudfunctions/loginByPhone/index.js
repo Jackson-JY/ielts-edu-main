@@ -16,6 +16,47 @@ cloud.init({
 const db = cloud.database();
 const _ = db.command;
 
+// 按 _openid 隔离存储的用户数据集合：换绑 openid 时需把旧 openid 的历史数据迁移到新 openid
+const USER_DATA_COLLECTIONS = [
+  'homework',
+  'checkins',
+  'exam_scores',
+  'speaking_answers',
+  'assessment_results',
+  'vocab_test_sessions',
+  'pomodoro_sessions',
+];
+
+/**
+ * 把旧 openid 名下的历史数据迁移到新 openid
+ * 场景：手机号命中老用户但 openid 已变更（如换了微信号）。
+ * 不迁移则该用户所有按 _openid 隔离的历史数据会"失联"。
+ * 服务端 where().update() 为批量更新，循环直到无剩余记录，防止单次更新条数上限导致遗漏。
+ */
+async function migrateUserData(oldOpenid, newOpenid) {
+  const migrated = {};
+  for (const col of USER_DATA_COLLECTIONS) {
+    let total = 0;
+    try {
+      for (let i = 0; i < 50; i++) { // 安全上限，避免异常数据导致死循环
+        const res = await db.collection(col)
+          .where({ _openid: oldOpenid })
+          .update({ data: { _openid: newOpenid } });
+        const updated = (res.stats && res.stats.updated) || 0;
+        total += updated;
+        if (updated === 0) break;
+      }
+    } catch (e) {
+      console.error(`[loginByPhone] 迁移 ${col} 失败`, e);
+      migrated[col] = -1;
+      continue;
+    }
+    migrated[col] = total;
+  }
+  console.log('[loginByPhone] 历史数据迁移完成', JSON.stringify(migrated));
+  return migrated;
+}
+
 exports.main = async (event) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
@@ -64,11 +105,25 @@ exports.main = async (event) => {
     return { success: false, error: 'BLOCKED', message: '该账号已被禁用' };
   }
 
-  // ---------- 第四步：老用户 → 更新登录统计并返回 ----------
+  // ---------- 第四步：老用户 → 换绑 openid、迁移历史数据、更新登录统计并返回 ----------
   if (user) {
+    // 换绑场景：手机号命中老用户但 openid 已变更（或历史记录缺失 _openid）。
+    // 不回写 openid 的话，该用户此后所有按 _openid 隔离的读写都会指向新 openid，
+    // 而历史数据仍挂在旧 openid 下，造成数据"失联"。
+    const needsRebind = !user._openid || user._openid !== openid;
+    if (needsRebind && user._openid) {
+      try {
+        await migrateUserData(user._openid, openid);
+      } catch (e) {
+        // 迁移失败不阻断登录，仅记录日志，下次登录会重试
+        console.error('[loginByPhone] 历史数据迁移失败', e);
+      }
+    }
+
     try {
       await db.collection('users').doc(user._id).update({
         data: {
+          ...(needsRebind ? { _openid: openid } : {}),
           loginCount: _.inc(1),
           loginAttempts: _.inc(1),
           lastLoginAt: new Date(),
@@ -104,6 +159,9 @@ exports.main = async (event) => {
     const now = new Date();
     const addRes = await db.collection('users').add({
       data: {
+        // 服务端创建的记录不会自动注入 _openid，必须显式写入：
+        // 黑名单校验（getOpenId 按 _openid 查 users）和客户端隔离查询都依赖该字段
+        _openid: openid,
         nickName: '微信用户', // 默认昵称，登录后可在"我的"页修改
         avatarUrl: '',        // 默认头像由前端兜底展示
         phone: phoneNumber,

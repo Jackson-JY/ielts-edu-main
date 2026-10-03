@@ -1,0 +1,9 @@
+{
+  "name": "getDailyTasks",
+  "version": "1.0.0",
+  "description": "获取每日打卡任务（学生端+管理端）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

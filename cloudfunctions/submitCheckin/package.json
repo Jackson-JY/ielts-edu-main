@@ -1,0 +1,9 @@
+{
+  "name": "submitCheckin",
+  "version": "1.0.0",
+  "description": "提交/切换每日打卡任务完成状态",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

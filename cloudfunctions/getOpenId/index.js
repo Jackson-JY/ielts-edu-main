@@ -20,6 +20,7 @@ exports.main = async (event, context) => {
   const countAttempt = !!(event && event.countAttempt);
 
   let blocked = false;
+  let dbError = false; // 数据库异常时无法确认黑名单状态
   try {
     const res = await db.collection('users')
       .where({ _openid: openid })
@@ -56,13 +57,17 @@ exports.main = async (event, context) => {
       }
     }
   } catch (e) {
-    console.error('[getOpenId] 查询用户状态失败', e);
+    // fail-closed：查询失败时按拦截处理，防止被封禁用户借数据库故障绕过黑名单校验
+    // verifyFailed 置位供日志/排查区分「真拉黑」与「校验失败」
+    console.error('[getOpenId] 查询用户状态失败，按拦截处理（fail-closed）', e);
+    dbError = true;
   }
 
   return {
     openid,
     appid: wxContext.APPID,
     unionid: wxContext.UNIONID,
-    blocked,
+    blocked: blocked || dbError,
+    verifyFailed: dbError,
   };
 };

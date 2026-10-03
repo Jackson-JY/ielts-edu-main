@@ -53,6 +53,8 @@ const add = async (collName, data) => {
  * @param {string} collName - 集合名称
  * @param {Object|Function} query - 查询条件或回调
  * @returns {Promise<Array>} 文档数组
+ * @note 微信小程序云数据库单次 get 默认仅返回 20 条，静默截断会导致列表缺数据。
+ *       这里对无参/object 形式 query 设 limit(100) 兜底；function 形式由调用方自行设 limit。
  */
 const get = async (collName, query) => {
   try {
@@ -67,8 +69,8 @@ const get = async (collName, query) => {
       dbQuery = dbQuery.where(query);
     }
 
-    // 只有在未通过 query 函数自定义查询时才使用默认排序
-    const res = await dbQuery.orderBy('_createTime', 'desc').get();
+    // 只有在未通过 query 函数自定义查询时才使用默认排序和兜底 limit
+    const res = await dbQuery.orderBy('_createTime', 'desc').limit(100).get();
     return { success: true, data: res.data };
   } catch (e) {
     console.error(`[cloudDB.get ${collName}] 失败`, e);

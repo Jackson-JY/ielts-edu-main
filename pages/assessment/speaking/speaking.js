@@ -292,22 +292,81 @@ Page({
           question,
           audioFileID: fileID,
           duration: Math.round(duration / 1000),
+          asrStatus: 'processing',
+          transcribedText: '',
           createdAt: new Date(),
         };
 
         const answers = [...this.data.productionAnswers];
         answers[taskIndex] = answer;
         this.setData({ productionAnswers: answers });
-        this.saveToSpeakingAnswers(answer);
-      }
 
-      wx.hideLoading();
-      wx.showToast({ title: '录音已保存', icon: 'success' });
+        const recordId = await this.saveToSpeakingAnswers(answer);
+        // 同步等待 ASR 结果并回填到页面（录音已先存云存储，转写失败不阻塞答题流程）
+        if (recordId) {
+          await this.runASR(answer, recordId);
+        } else {
+          // 写库失败时 ASR 无法回写，关闭 loading 并给出提示（录音本身已在云存储）
+          wx.hideLoading();
+          wx.showToast({ title: '录音已保存，转写未启动', icon: 'none', duration: 2500 });
+        }
+      }
     } catch (e) {
       wx.hideLoading();
       wx.showToast({ title: '保存录音失败', icon: 'none' });
     } finally {
       this.setData({ isProcessing: false });
+    }
+  },
+
+  // 产出题：同步调用 ASR 云函数，把转写文字回填到当前答案
+  async runASR(answer, recordId) {
+    wx.showLoading({ title: '语音转文字中...' });
+    const taskIndex = answer.questionIndex;
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'asrSpeechToText',
+        data: {
+          fileID: answer.audioFileID,
+          duration: answer.duration,
+          recordId,
+          answerId: answer.id,
+          part: answer.part,
+          questionIndex: answer.questionIndex,
+        },
+        config: { timeout: 60000 },
+      });
+
+      const result = res.result || {};
+      const answers = [...this.data.productionAnswers];
+      if (result.success) {
+        answers[taskIndex] = {
+          ...answers[taskIndex],
+          transcribedText: result.text || '',
+          asrStatus: 'completed',
+        };
+        this.setData({ productionAnswers: answers });
+        wx.showToast({ title: '转写完成', icon: 'success' });
+      } else {
+        answers[taskIndex] = {
+          ...answers[taskIndex],
+          asrStatus: 'failed',
+          asrError: result.error || '识别失败',
+        };
+        this.setData({ productionAnswers: answers });
+        wx.showToast({ title: '转文字失败，录音已保存', icon: 'none', duration: 2500 });
+      }
+    } catch (e) {
+      const answers = [...this.data.productionAnswers];
+      answers[taskIndex] = {
+        ...answers[taskIndex],
+        asrStatus: 'failed',
+        asrError: (e && e.errMsg) || '云函数调用失败',
+      };
+      this.setData({ productionAnswers: answers });
+      wx.showToast({ title: '转文字失败，录音已保存', icon: 'none', duration: 2500 });
+    } finally {
+      wx.hideLoading();
     }
   },
 
@@ -365,12 +424,12 @@ Page({
     }
   },
 
-  // 保存到 speaking_answers 集合（沿用 assessmentId 机制），并触发 ASR
+  // 保存到 speaking_answers 集合（沿用 assessmentId 机制），返回记录 id 供 ASR 回写
   async saveToSpeakingAnswers(answer) {
     try {
       const app = getApp();
       const openId = app.globalData.openId;
-      if (!openId) return;
+      if (!openId) return null;
 
       const assessmentId = 'default_assessment';
       const existing = await cloudDBQuery(assessmentId, openId);
@@ -401,22 +460,10 @@ Page({
         recordId = res.success ? res.id : null;
       }
 
-      // 产出题触发后台 ASR 转写；跟读题已有 SOE 评分，不触发 ASR
-      if (recordId && answer.part === 'production') {
-        wx.cloud.callFunction({
-          name: 'asrSpeechToText',
-          data: {
-            fileID: answer.audioFileID,
-            duration: answer.duration,
-            recordId,
-            answerId: `${answer.part}_${answer.questionIndex}`,
-            part: answer.part,
-            questionIndex: answer.questionIndex,
-          },
-        }).catch(() => {});
-      }
+      return recordId;
     } catch (e) {
-      // 保存失败不影响主流程
+      console.error('保存 speaking_answers 失败', e);
+      return null;
     }
   },
 

@@ -126,7 +126,7 @@ Page({
       } else {
         // 普通用户：使用原有方式查询自己的作业
         const res = await cloudDB.getMy('homework', (q) =>
-          q.orderBy('_updateTime', 'desc')
+          q.orderBy('_updateTime', 'desc').limit(200)
         );
 
         if (res.success) {
@@ -158,7 +158,7 @@ Page({
   async loadTasks() {
     try {
       const res = await cloudDB.getMy('homework', (q) =>
-        q.where({ recordType: 'task' }).orderBy('_updateTime', 'desc')
+        q.where({ recordType: 'task' }).orderBy('_updateTime', 'desc').limit(200)
       );
       const tasks = res.success ? res.data.map(t => this.formatTaskItem(t)) : [];
       this.setData({ tasks });

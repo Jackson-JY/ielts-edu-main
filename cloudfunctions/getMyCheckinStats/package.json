@@ -1,0 +1,9 @@
+{
+  "name": "getMyCheckinStats",
+  "version": "1.0.0",
+  "description": "获取我的打卡统计（连续天数/累计天数/近371天热力图数据）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}

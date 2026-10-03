@@ -1,0 +1,9 @@
+{
+  "name": "getCheckinQrcode",
+  "version": "1.0.0",
+  "description": "生成打卡海报用的小程序码并缓存到云存储",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}
