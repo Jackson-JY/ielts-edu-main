@@ -1,0 +1,9 @@
+{
+  "name": "adminManage",
+  "version": "1.0.0",
+  "description": "管理员账号管理：列表/新增/重置密码/自行改密",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.0"
+  }
+}
