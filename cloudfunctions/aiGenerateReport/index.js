@@ -373,6 +373,19 @@ exports.main = async (event) => {
 
     // 仅查询缓存：未命中时不触发 AI
     if (cacheOnly) {
+      // 有 part2 就返回（即使指纹不匹配也返回旧报告，由 stale 标记提示数据可能过期）
+      // 避免已保存的报告因源数据 _updateTime 变化而「消失」
+      if (cacheDoc && cacheDoc.part2) {
+        return {
+          success: true,
+          cached: true,
+          stale: cacheDoc.fingerprint !== fingerprint,
+          generatedAt: cacheDoc.updatedAt || cacheDoc._createTime || null,
+          part1: cacheDoc.part1,
+          part2: cacheDoc.part2,
+          model: cacheDoc.model,
+        };
+      }
       return { success: true, cached: false };
     }
 
