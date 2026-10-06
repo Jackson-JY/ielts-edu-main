@@ -112,7 +112,7 @@
         </view>
         <view class="task-row-body">
           <view class="task-row-top">
-            <view class="task-subject-dot" style="background: {{item.subject === 'listening' ? '#5AC8FA' : item.subject === 'speaking' ? '#FF9500' : item.subject === 'reading' ? '#34C759' : '#AF52DE'}};"></view>
+            <view class="task-subject-dot" style="background: {{item.subjectColor || '#8E8E93'}};"></view>
             <text class="task-content">{{item.content}}</text>
           </view>
           <view class="task-row-bottom">
@@ -173,35 +173,13 @@
         <button class="celebration-btn share-friend" open-type="share">
           <text>一键转发到群聊</text>
         </button>
-        <view class="celebration-btn poster-btn" bindtap="openPosterSheet">
-          <text>生成打卡海报</text>
+        <view class="celebration-btn poster-btn {{posterGenerating ? 'disabled' : ''}}" bindtap="generatePoster">
+          <text>{{posterGenerating ? '生成中…' : '生成打卡海报'}}</text>
         </view>
       </view>
 
       <view class="celebration-close" bindtap="hideCelebration">
         <text>知道了</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 海报科目标签切换弹层 -->
-  <view class="poster-sheet-overlay" wx:if="{{showPosterSheet}}">
-    <view class="poster-sheet-mask" bindtap="closePosterSheet"></view>
-    <view class="poster-sheet">
-      <text class="poster-sheet-title">选择海报主题</text>
-      <view class="poster-subject-row">
-        <view class="poster-subject-chip {{posterSubject === 'all' ? 'active' : ''}}"
-              data-subject="all" bindtap="onSelectPosterSubject">
-          <text>全科</text>
-        </view>
-        <view class="poster-subject-chip {{posterSubject === item.subject ? 'active' : ''}}"
-              wx:for="{{taskItems}}" wx:key="id"
-              data-subject="{{item.subject}}" bindtap="onSelectPosterSubject">
-          <text>{{item.subject === 'listening' ? '听力' : item.subject === 'speaking' ? '口语' : item.subject === 'reading' ? '阅读' : '写作'}}</text>
-        </view>
-      </view>
-      <view class="poster-generate-btn {{posterGenerating ? 'disabled' : ''}}" bindtap="generatePoster">
-        <text>{{posterGenerating ? '生成中…' : '生成海报'}}</text>
       </view>
     </view>
   </view>

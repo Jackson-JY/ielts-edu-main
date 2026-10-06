@@ -4,7 +4,16 @@ const cloudDB = require('../../utils/cloudDB');
 const cloudStorage = require('../../utils/cloudStorage');
 const { CLOUD_IMAGES } = require('../../config/images');
 const { formatDate } = require('../../utils/dateUtil');
-const { generatePoster } = require('../../utils/poster');
+const { generatePoster, preload: preloadPoster } = require('../../utils/poster');
+
+// 科目颜色映射（兼容历史英文 key 与中文/自定义标签）
+const SUBJECT_COLOR = {
+  listening: '#5AC8FA', 听力: '#5AC8FA',
+  reading: '#34C759', 阅读: '#34C759',
+  writing: '#AF52DE', 写作: '#AF52DE',
+  speaking: '#FF9500', 口语: '#FF9500',
+};
+const getSubjectColor = (s) => SUBJECT_COLOR[s] || '#8E8E93';
 
 // 打卡成功后的随机激励文案
 const ENCOURAGE_MESSAGES = [
@@ -40,6 +49,8 @@ Page({
     studyDays: 0,
     streakDays: 0,
     defaultAvatarUrl: '',
+    // 打卡分享卡片缩略图临时链接
+    shareImageUrl: '',
     userAvatar: '',
 
     // ===== 今日打卡任务 =====
@@ -48,6 +59,7 @@ Page({
     taskItems: [],             // 合并完成态后的任务项 [{id,subject,content,suggestMinutes,done,actualMinutes}]
     completedCount: 0,
     totalItems: 0,
+    allDone: false,
 
     // ===== 弹窗 =====
     showCelebration: false,
@@ -61,8 +73,6 @@ Page({
     minutesSubmitting: false,
 
     // ===== 海报生成 =====
-    showPosterSheet: false,    // 科目标签切换底部弹层
-    posterSubject: 'all',      // 当前选择的海报科目
     posterGenerating: false,
     posterCanvasId: 'posterCanvas',
 
@@ -75,6 +85,7 @@ Page({
   async onLoad(options) {
     this.initDate();
     await this.loadAvatarUrl();
+    this.loadShareImageUrl();
 
     // 扫码落地：from=poster 时弹轻提示
     if (options && options.scene) {
@@ -106,10 +117,23 @@ Page({
     }
   },
 
+  // 预取分享卡片缩略图（临时链接，带本地缓存；失败时分享兜底直接用 fileID）
+  async loadShareImageUrl() {
+    try {
+      const url = await cloudStorage.getTempUrl(CLOUD_IMAGES.checkinShare);
+      if (url) this.setData({ shareImageUrl: url });
+    } catch (e) { /* 分享时用 fileID 兜底 */ }
+  },
+
   onShow() {
     this.pickDailyQuote();
     this.loadUserData();
     this.loadDailyTask();
+  },
+
+  // 首屏渲染完成后静默预热海报资源（随机背景 + 小程序码），点击生成时秒出图
+  onReady() {
+    preloadPoster({ canvasId: 'posterCanvas', componentContext: null });
   },
 
   ensureLogin() {
@@ -196,6 +220,7 @@ Page({
           taskItems: [],
           completedCount: 0,
           totalItems: 0,
+          allDone: false,
           dailyTaskLoading: false,
         });
         return;
@@ -215,6 +240,7 @@ Page({
       const taskItems = (task.items || []).map((it) => ({
         id: it.id,
         subject: it.subject,
+        subjectColor: getSubjectColor(it.subject),
         content: it.content,
         suggestMinutes: it.suggestMinutes,
         done: doneMap[it.id] ? doneMap[it.id].done : false,
@@ -228,6 +254,7 @@ Page({
         taskItems,
         completedCount,
         totalItems: taskItems.length,
+        allDone: completedCount === taskItems.length && taskItems.length > 0,
         dailyTaskLoading: false,
       });
     } catch (e) {
@@ -322,7 +349,7 @@ Page({
       const completedCount = taskItems.filter((it) => it.done).length;
       const allDone = completedCount === this.data.totalItems && this.data.totalItems > 0;
 
-      this.setData({ taskItems, completedCount, streakDays: result.streakDays || this.data.streakDays });
+      this.setData({ taskItems, completedCount, allDone, streakDays: result.streakDays || this.data.streakDays });
 
       // 全部完成 → 庆祝弹窗
       if (allDone) {
@@ -355,56 +382,50 @@ Page({
 
   // ===== 分享 =====
   onShareAppMessage() {
-    const n = this.data.totalItems;
+    const { totalItems, allDone, shareImageUrl } = this.data;
+    const title = allDone && totalItems > 0
+      ? `我完成了今天全部 ${totalItems} 项学习任务，一起来 Deer Edu 打卡`
+      : '听说读写每日打卡，一起来 Deer Edu 坚持学习';
     return {
-      title: `我完成了今天全部 ${n} 项学习任务，一起来 Deer Edu 打卡`,
+      title,
       path: '/pages/home/home',
-      imageUrl: this.data.defaultAvatarUrl || '',
+      imageUrl: shareImageUrl || CLOUD_IMAGES.checkinShare,
     };
   },
 
   onShareTimeline() {
-    const n = this.data.totalItems;
+    const { totalItems, allDone, shareImageUrl } = this.data;
+    const title = allDone && totalItems > 0
+      ? `我完成了今天全部 ${totalItems} 项学习任务，一起来 Deer Edu 打卡`
+      : '听说读写每日打卡，一起来 Deer Edu 坚持学习';
     return {
-      title: `我完成了今天全部 ${n} 项学习任务，一起来 Deer Edu 打卡`,
+      title,
       query: '',
-      imageUrl: this.data.defaultAvatarUrl || '',
+      imageUrl: shareImageUrl || CLOUD_IMAGES.checkinShare,
     };
   },
 
   // ===== 海报生成 =====
-  // 打开科目标签切换弹层
-  openPosterSheet() {
-    // 默认「全科」，可切换为当天包含的科目
-    this.setData({ showPosterSheet: true, posterSubject: 'all' });
-  },
-
-  closePosterSheet() {
-    this.setData({ showPosterSheet: false });
-  },
-
-  onSelectPosterSubject(e) {
-    this.setData({ posterSubject: e.currentTarget.dataset.subject });
-  },
-
-  // 生成海报
+  // 生成海报（随机云端背景 + 随机励志语，无需选择科目）
   async generatePoster() {
     if (this.data.posterGenerating) return;
     this.setData({ posterGenerating: true });
     wx.showLoading({ title: '生成中…' });
 
     try {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
       const res = await generatePoster({
-        subject: this.data.posterSubject,
         streakDays: this.data.streakDays,
-        date: formatDate(new Date()),
+        date: formatDate(now),
+        time,
         canvasId: this.data.posterCanvasId,
         componentContext: null,
       });
 
       wx.hideLoading();
       this.setData({
-        showPosterSheet: false,
         posterGenerating: false,
         posterTempPath: res.tempFilePath,
         showPosterPreview: true,
