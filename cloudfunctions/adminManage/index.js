@@ -192,6 +192,26 @@ exports.main = async (event) => {
       };
     }
 
+    // ---------- 删除管理员（仅合并脏数据时使用） ----------
+    if (action === 'delete') {
+      const { userId } = event || {};
+      if (!userId) return { success: false, error: '缺少目标管理员' };
+
+      const targetRes = await db.collection('users').doc(userId).get();
+      const target = targetRes.data;
+      if (!target || target.isAdmin !== true) {
+        return { success: false, error: '目标账号不是管理员' };
+      }
+      if (target._id === auth.userId) {
+        return { success: false, error: '不能删除自己' };
+      }
+
+      await db.collection('users').doc(userId).remove();
+      await clearSessions(userId, null);
+      await logAudit(auth, 'admin.delete', `删除管理员：${target.nickName || '管理员'}（${target.adminUsername || userId}）`);
+      return { success: true, message: `已删除「${target.nickName || '管理员'}」` };
+    }
+
     // ---------- 自行修改密码 ----------
     if (action === 'changePassword') {
       const { oldPassword, newPassword } = event || {};
