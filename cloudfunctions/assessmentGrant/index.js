@@ -98,7 +98,7 @@ exports.main = async (event) => {
     if (action === 'list') {
       const [grantsRes, usersRes] = await Promise.all([
         db.collection(GRANTS).orderBy('updatedAt', 'desc').limit(200).get(),
-        db.collection('users').where({ isAdmin: _.neq(true) }).limit(500).get(),
+        db.collection('users').limit(500).get(),
       ]);
       const students = (usersRes.data || []).map((u) => ({
         userId: u._id,
