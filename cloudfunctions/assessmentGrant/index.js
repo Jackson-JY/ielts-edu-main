@@ -63,6 +63,19 @@ async function logAudit(auth, action, detail) {
   }
 }
 
+/** 分页拉全量（每页 100，最多 5000 条） */
+async function fetchAll(buildQuery, maxPages = 50) {
+  const PAGE = 100;
+  let all = [];
+  for (let i = 0; i < maxPages; i++) {
+    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
+    const page = res.data || [];
+    all = all.concat(page);
+    if (page.length < PAGE) break;
+  }
+  return all;
+}
+
 /** 查询用户（ userId 为 users._id ） */
 async function getUser(userId) {
   try {
@@ -146,8 +159,8 @@ exports.main = async (event) => {
         ress.forEach((r) => (r.data || []).forEach((u) => { targetMap[u._id] = u; }));
       }
       if (clsIds.length > 0) {
-        const ress = await Promise.all(clsIds.map((cid) => db.collection('users').where({ classIds: cid }).limit(1000).get()));
-        ress.forEach((r) => (r.data || []).forEach((u) => { targetMap[u._id] = u; }));
+        const lists = await Promise.all(clsIds.map((cid) => fetchAll(() => db.collection('users').where({ classIds: cid }))));
+        lists.forEach((list) => list.forEach((u) => { targetMap[u._id] = u; }));
       }
       const targets = Object.values(targetMap);
       if (targets.length === 0) return { success: false, error: '所选班级/学生下没有学生' };
