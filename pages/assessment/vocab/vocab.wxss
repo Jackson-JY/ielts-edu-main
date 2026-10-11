@@ -217,6 +217,29 @@ page {
   flex-shrink: 0;
 }
 
+/* 「我不认识这个词」：弱化样式，与答题选项区分 */
+.option-dontknow {
+  border-style: dashed;
+  border-color: #D1D1D6;
+  background-color: #FAFAFC;
+}
+
+.option-dontknow .option-text {
+  color: #6E6E73;
+}
+
+.option-badge-dontknow {
+  background-color: #E5E5EA;
+  color: #8E8E93;
+}
+
+/* 选中态：中性灰蓝，不用红/绿，避免对错暗示 */
+.option-dontknow-active {
+  background-color: #ECECF1;
+  border-color: #8E8E93;
+  border-style: solid;
+}
+
 /* ==================== 结果页 ==================== */
 .result-scroll {
   flex: 1;

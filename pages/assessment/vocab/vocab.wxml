@@ -54,6 +54,14 @@
           <icon wx:if="{{showFeedback && index === correctIdx}}" name="check" color="#12B7A8" size="32rpx" class="option-mark"/>
           <icon wx:if="{{showFeedback && index === selectedIdx && !feedbackCorrect}}" name="close" color="#FF3B30" size="32rpx" class="option-mark"/>
         </view>
+
+        <!-- 不认识：不猜测、不显示答错打击 -->
+        <view
+          class="option-item option-dontknow {{showFeedback && dontKnowSelected ? 'option-dontknow-active' : ''}}"
+          bindtap="selectDontKnow">
+          <view class="option-badge option-badge-dontknow">?</view>
+          <text class="option-text">我不认识这个词</text>
+        </view>
       </view>
     </view>
   </block>

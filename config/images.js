@@ -32,6 +32,8 @@ const CLOUD_IMAGES = {
   iconSupport: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/icon-support.png',
   iconTarget: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/icon-target.png',
   iconUser: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/images/icon-user.png',
+  // 打卡分享卡片缩略图（5:4，转发/朋友圈）
+  checkinShare: 'cloud://cloud1-d7g66xvli7bb6bcc6.636c-cloud1-d7g66xvli7bb6bcc6-1428001663/poster/share/checkin-share.png',
 };
 
 // 本地小图标（保留在小程序包内）

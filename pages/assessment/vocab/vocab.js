@@ -2,6 +2,9 @@
 // 词汇量 CAT 自适应测评（基于 IRT 3PL + EAP + 最大信息量选题）
 // 算法与题库在云函数 vocabCatTest 中，前端只负责答题交互与结果展示
 const TIME_LIMIT = 15; // 单题限时（秒），与云函数 CAT_CONFIG.TIME_LIMIT_MS 保持一致
+// 「不认识」选项的作答值：区别于超时 -1，云函数判分逻辑为 selectedOption === lastCorrectIndex
+// 才判对，-2 必然判错（IRT 按错误处理），无需改动云端
+const DONT_KNOW = -2;
 const { VOCAB_CEFR_DESCS } = require('../../../utils/assessmentData');
 const assessmentStore = require('../../../utils/assessmentStore');
 const assessmentAccess = require('../../../utils/assessmentAccess');
@@ -27,6 +30,7 @@ Page({
     selectedIdx: -1,
     showFeedback: false,
     feedbackCorrect: false,
+    dontKnowSelected: false,
     correctIdx: -1,
     submitting: false,
     timeLeft: TIME_LIMIT,
@@ -92,6 +96,7 @@ Page({
       selectedIdx: -1,
       showFeedback: false,
       feedbackCorrect: false,
+      dontKnowSelected: false,
       correctIdx: -1,
       submitting: false,
       timeLeft: TIME_LIMIT,
@@ -127,6 +132,12 @@ Page({
     const idx = e.currentTarget.dataset.index;
     if (this.data.submitting || this.data.showFeedback) return;
     this.handleSubmit(idx);
+  },
+
+  // 「我不认识这个词」：以 -2 提交，判错但不显示答错打击反馈
+  selectDontKnow() {
+    if (this.data.submitting || this.data.showFeedback) return;
+    this.handleSubmit(DONT_KNOW);
   },
 
   async handleSubmit(selectedIdx) {
@@ -169,11 +180,14 @@ Page({
     }
 
     // 对错反馈高亮（作答后才下发正确选项）
+    // 「不认识」：不显示正确项高亮、不显示答错红叉，仅标记已选，弱化打击感
+    const isDontKnow = selectedIdx === DONT_KNOW;
     this.setData({
       submitting: false,
       showFeedback: true,
       feedbackCorrect: res.isCorrect,
-      correctIdx: typeof res.correctIndex === 'number' ? res.correctIndex : -1,
+      dontKnowSelected: isDontKnow,
+      correctIdx: !isDontKnow && typeof res.correctIndex === 'number' ? res.correctIndex : -1,
       answeredCount: res.itemsAnswered,
       progressPercent: this.calcProgress(res.itemsAnswered),
     });

@@ -452,94 +452,9 @@
   color: #12B7A8;
 }
 
-/* ==================== 海报科目标签弹层 ==================== */
-.poster-sheet-overlay {
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 999;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.poster-sheet-mask {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-}
-
-.poster-sheet {
-  position: relative;
-  width: 100%;
-  background: #FFFFFF;
-  border-radius: 32rpx 32rpx 0 0;
-  padding: 40rpx 32rpx 60rpx;
-  box-sizing: border-box;
-  animation: sheet-in 0.25s ease-out;
-}
-
-@keyframes sheet-in {
-  0% { transform: translateY(100%); }
-  100% { transform: translateY(0); }
-}
-
-.poster-sheet-title {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1D1D1F;
-  margin-bottom: 28rpx;
-  text-align: center;
-}
-
-.poster-subject-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 36rpx;
-  justify-content: center;
-}
-
-.poster-subject-chip {
-  padding: 16rpx 32rpx;
-  border-radius: 999px;
-  background: #F2F2F7;
-  font-size: 26rpx;
-  color: #1D1D1F;
-  font-weight: 500;
-  transition: all 0.18s ease;
-}
-
-.poster-subject-chip.active {
-  background: #12B7A8;
-  color: #FFFFFF;
-}
-
-.poster-generate-btn {
-  height: 96rpx;
-  border-radius: 999px;
-  background: #12B7A8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: 600;
-  transition: filter 0.18s ease;
-}
-
-.poster-generate-btn:active {
-  filter: brightness(0.92);
-}
-
-.poster-generate-btn.disabled {
+.celebration-btn.disabled {
   opacity: 0.5;
+  pointer-events: none;
 }
 
 .poster-canvas-hide {
