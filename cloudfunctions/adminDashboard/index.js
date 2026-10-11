@@ -55,15 +55,58 @@ function daysAgoStart(n) {
   return d;
 }
 
-/** 近 14 天日期串数组（含今天） */
-function last14Days() {
-  const list = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(todayStart());
-    d.setDate(d.getDate() - i);
-    list.push(dayStr(d));
+/** 分页拉取全量，避免单次 limit(1000) 静默截断 */
+async function fetchAll(buildQuery, maxPages = 50) {
+  const PAGE = 100;
+  let all = [];
+  for (let i = 0; i < maxPages; i++) {
+    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
+    const page = res.data || [];
+    all = all.concat(page);
+    if (page.length < PAGE) break;
   }
-  return list;
+  return all;
+}
+
+/** 取某日期所在周的周一（0 点） */
+function mondayOf(d) {
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = date.getDay();
+  date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
+  return date;
+}
+
+/**
+ * 生成时间桶：granularity = day(近14天) | week(近12周) | month(近12月)
+ * 返回 [{ label, start: Date, startStr, endStr }]（start 升序，含当前桶）
+ */
+function buildBuckets(granularity) {
+  const g = granularity === 'week' || granularity === 'month' ? granularity : 'day';
+  const buckets = [];
+  if (g === 'day') {
+    for (let i = 13; i >= 0; i--) {
+      const start = daysAgoStart(i);
+      buckets.push({ label: dayStr(start), start, startStr: dayStr(start), endStr: dayStr(start) });
+    }
+  } else if (g === 'week') {
+    const thisMonday = mondayOf(new Date());
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(thisMonday);
+      start.setDate(start.getDate() - 7 * i);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      buckets.push({ label: dayStr(start), start, startStr: dayStr(start), endStr: dayStr(end) });
+    }
+  } else {
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      const label = `${start.getFullYear()}-${pad(start.getMonth() + 1)}`;
+      buckets.push({ label, start, startStr: dayStr(start), endStr: dayStr(end) });
+    }
+  }
+  return buckets;
 }
 
 exports.main = async (event) => {
@@ -131,48 +174,55 @@ exports.main = async (event) => {
       };
     }
 
-    // ---------- 近 14 天趋势 ----------
+    // ---------- 趋势（日/周/月 柱状分桶） ----------
     if (action === 'trend') {
-      const since = daysAgoStart(13);
-      const days = last14Days();
-      const daySet = new Set(days);
+      const buckets = buildBuckets(event.granularity);
+      const since = buckets[0].start;
+      const firstStr = buckets[0].startStr;
+      const lastStr = buckets[buckets.length - 1].endStr;
 
-      const [logsRes, checkinsRes] = await Promise.all([
-        db.collection('access_logs').where({ createdAt: _.gte(since) }).limit(1000).get(),
-        db.collection('checkin_records').where({ date: _.gte(days[0]).and(_.lte(days[13])), completedCount: _.gt(0) }).limit(1000).get(),
+      const [logs, checkins] = await Promise.all([
+        fetchAll(() => db.collection('access_logs').where({ createdAt: _.gte(since) })),
+        fetchAll(() =>
+          db.collection('checkin_records').where({ date: _.gte(firstStr).and(_.lte(lastStr)), completedCount: _.gt(0) })
+        ),
       ]);
 
-      const logs = logsRes.data || [];
-      const checkins = checkinsRes.data || [];
+      // 按日期串定位桶（'YYYY-MM-DD' 字典序即时间序）
+      const series = buckets.map((b) => ({ visitors: new Set(), logins: 0, assessments: 0, checkins: 0 }));
 
-      const series = {};
-      days.forEach((d) => {
-        series[d] = { visitors: new Set(), logins: 0, assessments: 0, checkins: 0 };
-      });
+      const bucketOfDay = (ds) => {
+        if (!ds) return -1;
+        for (let i = buckets.length - 1; i >= 0; i--) {
+          if (ds >= buckets[i].startStr && ds <= buckets[i].endStr) return i;
+        }
+        return -1;
+      };
 
       logs.forEach((l) => {
-        const d = l.day || dayStr(new Date(l.createdAt));
-        if (!daySet.has(d) || !series[d]) return;
-        series[d].visitors.add(l.openid);
-        if (l.type === 'login') series[d].logins += 1;
-        if (l.type === 'assessment') series[d].assessments += 1;
+        const ds = l.day || dayStr(new Date(l.createdAt));
+        const i = bucketOfDay(ds);
+        if (i < 0) return;
+        series[i].visitors.add(l.openid);
+        if (l.type === 'login') series[i].logins += 1;
+        if (l.type === 'assessment') series[i].assessments += 1;
       });
       checkins.forEach((c) => {
-        const d = c.date;
-        if (d && series[d]) series[d].checkins += 1;
+        const i = bucketOfDay(c.date);
+        if (i < 0) return;
+        series[i].checkins += 1;
       });
 
-      return {
-        success: true,
-        days,
-        trend: days.map((d) => ({
-          date: d,
-          visitors: series[d].visitors.size,
-          logins: series[d].logins,
-          assessments: series[d].assessments,
-          checkins: series[d].checkins,
-        })),
-      };
+      const labels = buckets.map((b) => b.label);
+      const trend = buckets.map((b, i) => ({
+        date: b.label,
+        visitors: series[i].visitors.size,
+        logins: series[i].logins,
+        assessments: series[i].assessments,
+        checkins: series[i].checkins,
+      }));
+
+      return { success: true, granularity: event.granularity || 'day', days: labels, buckets: labels, trend };
     }
 
     // ---------- 管理员操作记录 ----------

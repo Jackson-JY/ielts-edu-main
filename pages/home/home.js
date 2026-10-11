@@ -239,6 +239,7 @@ Page({
 
       const taskItems = (task.items || []).map((it) => ({
         id: it.id,
+        taskId: it.taskId || task._id, // 班级合并任务时每项来源任务不同
         subject: it.subject,
         subjectColor: getSubjectColor(it.subject),
         content: it.content,
@@ -322,6 +323,7 @@ Page({
   async submitToggle(itemId, done, actualMinutes) {
     const task = this.data.dailyTask;
     if (!task) return;
+    const item = (this.data.taskItems || []).find((it) => it.id === itemId);
     const today = formatDate(new Date());
 
     try {
@@ -330,10 +332,11 @@ Page({
         data: {
           action: 'toggle',
           date: today,
-          taskId: task._id,
+          taskId: (item && item.taskId) || task._id,
           itemId,
           done,
           actualMinutes,
+          totalItems: this.data.totalItems || undefined, // 班级合并任务的总项数
         },
       });
       const result = res.result;

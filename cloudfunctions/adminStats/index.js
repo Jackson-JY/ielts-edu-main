@@ -84,6 +84,62 @@ async function fetchAll(buildQuery, maxPages = 50) {
   return all;
 }
 
+/** 班级列表（集合不存在时返回空数组） */
+async function safeListClasses() {
+  try {
+    return await fetchAll(() => db.collection('classes'));
+  } catch (e) {
+    return [];
+  }
+}
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+/** 取某日期所在周的周一（0 点） */
+function mondayOf(d) {
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = date.getDay();
+  date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
+  return date;
+}
+
+/**
+ * 生成时间桶：granularity = day(近14天) | week(近12周) | month(近12月)
+ * 返回 [{ label, startStr, endStr }]（start 升序，含当前桶）
+ */
+function buildBuckets(granularity) {
+  const now = new Date();
+  const g = granularity === 'week' || granularity === 'month' ? granularity : 'day';
+  const buckets = [];
+  if (g === 'day') {
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const s = fmtDate(d);
+      buckets.push({ label: s, startStr: s, endStr: s });
+    }
+  } else if (g === 'week') {
+    const thisMonday = mondayOf(now);
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(thisMonday);
+      start.setDate(start.getDate() - 7 * i);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      buckets.push({ label: fmtDate(start), startStr: fmtDate(start), endStr: fmtDate(end) });
+    }
+  } else {
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      buckets.push({
+        label: `${start.getFullYear()}-${pad2(start.getMonth() + 1)}`,
+        startStr: fmtDate(start),
+        endStr: fmtDate(end),
+      });
+    }
+  }
+  return buckets;
+}
+
 exports.main = async (event) => {
   event = normalizeEvent(event);
   try {
@@ -98,12 +154,17 @@ exports.main = async (event) => {
 
     // ---------- 总览 ----------
     if (action === 'overview') {
-      const [users, checkins, homework, exams] = await Promise.all([
+      const [users, checkins, homework, exams, classes] = await Promise.all([
         fetchAll(() => db.collection('users')),
         fetchAll(() => db.collection('checkins')),
         fetchAll(() => db.collection('homework')),
         fetchAll(() => db.collection('exam_scores')),
+        safeListClasses(),
       ]);
+      const classNameById = {};
+      classes.forEach((c) => {
+        classNameById[c._id] = c.name;
+      });
 
       const students = users.filter((u) => u.isAdmin !== true);
 
@@ -134,17 +195,22 @@ exports.main = async (event) => {
 
       const newThisMonth = students.filter((u) => dateKey(u._createTime).substring(0, 7) === monthStr).length;
 
-      const studentList = students.map((u) => ({
-        _id: u._id,
-        _openid: u._openid,
-        nickName: u.nickName || '未命名用户',
-        avatarUrl: u.avatarUrl || '',
-        _createTime: u._createTime,
-        checkinCount: checkinByUser[u._openid] || 0,
-        homeworkCount: homeworkByUser[u._openid] || 0,
-        examCount: examByUser[u._openid] || 0,
-        lastActive: lastActiveByUser[u._openid] || null,
-      }));
+      const studentList = students.map((u) => {
+        const classIds = Array.isArray(u.classIds) ? u.classIds : [];
+        return {
+          _id: u._id,
+          _openid: u._openid,
+          nickName: u.nickName || '未命名用户',
+          avatarUrl: u.avatarUrl || '',
+          _createTime: u._createTime,
+          classIds,
+          classNames: classIds.map((cid) => classNameById[cid] || '').filter(Boolean),
+          checkinCount: checkinByUser[u._openid] || 0,
+          homeworkCount: homeworkByUser[u._openid] || 0,
+          examCount: examByUser[u._openid] || 0,
+          lastActive: lastActiveByUser[u._openid] || null,
+        };
+      });
 
       return {
         success: true,
@@ -154,11 +220,12 @@ exports.main = async (event) => {
           newThisMonth,
           totalHomework: homework.length,
         },
+        classes: classes.map((c) => ({ _id: c._id, name: c.name })),
         students: studentList,
       };
     }
 
-    // ---------- 单生趋势 ----------
+    // ---------- 单生趋势（日/周/月 分桶） ----------
     if (action === 'trend') {
       if (!studentId) return { success: false, error: '缺少 studentId' };
 
@@ -167,36 +234,45 @@ exports.main = async (event) => {
       const openid = user && user._openid;
       if (!openid) return { success: false, error: '用户无 openid' };
 
+      const buckets = buildBuckets(event.granularity);
+      const firstStr = buckets[0].startStr;
+      const lastStr = buckets[buckets.length - 1].endStr;
+
       const [checkins, homework, exams] = await Promise.all([
         fetchAll(() => db.collection('checkins').where({ _openid: openid })),
         fetchAll(() => db.collection('homework').where({ _openid: openid })),
         fetchAll(() => db.collection('exam_scores').where({ _openid: openid })),
       ]);
 
-      const dateMap = {};
-      const touch = (d) => {
-        if (!d) return;
-        dateMap[d] = dateMap[d] || { date: d, checkins: 0, homework: 0, exams: 0 };
+      const series = buckets.map(() => ({ checkins: 0, homework: 0, exams: 0 }));
+      const bucketOfDay = (ds) => {
+        if (!ds) return -1;
+        for (let i = buckets.length - 1; i >= 0; i--) {
+          if (ds >= buckets[i].startStr && ds <= buckets[i].endStr) return i;
+        }
+        return -1;
       };
 
       checkins.forEach((c) => {
-        const d = dateKey(c.date);
-        touch(d);
-        if (d) dateMap[d].checkins += 1;
+        const i = bucketOfDay(dateKey(c.date));
+        if (i >= 0) series[i].checkins += 1;
       });
       homework.forEach((h) => {
-        const d = dateKey(h.date) || dateKey(h._createTime) || dateKey(h._updateTime);
-        touch(d);
-        if (d) dateMap[d].homework += 1;
+        const i = bucketOfDay(dateKey(h.date) || dateKey(h._createTime) || dateKey(h._updateTime));
+        if (i >= 0) series[i].homework += 1;
       });
       exams.forEach((e) => {
-        const d = dateKey(e.date);
-        touch(d);
-        if (d) dateMap[d].exams += 1;
+        const i = bucketOfDay(dateKey(e.date));
+        if (i >= 0) series[i].exams += 1;
       });
 
-      const trend = Object.values(dateMap).sort((a, b) => (a.date < b.date ? -1 : 1));
-      return { success: true, trend };
+      const trend = buckets.map((b, i) => ({
+        date: b.label,
+        checkins: series[i].checkins,
+        homework: series[i].homework,
+        exams: series[i].exams,
+      }));
+      return { success: true, granularity: event.granularity || 'day', trend };
     }
 
     // ---------- 打卡周榜 ----------

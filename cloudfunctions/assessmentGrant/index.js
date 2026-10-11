@@ -1,8 +1,10 @@
 // 云函数：assessmentGrant —— 测评授权管理（管理员）
-//   action='list'   授权列表 + 学生列表（供选择）
-//   action='grant'  新增/调整授权（userId + totalQuota>=1 + expireAt + note）
-//   action='revoke' 吊销授权
-//   action='resume' 恢复授权（过期/无余量时返回提示）
+//   action='list'        授权列表 + 学生列表（供选择）+ 班级列表
+//   action='grant'       新增/调整单人授权（userId + totalQuota>=1 + expireAt + note）
+//   action='grantBatch'  按班级/多人批量授权（classIds[] / userIds[] + totalQuota + expireAt + note）
+//                        规则：已有授权次数累加、截止时间取更晚者；无授权新建；已吊销自动恢复
+//   action='revoke'      吊销授权
+//   action='resume'      恢复授权（过期/无余量时返回提示）
 // 鉴权：token 优先（Web），openid+isAdmin 兜底（小程序）
 // 每次写操作落一条 admin_audit_logs
 const cloud = require('wx-server-sdk');
@@ -71,6 +73,16 @@ async function getUser(userId) {
   }
 }
 
+/** 班级列表（集合不存在时返回空数组） */
+async function safeListClasses() {
+  try {
+    const res = await db.collection('classes').limit(100).get();
+    return (res.data || []).map((c) => ({ _id: c._id, name: c.name }));
+  } catch (e) {
+    return [];
+  }
+}
+
 /** 授权判定（与 assessmentAccess 口径一致） */
 function evaluate(grant) {
   if (!grant || grant.status === 'revoked') return { authorized: false, reason: grant ? 'REVOKED' : 'NO_GRANT' };
@@ -94,19 +106,133 @@ exports.main = async (event) => {
 
     const action = event.action;
 
-    // ---------- 列表：授权 + 学生 ----------
+    // ---------- 列表：授权 + 学生 + 班级 ----------
     if (action === 'list') {
-      const [grantsRes, usersRes] = await Promise.all([
+      const [grantsRes, usersRes, classesRes] = await Promise.all([
         db.collection(GRANTS).orderBy('updatedAt', 'desc').limit(200).get(),
         db.collection('users').limit(500).get(),
+        safeListClasses(),
       ]);
       const students = (usersRes.data || []).map((u) => ({
         userId: u._id,
         nickName: u.nickName || '微信用户',
         phone: u.phone || '',
         avatarUrl: u.avatarUrl || '',
+        classIds: Array.isArray(u.classIds) ? u.classIds : [],
       }));
-      return { success: true, grants: grantsRes.data || [], students };
+      return { success: true, grants: grantsRes.data || [], students, classes: classesRes };
+    }
+
+    // ---------- 按班级/多人批量授权 ----------
+    if (action === 'grantBatch') {
+      const { classIds, userIds, totalQuota, expireAt, note } = event;
+      const quota = Number(totalQuota);
+      if (!Number.isInteger(quota) || quota < 1) return { success: false, error: '使用次数必须为不小于 1 的整数' };
+      const clsIds = Array.isArray(classIds) ? classIds.filter((x) => typeof x === 'string' && x) : [];
+      const usrIds = Array.isArray(userIds) ? userIds.filter((x) => typeof x === 'string' && x) : [];
+      if (clsIds.length === 0 && usrIds.length === 0) return { success: false, error: '请选择班级或学生' };
+      let expireDate = null;
+      if (expireAt) {
+        expireDate = new Date(expireAt);
+        if (isNaN(expireDate.getTime())) return { success: false, error: '截止时间格式错误' };
+      }
+
+      // 汇总目标学生：指定学生 ∪ 班级内全部学生
+      const targetMap = {};
+      if (usrIds.length > 0) {
+        const chunks = [];
+        for (let i = 0; i < usrIds.length; i += 50) chunks.push(usrIds.slice(i, i + 50));
+        const ress = await Promise.all(chunks.map((ids) => db.collection('users').where({ _id: _.in(ids) }).get()));
+        ress.forEach((r) => (r.data || []).forEach((u) => { targetMap[u._id] = u; }));
+      }
+      if (clsIds.length > 0) {
+        const ress = await Promise.all(clsIds.map((cid) => db.collection('users').where({ classIds: cid }).limit(1000).get()));
+        ress.forEach((r) => (r.data || []).forEach((u) => { targetMap[u._id] = u; }));
+      }
+      const targets = Object.values(targetMap);
+      if (targets.length === 0) return { success: false, error: '所选班级/学生下没有学生' };
+
+      // 班级名（审计用）
+      let clsNames = [];
+      if (clsIds.length > 0) {
+        const cRes = await db.collection('classes').where({ _id: _.in(clsIds) }).get();
+        clsNames = (cRes.data || []).map((c) => c.name);
+      }
+
+      const now = new Date();
+      let created = 0;
+      let added = 0;
+
+      // 逐个 upsert（每批 20 并行）
+      const chunk = (arr, n) => {
+        const out = [];
+        for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+        return out;
+      };
+      for (const batch of chunk(targets, 20)) {
+        await Promise.all(
+          batch.map(async (user) => {
+            const existRes = await db.collection(GRANTS).where({ userId: user._id }).limit(1).get();
+            const exist = existRes.data && existRes.data[0];
+            if (exist) {
+              // 次数累加；截止时间：未传则保持原样；传了则取更晚者（长期有效视为最晚）
+              let expireUpdate = {};
+              if (expireDate) {
+                const oldTs = exist.expireAt ? new Date(exist.expireAt).getTime() : Infinity;
+                expireUpdate = oldTs <= expireDate.getTime() ? { expireAt: expireDate } : { expireAt: _.remove() };
+              }
+              await db.collection(GRANTS).doc(exist._id).update({
+                data: {
+                  totalQuota: (Number(exist.totalQuota) || 0) + quota,
+                  ...expireUpdate,
+                  note: note || exist.note || '',
+                  status: 'active',
+                  grantedBy: auth.nickName || '管理员',
+                  updatedAt: now,
+                },
+              });
+              added += 1;
+            } else {
+              await db.collection(GRANTS).add({
+                data: {
+                  userId: user._id,
+                  _openid: user._openid || '',
+                  nickName: user.nickName || '微信用户',
+                  phone: user.phone || '',
+                  totalQuota: quota,
+                  usedCount: 0,
+                  ...(expireDate ? { expireAt: expireDate } : {}),
+                  note: note || '',
+                  status: 'active',
+                  grantedBy: auth.nickName || '管理员',
+                  grantedAt: now,
+                  updatedAt: now,
+                },
+              });
+              created += 1;
+            }
+          })
+        );
+      }
+
+      const targetDesc = [
+        clsNames.length ? `班级[${clsNames.join('、')}]` : '',
+        usrIds.length ? `指定 ${usrIds.length} 人` : '',
+      ]
+        .filter(Boolean)
+        .join(' + ');
+      await logAudit(
+        auth,
+        'grant.grantBatch',
+        `批量授权：${targetDesc} → 每人 +${quota} 次${expireDate ? `，截止 ${dayStr(expireDate)}` : '，长期有效'}（新建 ${created}，累加 ${added}，共 ${targets.length} 人）`
+      );
+      return {
+        success: true,
+        message: `已为 ${targets.length} 名学生授权（新建 ${created}，累加 ${added}）`,
+        total: targets.length,
+        created,
+        added,
+      };
     }
 
     // ---------- 授权（新增/调整） ----------

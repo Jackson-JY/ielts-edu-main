@@ -89,7 +89,9 @@ exports.main = async (event) => {
       const existing = existingRes.data && existingRes.data[0];
 
       const now = new Date();
-      const totalItems = task.items.length;
+      // 班级合并任务时客户端会传合并后的总项数；单任务场景保持原逻辑
+      const clientTotal = parseInt(event.totalItems, 10);
+      const totalItems = Number.isInteger(clientTotal) && clientTotal > 0 ? clientTotal : task.items.length;
       const doneBool = !!done;
       const minutes = doneBool ? (parseInt(actualMinutes, 10) || 0) : 0;
 

@@ -25,6 +25,7 @@
     { "name": "getCheckinQrcode", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
     { "name": "submitCheckin", "timeout": 15, "runtime": "Nodejs16.13", "memorySize": 256 },
     { "name": "getMyCheckinStats", "timeout": 20, "runtime": "Nodejs16.13", "memorySize": 256 },
+    { "name": "manageClasses", "timeout": 15, "runtime": "Nodejs16.13", "memorySize": 256 },
     { "name": "migrateCheckin", "timeout": 60, "runtime": "Nodejs16.13", "memorySize": 512 }
   ]
 }
