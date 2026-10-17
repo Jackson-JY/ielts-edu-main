@@ -11,15 +11,7 @@ const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
-
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') return event.body;
-  return event;
-}
+const { normalizeEvent } = require('./_common');
 
 function formatDate(d) {
   const y = d.getFullYear();

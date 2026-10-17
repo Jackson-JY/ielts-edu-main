@@ -1,6 +1,7 @@
 // pages/courses/courses.js
 const { formatDate } = require('../../utils/dateUtil');
 const cloudDB = require('../../utils/cloudDB');
+const { getSubjectLabel } = require('../../utils/subjectUtil');
 
 // 科目 -> SVG 图标 name 映射（用于 <icon name="..." />）
 const SUBJECT_ICON_MAP = {
@@ -402,7 +403,7 @@ Page({
     if (!homework[courseId] || !homework[courseId].items || homework[courseId].items.length === 0) {
       homework[courseId] = {
         subject: course?.subject || '阅读',
-        subjectLabel: this.getSubjectLabel(course?.subject),
+        subjectLabel: getSubjectLabel(course?.subject) || '阅读',
         items: [{ content: '', estimatedTime: '' }],
       };
     }
@@ -439,23 +440,6 @@ Page({
   },
 
   /**
-   * 获取科目显示标签（与 homework.js 保持一致）
-   */
-  getSubjectLabel(subject) {
-    const labelMap = {
-      'listening': '听力',
-      'reading': '阅读',
-      'writing': '写作',
-      'speaking': '口语',
-      '听力': '听力',
-      '阅读': '阅读',
-      '写作': '写作',
-      '口语': '口语',
-    };
-    return labelMap[subject] || subject || '阅读';
-  },
-
-  /**
    * 保存作业到云数据库
    * 适配统一的 homework 表结构
    */
@@ -472,7 +456,7 @@ Page({
 
     try {
       const course = this.data.courses.find(c => c._id === id);
-      const subjectLabel = formData.subjectLabel || this.getSubjectLabel(course?.subject);
+      const subjectLabel = formData.subjectLabel || getSubjectLabel(course?.subject) || '阅读';
 
       // 多条作业项并行写入，每条一条 homework 记录
       const ops = validItems.map((it) => {

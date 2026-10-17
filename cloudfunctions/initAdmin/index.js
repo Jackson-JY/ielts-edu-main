@@ -9,16 +9,11 @@
 // 调用示例（云函数测试）：
 //   { openid: '管理员openid', username: 'admin', password: '你的密码' }
 const cloud = require('wx-server-sdk');
-const crypto = require('crypto');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
-const PASSWORD_SALT = 'ielts-edu-admin-v1'; // 与 adminLogin 保持一致
-
-function hashPassword(username, password) {
-  return crypto.createHash('sha256').update(`${username}:${password}:${PASSWORD_SALT}`).digest('hex');
-}
+const hashPassword = require('./_common').hashPassword;
 
 exports.main = async (event) => {
   try {

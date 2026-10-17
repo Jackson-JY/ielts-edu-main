@@ -98,35 +98,10 @@ const PROMPT_VERSION = 'course-plan-v2';
 // 需在云开发控制台「AI → 生文模型」中开启对应模型
 const AI_MODELS = ['hy3', 'deepseek-v4-flash', 'deepseek-v3.2'];
 
-// ============ 事件归一化 ============
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') return event.body;
-  return event;
-}
-
-// ============ 鉴权 ============
-async function authenticate(event) {
-  const token = event && event._token;
-  if (token) {
-    const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-    const session = res.data && res.data[0];
-    if (session && session.expireAt && new Date(session.expireAt) > new Date()) return { ok: true };
-    return { ok: false, authError: true };
-  }
-  const wxContext = cloud.getWXContext();
-  const openid = wxContext.OPENID;
-  if (openid) {
-    const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-    const user = res.data && res.data[0];
-    if (user && user.isAdmin === true) return { ok: true };
-    return { ok: false };
-  }
-  return { ok: false, authError: true };
-}
+// ============ 共享工具（事件归一化 / 鉴权） ============
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const authenticate = (event) => common.authenticate(event, db, cloud);
 
 // ============ 四维等级 → CEFR ============
 function levelToCefr(avg) {

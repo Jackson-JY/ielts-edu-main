@@ -9,70 +9,17 @@
 // 鉴权：token（admin_sessions）优先，openid+isAdmin 兜底（与各管理端云函数一致）
 // 审计：所有写操作写入 admin_audit_logs（module='admin'）
 const cloud = require('wx-server-sdk');
-const crypto = require('crypto');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 const _ = db.command;
-const PASSWORD_SALT = 'ielts-edu-admin-v1'; // 与 adminLogin / initAdmin 保持一致
 
-/** 归一化 event：兼容 SDK 调用与 HTTP 调用 */
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') {
-    return event.body;
-  }
-  return event;
-}
-
-/** 密码哈希（sha256 + 盐，与 adminLogin 保持一致） */
-function hashPassword(username, password) {
-  return crypto.createHash('sha256').update(`${username}:${password}:${PASSWORD_SALT}`).digest('hex');
-}
-
-/** 统一鉴权：返回 { ok, userId, adminName, token } */
-async function authenticate(event) {
-  const token = event && event._token;
-  if (token) {
-    const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-    const session = res.data && res.data[0];
-    if (session && session.expireAt && new Date(session.expireAt) > new Date()) {
-      return { ok: true, userId: session.userId, adminName: session.nickName || '管理员', token };
-    }
-    return { ok: false, authError: true };
-  }
-
-  const wxContext = cloud.getWXContext();
-  const openid = wxContext.OPENID;
-  if (!openid) return { ok: false, authError: true };
-
-  const res = await db.collection('users').where({ _openid: openid, isAdmin: true }).limit(1).get();
-  const user = res.data && res.data[0];
-  if (!user) return { ok: false };
-  return { ok: true, userId: user._id, adminName: user.nickName || '管理员', token: '' };
-}
-
-/** 写管理员操作审计日志 */
-async function logAudit(auth, action, detail) {
-  try {
-    await db.collection('admin_audit_logs').add({
-      data: {
-        adminId: auth.userId,
-        adminName: auth.adminName,
-        module: 'admin',
-        action,
-        detail: detail || '',
-        createdAt: new Date(),
-      },
-    });
-  } catch (e) {
-    console.error('[adminManage] 写审计日志失败', e);
-  }
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const hashPassword = common.hashPassword;
+const authenticate = (event) => common.authenticate(event, db, cloud);
+const logAudit = (auth, action, detail) => common.logAudit(db, auth, 'admin', action, detail);
 
 /** 清除某管理员的所有登录态（keepToken 用于改密后保留当前会话） */
 async function clearSessions(userId, keepToken) {

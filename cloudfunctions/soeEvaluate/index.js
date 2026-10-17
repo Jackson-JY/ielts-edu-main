@@ -146,17 +146,7 @@ function clampPercent(v) {
   return Math.max(0, Math.min(100, n));
 }
 
-function normalizeEvent(event) {
-  if (event && typeof event === 'object' && event.body) {
-    try {
-      const parsed = JSON.parse(event.body);
-      return { ...event, ...parsed };
-    } catch (e) {
-      return event;
-    }
-  }
-  return event;
-}
+const { normalizeEvent } = require('./_common');
 
 // ======================== 主入口 ========================
 exports.main = async (event) => {

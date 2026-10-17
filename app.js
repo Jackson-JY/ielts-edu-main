@@ -439,7 +439,6 @@ App({
 
     // 切到后台：暂停 interval（节电），记录时间戳
     wx.onAppHide(() => {
-      console.log('小程序进入后台');
       const p = this.globalData.pomodoro;
       if (p.status === 'working' || p.status === 'resting') {
         // 不停止计时——让 startAt 继续生效，切回来时重算
@@ -449,7 +448,6 @@ App({
 
     // 切回前台：如果正在计时则重启 interval 并校正剩余时间
     wx.onAppShow(() => {
-      console.log('小程序进入前台');
       const p = this.globalData.pomodoro;
       if (p.status === 'working' || p.status === 'resting') {
         // 重算剩余时间（后台期间经过的真实时间已记在 startAt 里）

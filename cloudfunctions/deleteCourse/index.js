@@ -7,66 +7,10 @@ cloud.init({
 
 const db = cloud.database();
 
-/**
- * 归一化 event：兼容 SDK 调用（event 直接是数据对象）与 HTTP 调用（event.body 是 JSON 字符串）
- */
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') {
-    return event.body;
-  }
-  return event;
-}
-
-// 统一鉴权：token 优先（Web 端），openid+isAdmin 兜底（小程序端）
-async function authenticate(event) {
-  try {
-    const token = event && event._token;
-    if (token) {
-      const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-      const session = res.data && res.data[0];
-      if (session && session.expireAt && new Date(session.expireAt) > new Date()) {
-        return { ok: true, userId: session.userId, nickName: session.nickName };
-      }
-      return { ok: false, authError: true };
-    }
-
-    const wxContext = cloud.getWXContext();
-    const openid = wxContext.OPENID;
-    if (!openid) return { ok: false, authError: true };
-
-    const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-    const user = res.data && res.data[0];
-    if (user && user.isAdmin === true) {
-      return { ok: true, userId: user._id, nickName: user.nickName };
-    }
-    return { ok: false };
-  } catch (e) {
-    console.error('验证管理员失败', e);
-    return { ok: false };
-  }
-}
-
-/** 写管理员操作审计日志 */
-async function logAudit(auth, action, detail) {
-  try {
-    await db.collection('admin_audit_logs').add({
-      data: {
-        adminId: auth.userId || '',
-        adminName: auth.nickName || '管理员',
-        module: 'course',
-        action,
-        detail: detail || '',
-        createdAt: new Date(),
-      },
-    });
-  } catch (e) {
-    console.error('[deleteCourse] 写审计日志失败', e);
-  }
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const authenticate = (event) => common.authenticate(event, db, cloud);
+const logAudit = (auth, action, detail) => common.logAudit(db, auth, 'course', action, detail);
 
 /**
  * 删除课程（管理员）

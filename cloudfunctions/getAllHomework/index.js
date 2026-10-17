@@ -6,24 +6,7 @@ cloud.init({
 
 const db = cloud.database();
 
-// 统一鉴权：token 优先（Web 端），openid+isAdmin 兜底（小程序端）
-async function authenticate(event) {
-  const token = event && event._token;
-  if (token) {
-    const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-    const session = res.data && res.data[0];
-    if (session && session.expireAt && new Date(session.expireAt) > new Date()) return { ok: true };
-    return { ok: false, authError: true };
-  }
-
-  const wxContext = cloud.getWXContext();
-  const openid = wxContext.OPENID;
-  if (!openid) return { ok: false, authError: true };
-
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  if (res.data && res.data[0] && res.data[0].isAdmin === true) return { ok: true };
-  return { ok: false };
-}
+const authenticate = (event) => require('./_common').authenticate(event, db, cloud);
 
 /**
  * 获取所有作业列表（管理员使用）

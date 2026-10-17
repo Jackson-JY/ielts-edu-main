@@ -13,35 +13,10 @@ const _ = db.command;
 const pad = (n) => String(n).padStart(2, '0');
 const dayStr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') return event.body;
-  return event;
-}
-
-async function authenticate(event) {
-  const token = event && event._token;
-  if (token) {
-    const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-    const session = res.data && res.data[0];
-    if (session && session.expireAt && new Date(session.expireAt) > new Date()) {
-      return { ok: true };
-    }
-    return { ok: false, authError: true };
-  }
-  const wxContext = cloud.getWXContext();
-  const openid = wxContext.OPENID;
-  if (openid) {
-    const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-    const user = res.data && res.data[0];
-    if (user && user.isAdmin === true) return { ok: true };
-    return { ok: false };
-  }
-  return { ok: false, authError: true };
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const authenticate = (event) => common.authenticate(event, db, cloud);
+const fetchAll = common.fetchAll;
 
 /** 时间窗口起点 */
 function todayStart() {
@@ -53,19 +28,6 @@ function daysAgoStart(n) {
   const d = todayStart();
   d.setDate(d.getDate() - n);
   return d;
-}
-
-/** 分页拉取全量，避免单次 limit(1000) 静默截断 */
-async function fetchAll(buildQuery, maxPages = 50) {
-  const PAGE = 100;
-  let all = [];
-  for (let i = 0; i < maxPages; i++) {
-    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
-    const page = res.data || [];
-    all = all.concat(page);
-    if (page.length < PAGE) break;
-  }
-  return all;
 }
 
 /** 取某日期所在周的周一（0 点） */

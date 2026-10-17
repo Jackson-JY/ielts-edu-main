@@ -22,27 +22,10 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 const SESSION_TTL = 7 * 24 * 3600 * 1000; // token 有效期 7 天
-const PASSWORD_SALT = 'ielts-edu-admin-v1'; // 账号密码哈希盐
 
-/**
- * 归一化 event：兼容 SDK 调用（event 直接是数据对象）与 HTTP 调用（event.body 是 JSON 字符串）
- * Web 端在匿名登录未开启时会降级为 HTTP 调用，此时 event 结构不同，需统一解析。
- */
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') {
-    return event.body;
-  }
-  return event;
-}
-
-/** 密码哈希（sha256 + 盐，与 initAdmin 云函数保持一致） */
-function hashPassword(username, password) {
-  return crypto.createHash('sha256').update(`${username}:${password}:${PASSWORD_SALT}`).digest('hex');
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const hashPassword = common.hashPassword;
 
 /** 用 code 换微信 oauth2 access_token（网站应用扫码登录） */
 function wxCode2Session(code) {

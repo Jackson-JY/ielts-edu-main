@@ -7,45 +7,10 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 
-/**
- * 归一化 event：兼容 SDK 调用（event 直接是数据对象）与 HTTP 调用（event.body 是 JSON 字符串）
- */
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') {
-    return event.body;
-  }
-  return event;
-}
-
-/** 统一鉴权：token 优先（Web），openid+isAdmin 兜底（小程序） */
-async function authenticate(event) {
-  const token = event && event._token;
-  if (token) {
-    const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-    const session = res.data && res.data[0];
-    if (session && session.expireAt && new Date(session.expireAt) > new Date()) {
-      return { ok: true, userId: session.userId, openid: session.openid, nickName: session.nickName };
-    }
-    return { ok: false, authError: true };
-  }
-
-  const wxContext = cloud.getWXContext();
-  const openid = wxContext.OPENID;
-  if (openid) {
-    const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-    const user = res.data && res.data[0];
-    if (user && user.isAdmin === true) {
-      return { ok: true, userId: user._id, openid, nickName: user.nickName };
-    }
-    return { ok: false };
-  }
-
-  return { ok: false, authError: true };
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const authenticate = (event) => common.authenticate(event, db, cloud);
+const logAudit = (auth, action, detail) => common.logAudit(db, auth, 'course', action, detail);
 
 /** 生成循环排课列表 */
 function generateRecurring(base, recurring) {
@@ -71,24 +36,6 @@ function generateRecurring(base, recurring) {
     });
   }
   return list;
-}
-
-/** 写管理员操作审计日志 */
-async function logAudit(auth, action, detail) {
-  try {
-    await db.collection('admin_audit_logs').add({
-      data: {
-        adminId: auth.userId || '',
-        adminName: auth.nickName || '管理员',
-        module: 'course',
-        action,
-        detail: detail || '',
-        createdAt: new Date(),
-      },
-    });
-  } catch (e) {
-    console.error('[saveCourse] 写审计日志失败', e);
-  }
 }
 
 exports.main = async (event) => {

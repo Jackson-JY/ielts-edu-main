@@ -6,19 +6,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 
-/**
- * 归一化 event：兼容 SDK 调用（event 直接是数据对象）与 HTTP 调用（event.body 是 JSON 字符串）
- */
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') {
-    return event.body;
-  }
-  return event;
-}
+const normalizeEvent = require('./_common').normalizeEvent;
 
 exports.main = async (event) => {
   event = normalizeEvent(event);

@@ -1,5 +1,6 @@
 // pages/homework-detail/homework-detail.js - 作业详情页
 const cloudDB = require('../../utils/cloudDB');
+const { mapTypeToSubject, getSubjectLabel } = require('../../utils/subjectUtil');
 
 Page({
   data: {
@@ -41,7 +42,7 @@ Page({
   },
 
   formatHomeworkDetail(hw) {
-    const subject = hw.subject || this.mapTypeToSubject(hw.type) || '阅读';
+    const subject = hw.subject || mapTypeToSubject(hw.type) || '阅读';
     const description = hw.description || hw.content || '';
     const status = hw.status || (hw.submitted ? 'completed' : 'pending');
 
@@ -60,7 +61,7 @@ Page({
       id: hw._id,
       title: hw.title || '未命名作业',
       subject: subject,
-      subjectLabel: this.getSubjectLabel(subject),
+      subjectLabel: getSubjectLabel(subject),
       subjectColor: this.getSubjectColor(subject),
       description: description,
       status: status,
@@ -72,30 +73,6 @@ Page({
       estimatedTime: hw.estimatedTime || 0,
       createTimeFormatted: createTimeFormatted,
     };
-  },
-
-  mapTypeToSubject(type) {
-    const typeMap = {
-      'listening': '听力',
-      'reading': '阅读',
-      'writing': '写作',
-      'speaking': '口语',
-    };
-    return typeMap[type] || type;
-  },
-
-  getSubjectLabel(subject) {
-    const labelMap = {
-      'listening': '听力',
-      'reading': '阅读',
-      'writing': '写作',
-      'speaking': '口语',
-      '听力': '听力',
-      '阅读': '阅读',
-      '写作': '写作',
-      '口语': '口语',
-    };
-    return labelMap[subject] || subject;
   },
 
   /**

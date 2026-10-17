@@ -8,40 +8,12 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 
-/**
- * 归一化 event：兼容 SDK 调用（event 直接是数据对象）与 HTTP 调用（event.body 是 JSON 字符串）
- */
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') {
-    return event.body;
-  }
-  return event;
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const authenticate = (event) => common.authenticate(event, db, cloud);
+const fetchAll = common.fetchAll;
 
 const SKILLS = ['listening', 'reading', 'writing', 'speaking'];
-
-async function authenticate(event) {
-  const token = event && event._token;
-  if (token) {
-    const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-    const session = res.data && res.data[0];
-    if (session && session.expireAt && new Date(session.expireAt) > new Date()) return { ok: true };
-    return { ok: false, authError: true };
-  }
-  const wxContext = cloud.getWXContext();
-  const openid = wxContext.OPENID;
-  if (openid) {
-    const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-    const user = res.data && res.data[0];
-    if (user && user.isAdmin === true) return { ok: true };
-    return { ok: false };
-  }
-  return { ok: false, authError: true };
-}
 
 /** 四维自评 → CEFR */
 function levelToCefr(avg) {
@@ -80,21 +52,6 @@ function bucketOf(v) {
     }
   }
   return '0-2000';
-}
-
-/**
- * 分页拉取全量数据，避免单次 limit(1000) 静默截断
- */
-async function fetchAll(buildQuery, maxPages = 50) {
-  const PAGE = 100;
-  let all = [];
-  for (let i = 0; i < maxPages; i++) {
-    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
-    const page = res.data || [];
-    all = all.concat(page);
-    if (page.length < PAGE) break;
-  }
-  return all;
 }
 
 exports.main = async (event) => {

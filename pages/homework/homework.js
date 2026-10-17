@@ -1,5 +1,6 @@
 // pages/homework/homework.js - 作业页面逻辑
 const cloudDB = require('../../utils/cloudDB');
+const { mapTypeToSubject, getSubjectLabel } = require('../../utils/subjectUtil');
 
 // 听说读写四个模块的基础展示信息（图标改用 SVG icon 组件，无需异步加载）
 const SUBJECT_MODULES_BASE = [
@@ -255,8 +256,8 @@ Page({
    * 将一条作业记录归类到 听/说/读/写 中的某一个模块
    */
   resolveModuleId(hw) {
-    const subject = hw.subject || this.mapTypeToSubject(hw.type) || '阅读';
-    return SUBJECT_TO_ID[subject] || SUBJECT_TO_ID[this.getSubjectLabel(subject)] || 'reading';
+    const subject = hw.subject || mapTypeToSubject(hw.type) || '阅读';
+    return SUBJECT_TO_ID[subject] || SUBJECT_TO_ID[getSubjectLabel(subject)] || 'reading';
   },
 
   /**
@@ -338,36 +339,6 @@ Page({
       completion,
       isCompleted,
     };
-  },
-
-  /**
-   * 将旧 type 字段映射到 subject
-   */
-  mapTypeToSubject(type) {
-    const typeMap = {
-      'listening': '听力',
-      'reading': '阅读',
-      'writing': '写作',
-      'speaking': '口语',
-    };
-    return typeMap[type] || type;
-  },
-
-  /**
-   * 获取科目显示标签
-   */
-  getSubjectLabel(subject) {
-    const labelMap = {
-      'listening': '听力',
-      'reading': '阅读',
-      'writing': '写作',
-      'speaking': '口语',
-      '听力': '听力',
-      '阅读': '阅读',
-      '写作': '写作',
-      '口语': '口语',
-    };
-    return labelMap[subject] || subject;
   },
 
   /**

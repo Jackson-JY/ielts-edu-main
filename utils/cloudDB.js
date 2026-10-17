@@ -129,7 +129,6 @@ const getMy = async (collName, query) => {
   
   // 检查用户是否登录
   if (!userInfo && !app.globalData.isLoggedIn) {
-    console.log('[cloudDB.getMy] 用户未登录，返回空数据');
     return { success: true, data: [] };
   }
   

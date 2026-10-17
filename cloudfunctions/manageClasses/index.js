@@ -14,67 +14,12 @@ const _ = db.command;
 
 const CLASSES = 'classes';
 const USERS = 'users';
-const AUDIT = 'admin_audit_logs';
 
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') return event.body;
-  return event;
-}
-
-async function authenticate(event) {
-  const token = event && event._token;
-  if (token) {
-    const res = await db.collection('admin_sessions').where({ token }).limit(1).get();
-    const session = res.data && res.data[0];
-    if (session && session.expireAt && new Date(session.expireAt) > new Date()) {
-      return { ok: true, userId: session.userId, nickName: session.nickName };
-    }
-    return { ok: false, authError: true };
-  }
-  const wxContext = cloud.getWXContext();
-  const openid = wxContext.OPENID;
-  if (openid) {
-    const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-    const user = res.data && res.data[0];
-    if (user && user.isAdmin === true) return { ok: true, userId: user._id, nickName: user.nickName };
-    return { ok: false };
-  }
-  return { ok: false, authError: true };
-}
-
-async function logAudit(auth, action, detail) {
-  try {
-    await db.collection(AUDIT).add({
-      data: {
-        adminId: auth.userId || '',
-        adminName: auth.nickName || '管理员',
-        module: 'classes',
-        action,
-        detail: detail || '',
-        createdAt: new Date(),
-      },
-    });
-  } catch (e) {
-    console.error('[manageClasses] 写审计日志失败', e);
-  }
-}
-
-/** 分页拉取全量，避免单次 limit 截断 */
-async function fetchAll(buildQuery, maxPages = 50) {
-  const PAGE = 100;
-  let all = [];
-  for (let i = 0; i < maxPages; i++) {
-    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
-    const page = res.data || [];
-    all = all.concat(page);
-    if (page.length < PAGE) break;
-  }
-  return all;
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const authenticate = (event) => common.authenticate(event, db, cloud);
+const logAudit = (auth, action, detail) => common.logAudit(db, auth, 'classes', action, detail);
+const fetchAll = common.fetchAll;
 
 function cleanName(name) {
   const n = String(name || '').trim();

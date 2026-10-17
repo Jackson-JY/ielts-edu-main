@@ -9,15 +9,9 @@ const cloud = require('wx-server-sdk');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
-
-function normalizeEvent(event) {
-  if (!event) return {};
-  if (typeof event.body === 'string') {
-    try { return JSON.parse(event.body); } catch (e) { return {}; }
-  }
-  if (event.body && typeof event.body === 'object') return event.body;
-  return event;
-}
+const common = require('./_common');
+const normalizeEvent = common.normalizeEvent;
+const fetchAll = common.fetchAll;
 
 /** 返回 { ok, isAdmin }：token 有效 → 管理端；openid → 学生端 */
 async function lightAuth(event) {
@@ -32,18 +26,6 @@ async function lightAuth(event) {
   const wxContext = cloud.getWXContext();
   if (wxContext.OPENID) return { ok: true, isAdmin: false };
   return { ok: false, authError: true };
-}
-
-async function fetchAll(buildQuery, maxPages = 50) {
-  const PAGE = 100;
-  let all = [];
-  for (let i = 0; i < maxPages; i++) {
-    const res = await buildQuery().skip(i * PAGE).limit(PAGE).get();
-    const page = res.data || [];
-    all = all.concat(page);
-    if (page.length < PAGE) break;
-  }
-  return all;
 }
 
 /** 管理端返回结构（原始 doc，含发布对象） */
