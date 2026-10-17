@@ -20,7 +20,7 @@ function drawScoreTrendChart(examScores) {
       const ctx = canvas.getContext('2d');
       const width = res[0].width;
       const height = res[0].height;
-      const dpr = wx.getWindowInfo().pixelRatio;
+      const dpr = (wx.getWindowInfo ? wx.getWindowInfo().pixelRatio : wx.getSystemInfoSync().pixelRatio) || 2;
 
       canvas.width = width * dpr;
       canvas.height = height * dpr;
