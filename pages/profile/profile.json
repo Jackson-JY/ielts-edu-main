@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "Deer Edu",
   "usingComponents": {
-    "pomodoro": "/components/pomodoro/pomodoro"
+    "pomodoro": "/components/pomodoro/pomodoro",
+    "checkin-calendar": "/components/checkin-calendar/checkin-calendar"
   }
 }

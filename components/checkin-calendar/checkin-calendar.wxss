@@ -1,0 +1,2 @@
+/* components/checkin-calendar/checkin-calendar.wxss */
+/* 组件样式采用 apply-shared：日历/弹窗/表单类样式复用页面 profile.wxss，此处仅放组件特有样式（当前为空） */
