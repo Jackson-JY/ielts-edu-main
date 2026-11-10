@@ -40,6 +40,8 @@ Page({
     studentNameMap: {},
     // 当前登录用户昵称（学生本人视角展示自己的昵称）
     currentUserName: '',
+    // 当前登录用户 openid（用于判断作业归属，管理员也可操作自己的作业）
+    myOpenId: '',
 
     // ─── 我的任务（保存在 homework 表，recordType='task' 区分）──────
     tasks: [],
@@ -75,7 +77,8 @@ Page({
     const userInfo = app.globalData.userInfo;
     const isAdmin = userInfo && userInfo.isAdmin === true;
     const currentUserName = (userInfo && userInfo.nickName) || '';
-    this.setData({ isAdmin, currentUserName }, () => {
+    const myOpenId = (userInfo && userInfo.openId) || '';
+    this.setData({ isAdmin, currentUserName, myOpenId }, () => {
       this.loadAllHomework();
       if (isAdmin) {
         this.loadStudentNames();
@@ -317,6 +320,10 @@ Page({
       studentName = this.data.currentUserName || '';
     }
 
+    // 是否本人作业：学生视角全部是本人作业；管理员视角仅自己名下的可操作
+    const isMine = !this.data.isAdmin
+      || !!(hw._openid && this.data.myOpenId && hw._openid === this.data.myOpenId);
+
     const completion = hw.completion != null && hw.completion !== ''
       ? Math.min(100, Math.max(0, parseInt(hw.completion) || 0))
       : (isCompleted ? 100 : 0);
@@ -331,6 +338,7 @@ Page({
       content,
       courseName: hw.courseName || '',
       studentName,
+      isMine,
       estimatedTime,              // 预估时长（分钟）
       timeSpent,                  // 已专注时长（番茄累计，分钟）
       // 右栏主时长显示：有已专注记录时优先展示实际值，否则展示预估值
@@ -353,12 +361,21 @@ Page({
 
   /**
    * 点击"已完成 ✅"打卡选项，切换该作业的完成状态
-   * @description 仅学员本人可对自己的作业打卡，管理员查看他人作业时不展示该入口
+   * @description 仅本人可对自己的作业打卡（管理员对自己名下的作业同样可操作）
    */
   async onToggleHomeworkComplete(e) {
-    if (this.data.isAdmin) return;
-
     const { id, completed } = e.currentTarget.dataset;
+    const hw = (this.data.allHomework || []).find((h) => h._id === id);
+    if (!hw) {
+      wx.showToast({ title: '作业不存在', icon: 'none' });
+      return;
+    }
+    // 管理员只能操作自己名下的作业；学生视角记录本身即本人
+    if (this.data.isAdmin && hw._openid !== this.data.myOpenId) {
+      wx.showToast({ title: '只能操作自己的作业', icon: 'none' });
+      return;
+    }
+
     const nextCompleted = !completed;
 
     wx.showLoading({ title: '更新中...' });

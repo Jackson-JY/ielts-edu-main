@@ -118,7 +118,8 @@ exports.main = async (event) => {
         classNameById[c._id] = c.name;
       });
 
-      const students = users.filter((u) => u.isAdmin !== true);
+      // 管理员也作为班级/学员参与统计，不再剔除
+      const students = users;
 
       const checkinByUser = groupCount(checkins, '_openid');
       const homeworkByUser = groupCount(homework, '_openid');
@@ -154,6 +155,7 @@ exports.main = async (event) => {
           _openid: u._openid,
           nickName: u.nickName || '未命名用户',
           avatarUrl: u.avatarUrl || '',
+          isAdmin: u.isAdmin === true,
           _createTime: u._createTime,
           classIds,
           classNames: classIds.map((cid) => classNameById[cid] || '').filter(Boolean),
@@ -261,7 +263,8 @@ exports.main = async (event) => {
         // ignore
       }
 
-      const students = users.filter((u) => u.isAdmin !== true);
+      // 管理员同样参与打卡榜统计
+      const students = users;
 
       // 按学生聚合打卡记录
       const checkinByOpenid = {};

@@ -87,8 +87,8 @@ exports.main = async (event) => {
     if (action === 'overview') {
       const t0 = todayStart();
       const [usersTotal, usersNew, visitsToday, loginsToday, assessmentsToday, checkinsToday, auditToday, grantsAll, resultsDone] = await Promise.all([
-        db.collection('users').where({ isAdmin: _.neq(true) }).count(),
-        db.collection('users').where({ isAdmin: _.neq(true), _createTime: _.gte(t0) }).count(),
+        db.collection('users').count(),
+        db.collection('users').where({ _createTime: _.gte(t0) }).count(),
         db.collection('access_logs').where({ day: dayStr(new Date()) }).count(),
         db.collection('access_logs').where({ day: dayStr(new Date()), type: 'login' }).count(),
         db.collection('access_logs').where({ day: dayStr(new Date()), type: 'assessment' }).count(),
@@ -207,7 +207,7 @@ exports.main = async (event) => {
       const [listRes, countRes, usersRes] = await Promise.all([
         db.collection('access_logs').where(where).orderBy('createdAt', 'desc').skip(skip).limit(Number(pageSize)).get(),
         db.collection('access_logs').where(where).count(),
-        db.collection('users').where({ isAdmin: _.neq(true) }).limit(500).get(),
+        db.collection('users').limit(500).get(),
       ]);
       const userMap = {};
       (usersRes.data || []).forEach((u) => {

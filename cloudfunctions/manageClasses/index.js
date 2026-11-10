@@ -55,15 +55,15 @@ exports.main = async (event) => {
         fetchAll(() => db.collection(CLASSES).orderBy('createdAt', 'asc')),
         fetchAll(() => db.collection(USERS)),
       ]);
-      const students = (usersAll || [])
-        .filter((u) => u.isAdmin !== true)
-        .map((u) => ({
-          userId: u._id,
-          nickName: u.nickName || '微信用户',
-          phone: u.phone || '',
-          avatarUrl: u.avatarUrl || '',
-          classIds: Array.isArray(u.classIds) ? u.classIds : [],
-        }));
+      // 管理员同样可以加入班级，因此不再过滤 isAdmin，仅回传标记供前端区分展示
+      const students = (usersAll || []).map((u) => ({
+        userId: u._id,
+        nickName: u.nickName || '微信用户',
+        phone: u.phone || '',
+        avatarUrl: u.avatarUrl || '',
+        isAdmin: u.isAdmin === true,
+        classIds: Array.isArray(u.classIds) ? u.classIds : [],
+      }));
       const countById = {};
       students.forEach((s) => {
         (s.classIds || []).forEach((cid) => {
